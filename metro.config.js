@@ -8,9 +8,14 @@ const {
  *
  * @type {import('metro-config').MetroConfig}
  */
-const config = {};
+const defaultConfig = getDefaultConfig(__dirname);
+
+const config = {
+  resolver: {
+    assetExts: [...defaultConfig.resolver.assetExts, "lottie"],
+  },
+};
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), wrapWithReanimatedMetroConfig(config));
 
 
-  
