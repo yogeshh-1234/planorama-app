@@ -1,5 +1,12 @@
-import React, {memo, useMemo} from 'react';
-import {Dimensions, Image, ScrollView, StyleSheet, View} from 'react-native';
+import React, {memo, useMemo, useState} from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import Text from '../../components/Text';
 import {fonts} from '../../config/constants';
 import {
@@ -57,7 +64,7 @@ export default function ({
         ]}>
         {title}
       </Text>
-      <Image style={styles.imgSty} source={{uri: cover_img}} />
+      <ImageCompo uri={cover_img} />
       <View style={styles.dateLoc}>
         <View style={styles.dateRow}>
           <Text variant={'SubTitleOne'} style={styles.txtColor}>
@@ -177,7 +184,33 @@ const RSVPCompo = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
     </View>
   );
 });
+const ImageCompo = memo(({uri}: {uri: string}) => {
+  const [loading, setLoading] = useState(false);
+  return (
+    <View
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <Image
+        style={styles.imgSty}
+        source={{uri}}
+        onLoadStart={() => setLoading(true)}
+        onLoadEnd={() => setLoading(false)}
+      />
 
+      {loading && (
+        <ActivityIndicator
+          color={'#fff'}
+          size={'large'}
+          style={{
+            position: 'absolute',
+          }}
+        />
+      )}
+    </View>
+  );
+});
 const styles = StyleSheet.create({
   container: {
     gap: 21,

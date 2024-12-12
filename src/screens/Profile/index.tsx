@@ -1,4 +1,4 @@
-import React, {memo} from 'react';
+import React, {memo, useState} from 'react';
 import {
   Dimensions,
   Image,
@@ -15,16 +15,58 @@ import {EditSVG, LogoutSVG} from '../../assets/SVG/IconsSVG';
 import Text from '../../components/Text';
 import HeaderCompo from '../../components/HeaderCompo';
 import {storage} from '../../functions/storage';
+import {dashError} from '../Dashboard/dashTypes';
+import {useMutation} from '@tanstack/react-query';
+import {postData} from '../../api';
+import Urls from '../../api/urls';
+import LoadingCompo from '../../components/LoadingCompo';
 
 const {width, height} = Dimensions.get('screen');
 
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
-
+interface logoutForm {
+  mode: string;
+  token: string;
+}
+interface logoutResponse {
+  data: {};
+  StatusCode: number;
+}
 export default function () {
   const {params} = useRoute<RouteProp<RootStackParamList, 'ProfileScreen'>>();
+  const [loading, setLoading] = useState(false);
   const logout = () => {
-    storage.clearAll();
+    //
+
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      const formData = {
+        mode: 'LOGOUT',
+        token: token,
+      };
+      setLoading(true);
+      mutation.mutate(formData);
+    }
   };
+
+  const mutation = useMutation<logoutResponse, dashError, logoutForm>({
+    mutationFn: (formData: logoutForm) =>
+      postData<logoutForm, logoutResponse>(Urls.AUTH, formData),
+    onSuccess: () => {
+      setLoading(false);
+      storage.clearAll();
+    },
+    onError: error => {
+      setLoading(false);
+      storage.clearAll();
+    },
+  });
   return (
     <View
       style={{
@@ -64,6 +106,7 @@ export default function () {
         />
         <ItemCompo title={'Logout'} onPress={logout} />
       </ScrollView>
+      {loading && <LoadingCompo text={'Logging out'} />}
     </View>
   );
 }
