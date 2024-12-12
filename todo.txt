@@ -1,0 +1,18 @@
+1. title length
+2. disc length
+3. location length
+
+
+
+
+validations
+event & gallery api
+review event page
+submit to details page with reset navigagation
+details page
+
+contacts display
+single contact add
+import contact 
+upload contacts page
+error display & loading

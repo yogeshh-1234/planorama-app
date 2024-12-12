@@ -18,6 +18,7 @@ import {AuthSuccess, ErrorFormat, registerFormType} from './authType';
 import Urls from '../../api/urls';
 import {postData} from '../../api';
 import PopupCompo from '../../components/PopupCompo';
+import ImageResizer from '@bam.tech/react-native-image-resizer';
 
 const {width, height} = Dimensions.get('screen');
 const PopupModal = {
@@ -32,7 +33,14 @@ export default function () {
   const [check, setCheck] = useState(false);
   const [loading, setLoading] = useState(false);
   const [popupModal, setPopupModal] = useState(PopupModal);
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState<{
+    base64: string | undefined;
+    path: string | undefined;
+  }>({
+    base64: '',
+    path: '',
+  });
+
   const handleUploadImage = () => {
     Alert.alert(
       'Upload Image',
@@ -44,15 +52,21 @@ export default function () {
             launchCamera(
               {
                 mediaType: 'photo',
+                maxHeight: 500,
+                maxWidth: 500,
                 includeBase64: true,
               },
               response => {
+                // console.log(response);
                 if (response.didCancel) {
                   // console.log('User cancelled image capture');
                 } else if (response.errorCode) {
-                  console.error('Camera Error:', response.errorMessage);
+                  // console.log('Camera Error:', response.errorMessage);
                 } else if (response.assets && response.assets.length > 0) {
-                  setImageUri(response.assets[0].base64 || null);
+                  setImageUri({
+                    base64: `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                    path: response?.assets[0].uri,
+                  });
                 }
               },
             );
@@ -64,15 +78,22 @@ export default function () {
             launchImageLibrary(
               {
                 mediaType: 'photo',
+                maxHeight: 500,
+                maxWidth: 500,
+                selectionLimit: 1,
                 includeBase64: true,
               },
               response => {
+                // console.log(response);
                 if (response.didCancel) {
                   // console.log('User cancelled image picker');
                 } else if (response.errorCode) {
-                  console.error('Gallery Error:', response.errorMessage);
+                  // console.log('Gallery Error:', response.errorMessage);
                 } else if (response.assets && response.assets.length > 0) {
-                  setImageUri(response.assets[0].base64 || null);
+                  setImageUri({
+                    base64: `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                    path: response?.assets[0].uri,
+                  });
                 }
               },
             );
@@ -94,15 +115,20 @@ export default function () {
       mobile = tempNum;
     }
     //
-    if (imageUri === null) {
+    if (imageUri.base64 === null || imageUri.base64 === undefined) {
       return;
     }
-
+    let country_code = '';
+    let tempCode = storage.getString('country.code');
+    if (tempCode !== null && tempCode !== undefined) {
+      country_code = tempCode;
+    }
     const formData = {
       mode: 'REGISTER',
       mobile: mobile,
       name: name,
-      pic: imageUri,
+      pic: imageUri.base64,
+      country_code,
     };
     setLoading(true);
 
@@ -114,8 +140,9 @@ export default function () {
     onSuccess: data => {
       if (data.StatusCode === 200) {
         //  register
-        storage.set('user.token', data.data.token);
+
         storage.set('user.id', data.data.id);
+        storage.set('user.token', data.data.token);
       } else {
         setPopupModal({
           state: true,
@@ -173,9 +200,9 @@ export default function () {
             justifyContent: 'center',
           }}
           onPress={handleUploadImage}>
-          {imageUri ? (
+          {imageUri?.path && imageUri?.path?.length > 0 ? (
             <Image
-              source={{uri: imageUri}}
+              source={{uri: imageUri.path}}
               style={{
                 width: 200,
                 height: 200,
@@ -207,9 +234,6 @@ export default function () {
             keyboardType: 'default',
             returnKeyType: 'done',
             dataDetectorTypes: 'all',
-          }}
-          textInputStyle={{
-            paddingHorizontal: 12,
           }}
         />
       </View>

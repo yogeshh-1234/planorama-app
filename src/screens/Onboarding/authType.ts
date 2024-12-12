@@ -1,15 +1,19 @@
 export interface SendOTPform {
   mode: string;
   mobile: string;
+  country_code: string;
   otp?: string;
 }
 
 export interface registerFormType {
-  mode:string
-  mobile: string
-  name: string
-  pic: string
+  mode: string;
+  mobile: string;
+  name: string;
+  pic: string;
+  country_code: string;
 }
+
+// 
 
 export interface CheckNumResponse {
   data: CheckNumData;
@@ -25,6 +29,14 @@ export interface VerifyOTPResponse {
   StatusCode: number;
 }
 
+export interface AuthSuccess {
+  data: {
+    token: string;
+    id: string;
+  };
+  StatusCode: number;
+}
+
 export interface ErrorFormat {
   error: {
     description: string;
@@ -33,10 +45,3 @@ export interface ErrorFormat {
   StatusCode: number;
 }
 
-export interface AuthSuccess {
-  data: {
-    token: string;
-    id: string;
-  };
-  StatusCode: number;
-}

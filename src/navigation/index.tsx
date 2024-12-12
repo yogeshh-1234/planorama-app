@@ -6,17 +6,51 @@ import IntroScreen from '../screens/Onboarding/IntroScreen';
 import {storage} from '../functions/storage';
 import AuthScreen from '../screens/Onboarding/AuthScreen';
 import HomeScreen from '../screens/Dashboard/HomeScreen';
+import EventCreation from '../screens/EventCreation';
+import EventConfirmDetails from '../screens/EventCreation/EventConfirmDetails';
+import EventDetails from '../screens/EventDetails';
+import Profile from '../screens/Profile';
 
 export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   IntroScreen: 'IntroScreen',
   AuthScreen: 'AuthScreen',
   HomeScreen: 'HomeScreen',
+  EventCreation: 'EventCreation',
+  EventConfirmDetails: 'EventConfirmDetails',
+  EventDetails: 'EventDetails',
+  ProfileScreen: 'ProfileScreen',
 };
 
 export type RootStackParamList = {
   IntroScreen: undefined;
   AuthScreen: undefined;
   HomeScreen: undefined;
+  EventCreation: undefined;
+  EventConfirmDetails: confirmEvent;
+  EventDetails: {id: number};
+  ProfileScreen: profileType;
+};
+type confirmEvent = {
+  title: string;
+  fontId: string;
+  cover_img: string;
+  bg_img: string;
+  colorHex: string;
+  date: string;
+  time: string;
+  location: string;
+  description: string;
+  rsvp: 'Y' | 'N' | 'M' | null;
+  gallery: string[];
+  id: number;
+};
+
+type profileType = {
+  country_code: string;
+  id: string;
+  name: string;
+  number: string;
+  pic: string;
 };
 
 export type MainStackNavigation = NavigationProp<RootStackParamList>;
@@ -79,7 +113,28 @@ function MainNavigation(): React.JSX.Element {
             />
           </>
         ) : (
-          <Stack.Screen name={MAINSCREENS.HomeScreen} component={HomeScreen} />
+          <>
+            <Stack.Screen
+              name={MAINSCREENS.HomeScreen}
+              component={HomeScreen}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.EventCreation}
+              component={EventCreation}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.EventConfirmDetails}
+              component={EventConfirmDetails}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.EventDetails}
+              component={EventDetails}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.ProfileScreen}
+              component={Profile}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

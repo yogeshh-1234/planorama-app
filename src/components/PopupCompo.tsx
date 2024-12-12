@@ -52,7 +52,10 @@ export default memo(
           alignItems: 'center',
         }}
         animationIn={'zoomIn'}
-        animationOut={'fadeOutDown'}>
+        animationOut={'fadeOutDown'}
+        onDismiss={onDismiss}
+        onBackdropPress={onDismiss}
+        onBackButtonPress={onDismiss}>
         <View style={styles.box}>
           {isVisible && (
             <Text

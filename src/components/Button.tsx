@@ -1,9 +1,10 @@
 import {MotiView, useAnimationState} from 'moti';
 import React, {memo} from 'react';
-import {Dimensions, Pressable, StyleSheet} from 'react-native';
+import {Dimensions, Pressable, StyleSheet, TextStyle} from 'react-native';
 import Text from './Text';
 import {StyleProps} from 'react-native-reanimated';
 import {ActivityIndicator} from 'react-native-paper';
+import {CustomVariantProp} from '../config/fonts';
 
 const {width} = Dimensions.get('screen');
 
@@ -13,16 +14,20 @@ export default memo(
     small = false,
     loading = false,
     buttonStyles,
+    textStyles,
     buttWidth = width * 0.9,
     disabled = false,
+    variant = 'SubTitleOne',
     onPress,
   }: {
     lable: string;
     small?: boolean;
     loading?: boolean;
     buttonStyles?: StyleProps;
+    textStyles?: TextStyle;
     buttWidth?: number;
     disabled?: boolean;
+    variant?: CustomVariantProp;
     onPress: () => void;
   }) => {
     const buttOneState = useAnimationState({
@@ -48,8 +53,7 @@ export default memo(
         onPressIn={() => buttTwoState.transitionTo('pressd')}
         onPressOut={() => buttTwoState.transitionTo('to')}
         onPress={disabled ? null : onPress}
-        disabled={loading || disabled}
-        style={{}}>
+        disabled={loading || disabled}>
         <MotiView
           style={[
             styles.buttTwo,
@@ -63,12 +67,13 @@ export default memo(
           state={buttTwoState}>
           {loading && <ActivityIndicator color="#75486F" />}
           <Text
-            variant={'SubTitleOne'}
+            variant={variant}
             style={[
               styles.buttTwoTxt,
               {
                 color: disabled ? '#dcdcdc' : '#fff',
               },
+              textStyles,
             ]}>
             {lable}
           </Text>

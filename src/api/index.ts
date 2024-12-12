@@ -26,17 +26,18 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   error => {
+    // console.log(error)
     if (error.response) {
       // Server responded with a status other than 2xx
-      console.log('Error Response:', error.response.data);
+      // console.log('Error Response:', error.response.data);
       return Promise.reject(error.response.data);
     } else if (error.request) {
       // Request was made but no response received
-      console.log('Error No Response:', error.request);
+      // console.log('Error No Response:', error.request);
       return Promise.reject('No response received from server');
     } else {
       // Something else happened while setting up the request
-      console.log('Error', error.message);
+      // console.log('Error', error.message);
       return Promise.reject(error.message);
     }
   },
@@ -45,22 +46,22 @@ apiClient.interceptors.response.use(
 export const fetchData = async <T,>(endpoint: string): Promise<T> => {
   try {
     const response: AxiosResponse<T> = await apiClient.get(`${endpoint}.php`);
-    console.log('response.data',response.data)
+    // console.log('response.data',response.data)
     return response.data;
   } catch (error) {
-    console.log('fetchData Error:',error)
+    // console.log('fetchData Error:',error)
     throw error;
   }
 };
 
 export const postData = async <T, R>(endpoint: string, data: T): Promise<R> => {
   try {
-    console.log('formData',data)
+    // console.log('formData',data)
     const response: AxiosResponse<R> = await apiClient.post(`${endpoint}.php`,data);
-    console.log('response.data',response.data)
+    // console.log('response.data',response.data)
     return response.data;
   } catch (error) {
-    console.log('postData Error:',error)
+    // console.log('postData Error:',error)
     throw error;
   }
 };

@@ -10,3 +10,27 @@ export const colors = {
 export const Spacing = {
   horizontal: width * 0.03,
 };
+
+
+export const fonts = [
+  {
+    id: '1',
+    name: 'PoppinsRegular',
+    lable: 'Poppins',
+  },
+  {
+    id: '2',
+    name: 'Arial',
+    lable: 'Arial',
+  },
+  {
+    id: '3',
+    name: 'PlayfairDisplayRegular',
+    lable: 'Playfair Display',
+  },
+  {
+    id: '4',
+    name: 'LobsterRegular',
+    lable: 'Lobster',
+  },
+];

@@ -69,11 +69,16 @@ export default function ({onPress}: {onPress: () => void}) {
       mobile = tempNum;
     }
     //
-
+    let country_code = '';
+    let tempCode = storage.getString('country.code');
+    if (tempCode !== null && tempCode !== undefined) {
+      country_code = tempCode;
+    }
     const formData = {
       mode: isNewUser ? 'VERIFY' : 'LOGIN',
       mobile: mobile,
       otp: otpVal,
+      country_code,
     };
     setLoading(true);
 
@@ -88,8 +93,9 @@ export default function ({onPress}: {onPress: () => void}) {
         if (tempUser !== null && tempUser !== undefined && tempUser) {
           onPress();
         } else {
-          storage.set('user.token', data.data.token);
+
           storage.set('user.id', data.data.id);
+          storage.set('user.token', data.data.token);
         }
         //  navigate to register
       } else {

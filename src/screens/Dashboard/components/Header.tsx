@@ -1,10 +1,44 @@
-import React from 'react';
-import {Dimensions, Image, Pressable, StyleSheet, View} from 'react-native';
+import React, {memo, useState} from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {NotiSVG, UsersSVG} from '../../../assets/SVG/IconsSVG';
+import {useNavigation} from '@react-navigation/native';
+import {MainStackNavigation} from '../../../navigation';
 
 const {width, height} = Dimensions.get('screen');
 const PIC_H = 50;
-export default function () {
+export default function ({
+  country_code,
+  id,
+  name,
+  number,
+  pic,
+}: {
+  country_code: string;
+  id: string;
+  name: string;
+  number: string;
+  pic: string;
+}) {
+  
+  const navigation = useNavigation<MainStackNavigation>();
+
+  const onPress = () =>
+    navigation.navigate('ProfileScreen', {
+      country_code,
+      id,
+      name,
+      number,
+      pic,
+    });
+
+  // ProfileScreen
   return (
     <View style={styles.container}>
       <View
@@ -33,23 +67,53 @@ export default function () {
         }}>
         <NotiSVG width={30} height={30} />
       </Pressable>
+      <ImageCompo uri={pic} onPress={onPress} />
+    </View>
+  );
+}
+const ImageCompo = memo(
+  ({uri, onPress}: {uri: string; onPress: () => void}) => {
+    const [loading, setLoading] = useState(false);
+
+    return (
       <Pressable
         style={{
           height: 40,
           width: 40,
           borderRadius: 100,
-          backgroundColor: '#fff',
-        }}></Pressable>
-    </View>
-  );
-}
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        onPress={onPress}>
+        {loading && (
+          <ActivityIndicator
+            color={'#fff'}
+            style={{
+              position: 'absolute',
+            }}
+          />
+        )}
+        <Image
+          onLoadStart={() => setLoading(true)}
+          onLoadEnd={() => setLoading(false)}
+          source={{uri}}
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: 100,
+          }}
+        />
+      </Pressable>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding:8,
-    gap:8,
-    paddingRight:16
+    padding: 8,
+    gap: 8,
+    paddingRight: 16,
   },
 });

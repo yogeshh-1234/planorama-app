@@ -1,4 +1,4 @@
-import React, {memo, useState} from 'react';
+import React, {memo, useCallback, useEffect, useState} from 'react';
 import {
   Dimensions,
   Image,
@@ -10,15 +10,49 @@ import {
 import {BGline} from '../../assets/SVG/VectorSVG';
 import Header from './components/Header';
 import Text from '../../components/Text';
-import {Searchbar} from 'react-native-paper';
+import {ActivityIndicator, Searchbar} from 'react-native-paper';
 import {
   CalenderSVG,
   ClockSVG,
+  QuesSVG,
   SearchSVG,
   ThumbsUpSVG,
 } from '../../assets/SVG/IconsSVG';
-
+import {storage} from '../../functions/storage';
+import {useMutation} from '@tanstack/react-query';
+import {
+  dashError,
+  dashEventsResponse,
+  dashFormType,
+  eventItem,
+  profileResponse,
+} from './dashTypes';
+import {postData} from '../../api';
+import Urls from '../../api/urls';
+import PopupCompo from '../../components/PopupCompo';
+import Animated, {
+  CurvedTransition,
+  FadeInLeft,
+  FadeInRight,
+  FadeInUp,
+  FadeOut,
+  FadeOutLeft,
+  FadingTransition,
+  JumpingTransition,
+  LinearTransition,
+  SequencedTransition,
+} from 'react-native-reanimated';
+import Button from '../../components/Button';
+import {useNavigation} from '@react-navigation/native';
+import {MainStackNavigation} from '../../navigation';
 const {width, height} = Dimensions.get('screen');
+const PopupModal = {
+  state: false,
+  title: '',
+  disc: '',
+  buttOne: '',
+  buttTwo: '',
+};
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
 const paddingHorizontal = width * 0.05;
@@ -37,66 +71,181 @@ interface goingListType {
   name: string;
   pic: string;
 }
-const eventList = [
-  {
-    pic: 'https://s3-alpha-sig.figma.com/img/c9fb/05c9/f9f87fa6736978b3dc687a0538f64b6a?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=KRZ4s5JN1MxAhrzlCQ99jbMyBM5EXDzA0EUInMFLyYWfuPTawTlp-KTM2f2X5pin7YvUdKNhO44M3kd-Pm~oE0BAs8OVrrO0K2p7vitVA~EhprcF9cXRzlQIVWDS4HSmydev5MThECtnG18p3Do5dcwi84MZ9OKLx8mpCDTcasVLbTaoa8Dj~TCTJM~hu4Heoipw0G2TKm5cOblD8ZYheRAQaABCxURwRl6SKJMIBvGWwbNznmYuXqdnflngKT71y2vTbMP9J6kPcIv38pPiJuHULsUsx3GKrSIhhu99uzkw6TAUXKDXI6jlH8eSoTvBjSylslpO~THRRbVaImBEiA__',
-    title: 'New Year Celebration',
-    date: '31/12/2024',
-    time: '20:00',
-    goingStatus: 'Y', // Y / N - Yes / No
-    eventStatus: 'CLOSED EVENT (N/R. mobile)', // CLOSED EVENT (N/R. mobile)
-    goingList: [
-      {
-        name: 'Chinmay Palekar',
-        pic: '',
-      },
-    ],
-    goingListTotal: 1,
-  },
-  {
-    pic: 'https://s3-alpha-sig.figma.com/img/fb7c/a046/cc247627452c7be672f73b7a15272921?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=YFwirekgUHmBh1mgMGJCbZYuLWV85QASVI76LpqzO5Qp3VBEJsAvu8ErF14vFmYfUZdLLoaILlwo~utk293H~P5VyUZdzC47hqanXb0lXU1XMbPNg7Tj-eZM0JEuXPXuL9GVFPJTRPbVBemEa~7qmvht626xzAeidm19jzzh61WAEZpiWtl8t5vFiXrm5FjJ4zMAJkvx-k~8b0KzKgIcXfeC21C1-mYG-hjHPC~A1ZPCNbcPVOvY18wI9I0lW4FVusnxJD3MzWlgNhoPEi2ucRVUBOG56BNH0v~tUo~RuTNEfSYVE52HEbq9y0FCQbP20Qpzb8-im6JUR6x~jtqbvA__',
-    title: 'XMAS EVE',
-    date: '25/12/2024',
-    time: '10:30',
-    goingStatus: 'N', // Y / N - Yes / No
-    eventStatus: 'CLOSED EVENT (Resp. mobile)', // CLOSED EVENT (N/R. mobile)
-    goingList: [
-      {
-        name: 'Chinmay Palekar',
-        pic: '',
-      },
-      {
-        name: 'Chinmay Palekar',
-        pic: '',
-      },
-      {
-        name: 'Chinmay Palekar',
-        pic: '',
-      },
-    ],
-    goingListTotal: 5,
-  },
-  {
-    pic: 'https://s3-alpha-sig.figma.com/img/207e/5493/a9880199d716a0f5c2dcb1449166f613?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=Mx1BN0Eta2e7wqZyQl9K~sKdrfLrSjESwZABFoelX4KVhy1muTHn968VOnPBjmOaVgpO1XdTMLnxq66LkcV3ozc9y6Y4OyCXFul6OjPCsHNLBt2I0WR48jERckXGeV1-djaqapPaNRDh9mHRuEK5yoKIzMDXiH1j4VRMr6sJaylSHAKDEgfk9mrdfe1oUcV02X1gDOySUpJYwuPPiJM7f9fE~iz9mOOH50m7bhsm-eBoiK5oLv2~OegGW22KzHbKQld04UTRu43g15Ot27509~zXeb3JX3y2BVlIqsn18b0UWx627xH5KzQhVWmJsj2em4t9mAtKDmtA0M91YuYV~Q__',
-    title: 'Birthday Party',
-    date: '31/12/2024',
-    time: '20:00',
-    goingStatus: '', // Y / N - Yes / No
-    eventStatus: 'CLOSED EVENT (web)', // CLOSED EVENT (N/R. mobile)
-    goingList: [
-      {
-        name: 'Chinmay Palekar',
-        pic: '',
-      },
-    ],
-    goingListTotal: 1,
-  },
-];
+// const eventList = [
+//   {
+//     pic: 'https://s3-alpha-sig.figma.com/img/c9fb/05c9/f9f87fa6736978b3dc687a0538f64b6a?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=KRZ4s5JN1MxAhrzlCQ99jbMyBM5EXDzA0EUInMFLyYWfuPTawTlp-KTM2f2X5pin7YvUdKNhO44M3kd-Pm~oE0BAs8OVrrO0K2p7vitVA~EhprcF9cXRzlQIVWDS4HSmydev5MThECtnG18p3Do5dcwi84MZ9OKLx8mpCDTcasVLbTaoa8Dj~TCTJM~hu4Heoipw0G2TKm5cOblD8ZYheRAQaABCxURwRl6SKJMIBvGWwbNznmYuXqdnflngKT71y2vTbMP9J6kPcIv38pPiJuHULsUsx3GKrSIhhu99uzkw6TAUXKDXI6jlH8eSoTvBjSylslpO~THRRbVaImBEiA__',
+//     title: 'New Year Celebration',
+//     date: '31/12/2024',
+//     time: '20:00',
+//     goingStatus: 'Y', // Y / N - Yes / No
+//     eventStatus: 'CLOSED EVENT (N/R. mobile)', // CLOSED EVENT (N/R. mobile)
+//     goingList: [
+//       {
+//         name: 'Chinmay Palekar',
+//         pic: '',
+//       },
+//     ],
+//     goingListTotal: 1,
+//   },
+//   {
+//     pic: 'https://s3-alpha-sig.figma.com/img/fb7c/a046/cc247627452c7be672f73b7a15272921?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=YFwirekgUHmBh1mgMGJCbZYuLWV85QASVI76LpqzO5Qp3VBEJsAvu8ErF14vFmYfUZdLLoaILlwo~utk293H~P5VyUZdzC47hqanXb0lXU1XMbPNg7Tj-eZM0JEuXPXuL9GVFPJTRPbVBemEa~7qmvht626xzAeidm19jzzh61WAEZpiWtl8t5vFiXrm5FjJ4zMAJkvx-k~8b0KzKgIcXfeC21C1-mYG-hjHPC~A1ZPCNbcPVOvY18wI9I0lW4FVusnxJD3MzWlgNhoPEi2ucRVUBOG56BNH0v~tUo~RuTNEfSYVE52HEbq9y0FCQbP20Qpzb8-im6JUR6x~jtqbvA__',
+//     title: 'XMAS EVE',
+//     date: '25/12/2024',
+//     time: '10:30',
+//     goingStatus: 'N', // Y / N - Yes / No
+//     eventStatus: 'CLOSED EVENT (Resp. mobile)', // CLOSED EVENT (N/R. mobile)
+//     goingList: [
+//       {
+//         name: 'Chinmay Palekar',
+//         pic: '',
+//       },
+//       {
+//         name: 'Chinmay Palekar',
+//         pic: '',
+//       },
+//       {
+//         name: 'Chinmay Palekar',
+//         pic: '',
+//       },
+//     ],
+//     goingListTotal: 5,
+//   },
+//   {
+//     pic: 'https://s3-alpha-sig.figma.com/img/207e/5493/a9880199d716a0f5c2dcb1449166f613?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=Mx1BN0Eta2e7wqZyQl9K~sKdrfLrSjESwZABFoelX4KVhy1muTHn968VOnPBjmOaVgpO1XdTMLnxq66LkcV3ozc9y6Y4OyCXFul6OjPCsHNLBt2I0WR48jERckXGeV1-djaqapPaNRDh9mHRuEK5yoKIzMDXiH1j4VRMr6sJaylSHAKDEgfk9mrdfe1oUcV02X1gDOySUpJYwuPPiJM7f9fE~iz9mOOH50m7bhsm-eBoiK5oLv2~OegGW22KzHbKQld04UTRu43g15Ot27509~zXeb3JX3y2BVlIqsn18b0UWx627xH5KzQhVWmJsj2em4t9mAtKDmtA0M91YuYV~Q__',
+//     title: 'Birthday Party',
+//     date: '31/12/2024',
+//     time: '20:00',
+//     goingStatus: '', // Y / N - Yes / No
+//     eventStatus: 'CLOSED EVENT (web)', // CLOSED EVENT (N/R. mobile)
+//     goingList: [
+//       {
+//         name: 'Chinmay Palekar',
+//         pic: '',
+//       },
+//     ],
+//     goingListTotal: 1,
+//   },
+// ];
 type EventListType = 'your' | 'invited';
 type EventTypeText = 'Upcoming' | 'Previous';
 export default function () {
+  const navigation = useNavigation<MainStackNavigation>();
+  const [profileData, setProfileData] = useState({
+    country_code: '',
+    id: '',
+    name: '',
+    number: '',
+    pic: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [popupModal, setPopupModal] = useState(PopupModal);
+
+  useEffect(() => {
+    const tempName = storage.getString('user.name');
+    const tempPic = storage.getString('user.pic');
+    if (
+      tempName !== null &&
+      tempName !== undefined &&
+      tempPic !== null &&
+      tempPic !== undefined
+    ) {
+      setProfileData(pre => ({
+        ...pre,
+        pic: tempPic,
+        name: tempName,
+      }));
+    }
+    callAPI();
+  }, []);
+
+  const callAPI = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      const formData = {
+        mode: 'VIEW_PROFILE',
+        token,
+        id,
+      };
+      setLoading(true);
+      mutation.mutate(formData);
+    }
+  };
+
+  const mutation = useMutation<profileResponse, dashError, dashFormType>({
+    mutationFn: (formData: dashFormType) =>
+      postData<dashFormType, profileResponse>(Urls.PROFILE, formData),
+    onSuccess: ({data, StatusCode}) => {
+      if (StatusCode === 200) {
+        setProfileData({
+          pic: data.pic,
+          name: data.name,
+          country_code: data.country_code,
+          id: data.id,
+          number: data.number,
+        });
+        storage.set('user.name', data.name);
+        storage.set('user.pic', data.pic);
+
+        //
+      } else {
+        setPopupModal({
+          state: true,
+          title: `Oops! Something went wrong.${
+            StatusCode ? ` [${StatusCode}]` : ''
+          }`,
+          disc: "We couldn't complete your request, please try again!",
+          buttOne: 'LOGOUT',
+          buttTwo: 'RETRY',
+        });
+      }
+      setLoading(false);
+    },
+    onError: error => {
+      setLoading(false);
+
+      setPopupModal({
+        state: true,
+        title: `Oops! Something went wrong.${
+          error?.StatusCode ? ` [${error.StatusCode}]` : ''
+        }`,
+        disc: error?.error?.description
+          ? error.error.description
+          : "We couldn't complete your request, please try again!",
+        buttOne: 'LOGOUT',
+        buttTwo: 'RETRY',
+      });
+    },
+  });
+
+  const onDismiss = useCallback(() => {
+    setPopupModal({...popupModal, state: false});
+  }, [popupModal.state]);
+
+  const buttOnePress = useCallback(() => {
+    if (popupModal.buttOne === 'LOGOUT') {
+      setPopupModal({...popupModal, state: false});
+      storage.clearAll();
+    }
+  }, [popupModal.state]);
+
+  const buttTwoPress = useCallback(() => {
+    if (popupModal.buttTwo === 'RETRY') {
+      setPopupModal({...popupModal, state: false});
+      callAPI();
+    }
+  }, [popupModal.state]);
+
+  const AddEvent = () => {
+    navigation.navigate('EventCreation');
+  };
   return (
-    <View
+    <Animated.View
       style={{
         backgroundColor: '#75486F',
         flex: 1,
@@ -117,26 +266,172 @@ export default function () {
           right: 0,
         }}
       />
-      <Header />
+      <Header
+        country_code={profileData.country_code}
+        id={profileData.id}
+        name={profileData.name}
+        number={profileData.number}
+        pic={profileData.pic}
+      />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: height * 0.04,
+          paddingTop: height * 0.03,
           paddingBottom: height * 0.04,
           gap: 12,
         }}>
-        <WelcomeCompo />
+        <WelcomeCompo name={profileData.name} />
         <SearchCompo />
         <EventsCompo lable={'your'} />
         <EventsCompo lable={'invited'} />
       </ScrollView>
-    </View>
+
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 20,
+          right: 20,
+        }}>
+        <Button
+          lable="+ New Event"
+          onPress={AddEvent}
+          buttonStyles={{
+            width: 'auto',
+            paddingHorizontal: 20,
+          }}
+        />
+      </View>
+      <PopupCompo
+        isVisible={popupModal.state}
+        onDismiss={onDismiss}
+        title={popupModal.title}
+        disc={popupModal.disc}
+        buttOne={popupModal.buttOne}
+        buttTwo={popupModal.buttTwo}
+        buttOnePress={buttOnePress}
+        buttTwoPress={buttTwoPress}
+      />
+    </Animated.View>
   );
 }
 
 const EventsCompo = memo(({lable}: {lable: EventListType}) => {
   const [type, setType] = useState<EventTypeText>('Upcoming');
+  const [loading, setLoading] = useState(false);
+  const [popupModal, setPopupModal] = useState(PopupModal);
+  const [preEventsList, setPreEventsList] = useState<eventItem[]>([]);
+  const [upEventsList, setUpEventsList] = useState<eventItem[]>([]);
+  const [totalCount, setTotalCount] = useState({
+    up: '',
+    pre: '',
+  });
+
+  useEffect(() => {
+    if (
+      (type === 'Previous' && preEventsList.length === 0) ||
+      (type === 'Upcoming' && upEventsList.length === 0)
+    ) {
+      callAPI();
+    }
+  }, [type, lable]);
+
+  const callAPI = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      const mode =
+        lable === 'your'
+          ? type === 'Upcoming'
+            ? 'MY_EVT_LIST_UP'
+            : 'MY_EVT_LIST_PREV'
+          : type === 'Upcoming'
+          ? 'INV_EVT_LIST_UP'
+          : 'INV_EVT_LIST_PREV';
+      const formData = {
+        mode,
+        token,
+        id,
+      };
+      setLoading(true);
+
+      mutation.mutate(formData);
+    }
+  };
+  const mutation = useMutation<dashEventsResponse, dashError, dashFormType>({
+    mutationFn: (formData: dashFormType) =>
+      postData<dashFormType, dashEventsResponse>(Urls.HOME, formData),
+    onSuccess: ({data, StatusCode}) => {
+      if (StatusCode === 200) {
+        console.log(data.event_list);
+        if (type === 'Upcoming') {
+          setUpEventsList(data.event_list);
+          setTotalCount(pre => ({
+            ...pre,
+            up: data.event_list.length.toString(),
+          }));
+        } else {
+          setPreEventsList(data.event_list);
+          setTotalCount(pre => ({
+            ...pre,
+            pre: data.event_list.length.toString(),
+          }));
+        }
+
+        //
+      } else {
+        setPopupModal({
+          state: true,
+          title: `Error getting ${lable} ${type} events.${
+            StatusCode ? ` [${StatusCode}]` : ''
+          }`,
+          disc: "We couldn't complete your request, please try again!",
+          buttOne: 'LOGOUT',
+          buttTwo: 'RETRY',
+        });
+      }
+      setLoading(false);
+    },
+    onError: error => {
+      setLoading(false);
+
+      setPopupModal({
+        state: true,
+        title: `Error getting ${lable} ${type} events.${
+          error?.StatusCode ? ` [${error.StatusCode}]` : ''
+        }`,
+        disc: error?.error?.description
+          ? error.error.description
+          : "We couldn't complete your request, please try again!",
+        buttOne: 'LOGOUT',
+        buttTwo: 'RETRY',
+      });
+    },
+  });
+
+  const onDismiss = useCallback(() => {
+    setPopupModal({...popupModal, state: false});
+  }, [popupModal.state]);
+
+  const buttOnePress = useCallback(() => {
+    if (popupModal.buttOne === 'LOGOUT') {
+      setPopupModal({...popupModal, state: false});
+      storage.clearAll();
+    }
+  }, [popupModal.state]);
+
+  const buttTwoPress = useCallback(() => {
+    if (popupModal.buttTwo === 'RETRY') {
+      setPopupModal({...popupModal, state: false});
+      callAPI();
+    }
+  }, [popupModal.state]);
+
   return (
-    <View style={{}}>
+    <Animated.View style={{}}>
       <Text
         style={{
           color: '#fff',
@@ -147,9 +442,24 @@ const EventsCompo = memo(({lable}: {lable: EventListType}) => {
         variant={'SubTitleTwo'}>
         {lable} Events
       </Text>
-      <SelectionRow type={type} setType={setType} total={eventList.length} />
-      <EventsDisplay eventList={eventList} type={type} lable={lable} />
-    </View>
+      <SelectionRow type={type} setType={setType} total={totalCount} />
+      <EventsDisplay
+        eventList={type === 'Previous' ? preEventsList : upEventsList}
+        type={type}
+        lable={lable}
+        loading={loading}
+      />
+      <PopupCompo
+        isVisible={popupModal.state}
+        onDismiss={onDismiss}
+        title={popupModal.title}
+        disc={popupModal.disc}
+        buttOne={popupModal.buttOne}
+        buttTwo={popupModal.buttTwo}
+        buttOnePress={buttOnePress}
+        buttTwoPress={buttTwoPress}
+      />
+    </Animated.View>
   );
 });
 
@@ -158,13 +468,17 @@ const EventsDisplay = memo(
     eventList,
     type,
     lable,
+    loading,
   }: {
-    eventList: EventType[];
+    eventList: eventItem[];
     type: EventTypeText;
     lable: EventListType;
+    loading: boolean;
   }) => {
     return (
-      <ScrollView
+      <Animated.ScrollView
+        entering={FadeInLeft}
+        exiting={FadeOutLeft}
         horizontal={true}
         decelerationRate={0}
         snapToInterval={width * 0.62} //your element width
@@ -173,15 +487,53 @@ const EventsDisplay = memo(
           // gap: 18,
           paddingVertical: 14,
           paddingLeft: paddingHorizontal,
-        }}>
-        {eventList?.map(item => (
-          <EventView
-            data={item}
-            prev={type === 'Previous'}
-            invited={lable === 'invited'}
-          />
-        ))}
-      </ScrollView>
+        }}
+        // LinearTransition
+        // layout={SequencedTransition}
+      >
+        {loading ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+            <ActivityIndicator
+              color="#fff"
+              style={{alignSelf: 'center'}}
+              size={'small'}
+            />
+            <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+              Getting Events ...
+            </Text>
+          </View>
+        ) : eventList.length > 0 ? (
+          eventList?.map((item, index) => (
+            <EventView
+              key={index}
+              data={item}
+              // prev={type === 'Previous'}
+              // invited={lable === 'invited'}
+              prev={false}
+              invited={false}
+            />
+          ))
+        ) : (
+          <Animated.View
+            style={{
+              paddingVertical: 12,
+              alignItems: 'center',
+            }}>
+            <Text
+              // entering={FadeInRight}
+              // exiting={FadeOutLeft}
+              style={{color: '#fff'}}
+              variant={'SubTitleTwo'}>
+              No Events to display!
+            </Text>
+          </Animated.View>
+        )}
+      </Animated.ScrollView>
     );
   },
 );
@@ -192,45 +544,43 @@ const EventView = memo(
     prev,
     invited,
   }: {
-    data: EventType;
+    data: eventItem;
     prev: boolean;
     invited: boolean;
   }) => {
+    const navigation = useNavigation<MainStackNavigation>();
     return (
-      <View style={{paddingHorizontal: width * 0.02}}>
+      <Pressable
+        style={{paddingHorizontal: width * 0.02}}
+        onPress={() => {
+          navigation.navigate('EventDetails', {id: data.evt_id});
+        }}>
         {prev && (
           <Text
             style={{color: '#F9BC52', marginBottom: 4}}
             variant={'BodyBold'}>
-            {data.eventStatus}
+            {`{data.eventStatus}`}
           </Text>
         )}
-        <Image
-          source={{uri: data.pic}}
-          style={{
-            width: width * 0.6,
-            height: width * 0.6,
-            borderRadius: 10,
-            marginVertical: 4,
-          }}
-        />
-        <View
+        {/*  */}
+        <ImageCompo uri={data.pic} size={width * 0.6} />
+        <Animated.View
           style={{
             paddingVertical: 4,
             gap: 8,
           }}>
-          {invited && (
-            <View
+          {/* {invited && (
+            <Animated.View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
               }}>
               {data.goingList.length > 0 && (
-                <View
+                <Animated.View
                   style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Animated.View style={{flexDirection: 'row', alignItems: 'center'}}>
                     {data.goingList.map((itm, idx) => (
-                      <View
+                      <Animated.View
                         style={{
                           width:
                             idx + 1 ===
@@ -255,9 +605,9 @@ const EventView = memo(
                             borderColor: '#EDEDED',
                           }}
                         />
-                      </View>
+                      </Animated.View>
                     ))}
-                  </View>
+                  </Animated.View>
                   <Text variant={'DetailRegular'} style={{color: '#fff'}}>
                     {data.goingList[0].name}
                   </Text>
@@ -266,40 +616,40 @@ const EventView = memo(
                       +{data.goingList.length - 1} more
                     </Text>
                   )}
-                  {/*  */}
-                </View>
+                </Animated.View>
               )}
-            </View>
-          )}
+            </Animated.View>
+          )} */}
           <Text variant={'SubTitleOne'} style={{color: '#fff'}}>
             {data.title}
           </Text>
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 16}}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+          <Animated.View
+            style={{flexDirection: 'row', alignItems: 'center', gap: 16}}>
+            <Animated.View
+              style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
               <CalenderSVG width={16} height={16} />
               <Text variant={'DetailRegular'} style={{color: '#EDEDED'}}>
                 {data.date}
               </Text>
-            </View>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+            </Animated.View>
+            <Animated.View
+              style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
               <ClockSVG width={16} height={16} />
               <Text variant={'DetailRegular'} style={{color: '#EDEDED'}}>
                 {data.time}
               </Text>
-            </View>
-          </View>
+            </Animated.View>
+          </Animated.View>
           <StatusCompo goingStatus={data.goingStatus} />
-        </View>
-      </View>
+        </Animated.View>
+      </Pressable>
     );
   },
 );
 
-
-
 const StatusCompo = memo(({goingStatus}: {goingStatus: string}) => {
   return (
-    <View
+    <Animated.View
       style={{
         backgroundColor: '#FFFFFF1A',
         borderRadius: 10,
@@ -310,13 +660,27 @@ const StatusCompo = memo(({goingStatus}: {goingStatus: string}) => {
         alignSelf: 'flex-start',
       }}>
       {goingStatus === 'Y' && <ThumbsUpSVG width={20} height={20} />}
-      {goingStatus === 'N' && <ThumbsUpSVG width={20} height={20} />}
+      {goingStatus === 'N' && (
+        <ThumbsUpSVG
+          style={{
+            transform: [
+              {
+                rotate: '180deg',
+              },
+            ],
+          }}
+          width={20}
+          height={20}
+        />
+      )}
+      {goingStatus === 'M' && <QuesSVG width={20} height={20} />}
       <Text variant={'BodyRegular'} style={{color: '#fff'}}>
         {goingStatus === 'Y' && 'Going'}
         {goingStatus === 'N' && 'Not Going'}
+        {goingStatus === 'M' && 'May Be'}
         {goingStatus === '' && 'Not Responsede Yet'}
       </Text>
-    </View>
+    </Animated.View>
   );
 });
 
@@ -327,11 +691,11 @@ const SelectionRow = memo(
     setType,
   }: {
     type: string;
-    total: number;
+    total: {up: string; pre: string};
     setType: (val: EventTypeText) => void;
   }) => {
     return (
-      <View
+      <Animated.View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -341,17 +705,17 @@ const SelectionRow = memo(
         }}>
         <SelectionItm
           lable={'Upcoming'}
-          count={total}
+          count={total.up}
           type={type === 'Upcoming'}
           onPress={() => setType('Upcoming')}
         />
         <SelectionItm
           lable={'Previous'}
-          count={total}
+          count={total.pre}
           type={type === 'Previous'}
           onPress={() => setType('Previous')}
         />
-      </View>
+      </Animated.View>
     );
   },
 );
@@ -363,7 +727,7 @@ const SelectionItm = memo(
     onPress,
   }: {
     lable: string;
-    count: number;
+    count: string;
     type: boolean;
     onPress: () => void;
   }) => {
@@ -392,24 +756,25 @@ const SelectionItm = memo(
     );
   },
 );
-const WelcomeCompo = memo(() => {
+
+const WelcomeCompo = memo(({name}: {name: string}) => {
   return (
-    <View style={{paddingHorizontal, gap: 12}}>
+    <Animated.View style={{paddingHorizontal, gap: 12}}>
       <Text variant={'Heading'} style={{color: '#fff'}}>
-        Welcome, !
+        Welcome, {name}!
       </Text>
       <Text variant={'DetailBold'} style={{color: '#fff'}}>
         Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet
         sint.
       </Text>
-    </View>
+    </Animated.View>
   );
 });
 
 const SearchCompo = memo(() => {
   const [value, setValue] = useState('');
   return (
-    <View style={{paddingHorizontal}}>
+    <Animated.View style={{paddingHorizontal}}>
       <Searchbar
         style={{
           backgroundColor: '#C5B1C33D',
@@ -430,6 +795,63 @@ const SearchCompo = memo(() => {
         placeholder="Search"
         placeholderTextColor={'#FFFFFF'}
       />
-    </View>
+    </Animated.View>
+  );
+});
+
+const ImageCompo = memo(({uri, size}: {uri: string | null; size: number}) => {
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <Animated.View
+      style={{
+        borderWidth: 0.5,
+        borderColor: '#ffffff1A',
+        borderRadius: 10,
+        marginVertical: 4,
+      }}>
+      {uri ? (
+        <Image
+          source={{uri}}
+          style={{
+            width: size,
+            height: size,
+            borderRadius: 10,
+          }}
+          onLoadStart={() => {
+            setLoading(true);
+          }}
+          onLoadEnd={() => {
+            setLoading(false);
+          }}
+        />
+      ) : (
+        <Animated.View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#C5B1C380',
+          }}>
+          <Text style={{color: '#fff'}} variant={'BodyBold'}>
+            No Image
+          </Text>
+        </Animated.View>
+      )}
+      {loading && (
+        <ActivityIndicator
+          color="#fff"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            top: 0,
+          }}
+        />
+      )}
+    </Animated.View>
   );
 });

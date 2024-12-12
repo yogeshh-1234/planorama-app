@@ -62,11 +62,12 @@ export default function ({onPress}: {onPress: () => void}) {
     Keyboard.dismiss();
 
     setLoading(true);
-    const mobile = `${codeData.dial_code.replace(/\+/g, '')}${num}`;
+    const mobile = `${num}`;
+    const country_code = `${codeData.dial_code.replace(/\+/g, '')}`;
     mutation.mutate({
       mode: 'SEND_OTP',
       mobile,
-      // 917798246842
+      country_code,
     });
   };
 
@@ -75,12 +76,10 @@ export default function ({onPress}: {onPress: () => void}) {
       postData<SendOTPform, CheckNumResponse>(Urls.AUTH, credentials),
     onSuccess: data => {
       if (data.StatusCode === 200) {
-        storage.set(
-          'phone.number',
-          `${codeData.dial_code.replace(/\+/g, '')}${num}`,
-        );
+        storage.set('phone.number', `${num}`);
         storage.set('display.number', `${codeData.dial_code} ${num}`);
         storage.set('new.user', data.data.newuser);
+        storage.set('country.code', codeData.dial_code.replace(/\+/g, ''));
 
         onPress();
       } else {
@@ -172,11 +171,15 @@ export default function ({onPress}: {onPress: () => void}) {
                 returnKeyLabel: 'GO!',
                 dataDetectorTypes: 'phoneNumber',
                 cursorColor: '#fff',
-                selectionColor:'#2D2D2D'
+                selectionColor: '#2D2D2D',
               }}
               textInputStyle={{
                 letterSpacing: 3,
-                paddingHorizontal: 12,
+                color: '#fff',
+                fontFamily: 'PoppinsBold',
+                fontWeight: '700',
+                fontSize: 25,
+                lineHeight: 37.5,
               }}
             />
           </View>
