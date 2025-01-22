@@ -1,12 +1,13 @@
 import React from 'react';
 import {
+  Pressable,
   StyleProp,
   TextInput,
   TextInputProps,
   TextStyle,
   View,
 } from 'react-native';
-import {LocSVG} from '../assets/SVG/IconsSVG';
+import {CloseSVG, LocSVG, SearchSVG} from '../assets/SVG/IconsSVG';
 
 export default ({
   lable = '',
@@ -16,20 +17,41 @@ export default ({
   onChangeText,
   textInputProps,
   textInputStyle,
+  onRightButt,
 }: {
   lable?: string;
   value?: string;
-  iconName?: 'loc';
+  iconName?: 'loc' | 'search';
   iconsize?: number;
   onChangeText?: (val: string) => void;
   textInputProps?: TextInputProps;
   textInputStyle?: TextStyle;
+  onRightButt?: () => void;
 }) => {
   const icon = () => {
     switch (iconName) {
       case 'loc':
         return <LocSVG width={iconsize} height={iconsize} />;
+      case 'search':
+        return <SearchSVG width={iconsize} height={iconsize} />;
 
+      default:
+        return <></>;
+    }
+  };
+
+  const rightIcon = () => {
+    switch (iconName) {
+      case 'search':
+        return (
+          <Pressable onPress={onRightButt}>
+            <CloseSVG
+              fill={'#fff'}
+              width={iconsize * 1.8}
+              height={iconsize * 1.8}
+            />
+          </Pressable>
+        );
       default:
         return <></>;
     }
@@ -62,6 +84,7 @@ export default ({
         onChangeText={onChangeText}
         {...textInputProps}
       />
+      {rightIcon()}
     </View>
   );
 };

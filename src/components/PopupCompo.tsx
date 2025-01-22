@@ -3,7 +3,7 @@ import Modal from 'react-native-modal';
 import {memo} from 'react';
 import {MotiView, useAnimationState} from 'moti';
 import Text from './Text';
-import {FadeIn, FadeOut} from 'react-native-reanimated';
+import {FadeIn, FadeInUp, FadeOut} from 'react-native-reanimated';
 const {width, height} = Dimensions.get('screen');
 const space = 20;
 export default memo(
@@ -52,7 +52,7 @@ export default memo(
           alignItems: 'center',
         }}
         animationIn={'zoomIn'}
-        animationOut={'fadeOutDown'}
+        animationOut={'zoomOut'}
         onDismiss={onDismiss}
         onBackdropPress={onDismiss}
         onBackButtonPress={onDismiss}>
@@ -61,7 +61,7 @@ export default memo(
             <Text
               variant={'SubTitleTwo'}
               style={styles.title}
-              entering={FadeIn}
+              entering={FadeIn.delay(100)}
               exiting={FadeOut}>
               {title}
             </Text>
@@ -71,7 +71,7 @@ export default memo(
             <Text
               variant={'BodyRegular'}
               style={styles.disc}
-              entering={FadeIn}
+              entering={FadeIn.delay(200)}
               exiting={FadeOut}>
               {disc}
             </Text>
@@ -84,8 +84,16 @@ export default memo(
                 onPressOut={() => buttOneState.transitionTo('to')}
                 onPress={buttOnePress}
                 style={{flex: 1}}>
-                <MotiView style={styles.buttOne} state={buttOneState}>
-                  <Text variant={'SubTitleOne'} style={styles.buttOneTxt}>
+                <MotiView
+                  style={styles.buttOne}
+                  state={buttOneState}
+                  entering={FadeIn.delay(100)}
+                  exiting={FadeOut}>
+                  <Text
+                    variant={'SubTitleOne'}
+                    style={styles.buttOneTxt}
+                    entering={FadeIn.delay(200)}
+                    exiting={FadeOut}>
                     {buttOne}
                   </Text>
                 </MotiView>
@@ -96,8 +104,16 @@ export default memo(
               onPressOut={() => buttTwoState.transitionTo('to')}
               onPress={buttTwoPress}
               style={{flex: 1}}>
-              <MotiView style={styles.buttTwo} state={buttTwoState}>
-                <Text variant={'SubTitleOne'} style={styles.buttTwoTxt}>
+              <MotiView
+                style={styles.buttTwo}
+                state={buttTwoState}
+                entering={FadeIn.delay(100)}
+                exiting={FadeOut}>
+                <Text
+                  variant={'SubTitleOne'}
+                  style={styles.buttTwoTxt}
+                  entering={FadeIn.delay(200)}
+                  exiting={FadeOut}>
                   {buttTwo}
                 </Text>
               </MotiView>

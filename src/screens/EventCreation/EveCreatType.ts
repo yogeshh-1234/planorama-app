@@ -14,14 +14,15 @@ export interface eventItemType {
   link: string;
   eventHostIds: string;
   eventDisc: string;
-  rsvp: 'Y' | 'N' | 'M' | null;
+  rsvp: 'Y' | 'N' | 'M' | '' | null;
+  event_id: number | null;
 }
 export interface galleryForm {
   mode: string;
   token: string;
   id: string;
   event_id: number;
-  gallery: string[];
+  gallery: string;
 }
 export interface eventError {
   error: {

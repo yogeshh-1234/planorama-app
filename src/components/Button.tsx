@@ -1,5 +1,5 @@
 import {MotiView, useAnimationState} from 'moti';
-import React, {memo} from 'react';
+import React, {Component, FunctionComponent, memo} from 'react';
 import {Dimensions, Pressable, StyleSheet, TextStyle} from 'react-native';
 import Text from './Text';
 import {StyleProps} from 'react-native-reanimated';
@@ -18,6 +18,7 @@ export default memo(
     buttWidth = width * 0.9,
     disabled = false,
     variant = 'SubTitleOne',
+    icon=()=><></>,
     onPress,
   }: {
     lable: string;
@@ -28,6 +29,7 @@ export default memo(
     buttWidth?: number;
     disabled?: boolean;
     variant?: CustomVariantProp;
+    icon?: () => JSX.Element;
     onPress: () => void;
   }) => {
     const buttOneState = useAnimationState({
@@ -65,7 +67,9 @@ export default memo(
             buttonStyles,
           ]}
           state={buttTwoState}>
+            
           {loading && <ActivityIndicator color="#75486F" />}
+          {icon()}
           <Text
             variant={variant}
             style={[

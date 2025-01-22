@@ -26,7 +26,6 @@ export default function ({
   number: string;
   pic: string;
 }) {
-  
   const navigation = useNavigation<MainStackNavigation>();
 
   const onPress = () =>
@@ -38,7 +37,7 @@ export default function ({
       pic,
     });
 
-  // ProfileScreen
+  const onContacts = () => navigation.navigate('ContactsScreen',{eventID:-1});
   return (
     <View style={styles.container}>
       <View
@@ -55,6 +54,7 @@ export default function ({
         />
       </View>
       <Pressable
+        onPress={onContacts}
         style={{
           padding: 10,
         }}>

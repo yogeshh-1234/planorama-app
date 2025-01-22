@@ -1,30 +1,13 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {
-  Dimensions,
-  Image,
-  Keyboard,
-  Pressable,
-  StatusBar,
-  View,
-} from 'react-native';
-import Background from '../../components/Background';
-import BackgroundSVG from '../../assets/SVG/BackgroundSVG';
-import {BGline, IntroSVG} from '../../assets/SVG/VectorSVG';
+import {Dimensions, Keyboard, Pressable, View} from 'react-native';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
 import TextInput from '../../components/TextInput';
-import Animated, {
-  FadeIn,
-  FadeInUp,
-  FadeOut,
-  ZoomIn,
-  ZoomOut,
-} from 'react-native-reanimated';
+import Animated, {FadeIn, FadeInUp, FadeOut} from 'react-native-reanimated';
 import TitleCompo from './components/TitleCompo';
 import {CountryPicker} from 'react-native-country-codes-picker';
 import {DownSVG} from '../../assets/SVG/IconsSVG';
 import PopupCompo from '../../components/PopupCompo';
-import Loading from '../../components/Loading';
 import {useMutation} from '@tanstack/react-query';
 import {CheckNumResponse, ErrorFormat, SendOTPform} from './authType';
 import {postData} from '../../api';
@@ -131,13 +114,14 @@ export default function ({onPress}: {onPress: () => void}) {
         paddingHorizontal: width * 0.05,
         justifyContent: 'space-between',
       }}>
-      <View
+      <Animated.View
+        sharedTransitionTag="authTitle"
         style={{
           gap: height * 0.02,
         }}>
         <View />
         <TitleCompo />
-      </View>
+      </Animated.View>
       <View style={{gap: height * 0.02}}>
         <Animated.View
           entering={FadeIn.delay(400)}
@@ -145,17 +129,17 @@ export default function ({onPress}: {onPress: () => void}) {
           style={{flexDirection: 'row', alignItems: 'center'}}>
           <Pressable
             style={{
-              paddingHorizontal: 14,
+              paddingHorizontal: 8,
               paddingVertical: 12,
               flexDirection: 'row',
               alignItems: 'center',
               gap: 5,
             }}
             onPress={() => setShow(pre => !pre)}>
-            <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
+            <Text variant={'SubTitleOne'} style={{color: '#fff'}}>
               {codeData.flag} {codeData.dial_code}
             </Text>
-            <DownSVG width={20} height={20} />
+            <DownSVG width={18} height={18} />
           </Pressable>
           <View
             style={{

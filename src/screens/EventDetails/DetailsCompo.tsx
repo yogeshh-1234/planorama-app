@@ -1,8 +1,10 @@
-import React, {memo, useMemo, useState} from 'react';
+import React, {memo, useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Linking,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -17,6 +19,16 @@ import {
   ThumbsUpSVG,
 } from '../../assets/SVG/IconsSVG';
 import moment from 'moment';
+import Animated, {
+  FadeIn,
+  FadeInLeft,
+  FadeInUp,
+  FadeOut,
+  FadeOutLeft,
+  ZoomIn,
+  ZoomOut,
+} from 'react-native-reanimated';
+import {storage} from '../../functions/storage';
 const {width, height} = Dimensions.get('screen');
 
 export default function ({
@@ -28,9 +40,11 @@ export default function ({
   date,
   time,
   location,
+  isLink,
   description,
   rsvp,
   gallery,
+  galleryLoading = false,
 }: {
   title: string;
   fontId: string;
@@ -40,9 +54,11 @@ export default function ({
   date: string;
   time: string;
   location: string;
+  isLink: boolean;
   description: string;
   rsvp: 'Y' | 'N' | 'M' | null;
   gallery: string[];
+  galleryLoading?: boolean;
 }) {
   const fontName = useMemo(() => {
     let idx = fonts.findIndex(itm => itm.id === fontId);
@@ -55,6 +71,7 @@ export default function ({
   return (
     <View style={styles.container}>
       <Text
+        entering={FadeIn}
         variant={'DetailRegular'}
         style={[
           styles.title,
@@ -67,150 +84,207 @@ export default function ({
       <ImageCompo uri={cover_img} />
       <View style={styles.dateLoc}>
         <View style={styles.dateRow}>
-          <Text variant={'SubTitleOne'} style={styles.txtColor}>
-            {/* December 31, 2024 */}
-            {moment(date, 'DD/MM/YYYY').format('MMMM DD, YYYY')}
+          <Text
+            variant={'SubTitleOne'}
+            style={styles.txtColor}
+            entering={FadeInLeft.delay(200)}
+            exiting={FadeOutLeft}>
+            {date.length > 0 &&
+              moment(date, 'DD/MM/YYYY').format('MMMM DD, YYYY')}
           </Text>
-          <View
-            style={{
-              backgroundColor: '#F9BC52',
-              borderRadius: 6,
-              padding: 6,
-            }}>
-            <CalenderSVG width={20} height={20} fill={'#fff'} />
-          </View>
+          {date.length > 0 && (
+            <Animated.View
+              entering={ZoomIn.delay(400)}
+              exiting={ZoomOut}
+              style={{
+                backgroundColor: '#F9BC52',
+                borderRadius: 6,
+                padding: 6,
+              }}>
+              <CalenderSVG width={20} height={20} fill={'#fff'} />
+            </Animated.View>
+          )}
         </View>
-        <View style={styles.timeRow}>
+        <Animated.View
+          style={styles.timeRow}
+          entering={FadeInLeft.delay(300)}
+          exiting={FadeOutLeft}>
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
             }}>
-            <ClockSVG width={10} height={10} fill={'#fff'} />
+            {time.length > 0 && (
+              <ClockSVG width={10} height={10} fill={'#fff'} />
+            )}
             <Text variant={'DetailBold'} style={styles.txtColor}>
               {time}
             </Text>
           </View>
-          <View
+          <Pressable
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
-            }}>
-            <LocSVG width={10} height={10} fill={'#fff'} />
-            <Text variant={'DetailBold'} style={styles.txtColor}>
+            }}
+            onPress={
+              isLink
+                ? () => {
+                    Linking.openURL(location);
+                  }
+                : null
+            }>
+            {location.length > 0 && (
+              <LocSVG width={10} height={10} fill={'#fff'} />
+            )}
+            <Text
+              variant={'DetailBold'}
+              style={[
+                styles.txtColor,
+                {textDecorationLine: isLink ? 'underline' : 'none'},
+              ]}>
               {location}
             </Text>
-          </View>
-        </View>
-        {/* <View style={styles.hostDet}></View> */}
+          </Pressable>
+        </Animated.View>
+
       </View>
+      <HostedByCompo />
       <View>
-        <Text variant={'DetailBold'} style={styles.txtColor}>
+        <Text
+          variant={'DetailBold'}
+          style={styles.txtColor}
+          entering={FadeIn.delay(500)}
+          exiting={FadeOut}>
           {description}
         </Text>
       </View>
       <View>
-        {gallery.length > 0 && (
-          <ScrollView
-            horizontal
-            contentContainerStyle={{
-              gap: 10,
-              paddingVertical: 12,
+        {galleryLoading ? (
+          <View
+            style={{
+              height: width * 0.3,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              gap: 12,
             }}>
-            {gallery.map(itm => (
-              <Image
-                source={{uri: itm}}
-                style={{
-                  width: width * 0.3,
-                  height: width * 0.3,
-                  // borderRadius: 10,
-                }}
-              />
-            ))}
-          </ScrollView>
+            <ActivityIndicator color={'#fff'} />
+            <Text style={{color: '#fff'}} variant={'BodyRegular'}>
+              {' '}
+              Loading Gallery...
+            </Text>
+          </View>
+        ) : (
+          gallery.length > 0 && (
+            <ScrollView
+              horizontal
+              contentContainerStyle={{
+                gap: 10,
+                paddingVertical: 12,
+              }}>
+              {gallery.map((itm, idx) => (
+                <Animated.Image
+                  entering={FadeIn.delay(600 + idx * 50)}
+                  exiting={FadeOut}
+                  source={{uri: itm}}
+                  style={{
+                    width: width * 0.3,
+                    height: width * 0.3,
+                    borderRadius: 10,
+                  }}
+                />
+              ))}
+            </ScrollView>
+          )
         )}
-      </View>
-      <View>
-        <RSVPCompo value={rsvp} />
       </View>
     </View>
   );
 }
-const IconSize = width * 0.15;
-const RSVPCompo = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
-  return (
-    <View style={styles.rsvpRow}>
-      <View style={styles.rsvpCompo}>
-        <ThumbsUpSVG
-          width={IconSize}
-          height={IconSize}
-          fill={value === 'Y' ? '#FFF' : '#C5B1C3'}
-        />
-        <Text
-          variant={value === 'Y' ? 'SubTitleTwo' : 'BodyRegular'}
-          style={[styles.color_W]}>
-          Going
-        </Text>
-      </View>
-      <View style={styles.rsvpCompo}>
-        <QuesSVG
-          width={IconSize}
-          height={IconSize}
-          fill={value === 'M' ? '#FFF' : '#C5B1C3'}
-        />
-        <Text
-          variant={value === 'M' ? 'SubTitleTwo' : 'BodyRegular'}
-          style={[styles.color_W, {}]}>
-          May be
-        </Text>
-      </View>
-      <View style={styles.rsvpCompo}>
-        <ThumbsUpSVG
-          width={IconSize}
-          height={IconSize}
-          fill={value === 'N' ? '#FFF' : '#C5B1C3'}
-          style={{
-            transform: [{rotate: '180deg'}],
-          }}
-        />
-        <Text
-          variant={value === 'N' ? 'SubTitleTwo' : 'BodyRegular'}
-          style={[styles.color_W]}>
-          No
-        </Text>
-      </View>
-    </View>
-  );
-});
 const ImageCompo = memo(({uri}: {uri: string}) => {
   const [loading, setLoading] = useState(false);
   return (
-    <View
+    <Animated.View
       style={{
         alignItems: 'center',
         justifyContent: 'center',
-      }}>
-      <Image
-        style={styles.imgSty}
-        source={{uri}}
-        onLoadStart={() => setLoading(true)}
-        onLoadEnd={() => setLoading(false)}
+        width: width * 0.9,
+        height: width * 0.9,
+        borderRadius: 10,
+      }}
+      entering={FadeIn.delay(100)}
+      exiting={FadeOut}>
+      <ActivityIndicator
+        color={'#fff'}
+        size={'large'}
+        style={{
+          position: 'absolute',
+        }}
       />
+      {uri.length > 0 && (
+        <Image
+          style={styles.imgSty}
+          source={{uri}}
+          onLoadStart={() => setLoading(true)}
+          onLoadEnd={() => setLoading(false)}
+        />
+      )}
+    </Animated.View>
+  );
+});
+const HostedByCompo = memo(() => {
+  const [data, setProfileData] = useState({
+    name: '',
+    pic: '',
+  });
 
-      {loading && (
-        <ActivityIndicator
-          color={'#fff'}
-          size={'large'}
+  useEffect(() => {
+    const tempName = storage.getString('user.name');
+    const tempPic = storage.getString('user.pic');
+    if (
+      tempName !== null &&
+      tempName !== undefined &&
+      tempPic !== null &&
+      tempPic !== undefined
+    ) {
+      setProfileData({
+        pic: tempPic,
+        name: tempName,
+      });
+    }
+  }, []);
+
+  return (
+    <Animated.View
+      entering={FadeIn.delay(400)}
+      exiting={FadeOut}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+      }}>
+      {data.pic.length > 0 && (
+        <Image
+          source={{
+            uri: data.pic,
+          }}
           style={{
-            position: 'absolute',
+            width: 21,
+            height: 21,
+            borderRadius: 100,
           }}
         />
       )}
-    </View>
+      <Text variant={'BodyBold'} style={{color: '#F9BC52'}}>
+        {data.name}
+      </Text>
+    </Animated.View>
   );
 });
+
+
 const styles = StyleSheet.create({
   container: {
     gap: 21,
@@ -247,18 +321,5 @@ const styles = StyleSheet.create({
   color_W: {
     color: '#fff',
     lineHeight: 24,
-  },
-  rsvpRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  rsvpCompo: {
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-    backgroundColor: '#C5B1C33D',
-    borderRadius: 20,
-    paddingVertical: 24,
   },
 });

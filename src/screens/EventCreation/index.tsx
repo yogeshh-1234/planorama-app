@@ -13,7 +13,14 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInRight,
+  FadeOut,
+  SlideInRight,
+  ZoomIn,
+  ZoomOut,
+} from 'react-native-reanimated';
 import {BGline} from '../../assets/SVG/VectorSVG';
 import PopupCompo from '../../components/PopupCompo';
 import {
@@ -23,6 +30,7 @@ import {
   EditSVG,
   ImageSVG,
   QuesSVG,
+  SettingSVG,
   ThumbsUpSVG,
 } from '../../assets/SVG/IconsSVG';
 import Text from '../../components/Text';
@@ -41,8 +49,14 @@ import ColorPicker, {
 import {Switch} from 'react-native-paper';
 import {storage} from '../../functions/storage';
 import Contacts from 'react-native-contacts';
-import {CommonActions, useNavigation} from '@react-navigation/native';
-import {MainStackNavigation} from '../../navigation';
+import {
+  CommonActions,
+  RouteProp,
+  StackActions,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
+import {MainStackNavigation, RootStackParamList} from '../../navigation';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
@@ -57,7 +71,10 @@ import {
 import {postData} from '../../api';
 import LoadingCompo from '../../components/LoadingCompo';
 import HeaderCompo from '../../components/HeaderCompo';
-
+import {MotiView, useAnimationState} from 'moti';
+import CustomCheckBox from '../../components/CheckBox';
+import RSVPIconCompo from '../../components/RSVPIconCompo';
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 const PopupModal = {
@@ -73,11 +90,16 @@ const GapTwo = 12;
 export default function () {
   const navigation = useNavigation<MainStackNavigation>();
 
+  const {params} = useRoute<RouteProp<RootStackParamList, 'EventCreation'>>();
+  const editEvent = params.eventID ? true : false;
+
   const [titleData, setTitleData] = useState({
     value: '',
     fontID: fonts[0].id,
   });
-  const [mainImg, setMainImg] = useState('');
+  const [mainImg, setMainImg] = useState({
+    image: '',
+  });
   const [bgImg, setBg] = useState({
     colorCode: '',
     image: '',
@@ -96,11 +118,111 @@ export default function () {
 
   const [disc, setDisc] = useState('');
 
-  const [rsvpStatus, setRSVPStatus] = useState<'Y' | 'N' | 'M' | null>(null);
+  const [rsvpStatus, setRSVPStatus] = useState<'Y' | 'N' | 'M' | '' | null>(
+    null,
+  );
 
   const [galleryArr, setGalleryArr] = useState<string[]>([]);
 
   const [eventID, setEventID] = useState(-1);
+
+  useEffect(() => {
+    setEditData();
+  }, []);
+
+  const setEditData = async () => {
+    if (params?.eventData !== undefined) {
+      setLoading({
+        status: true,
+        text: 'Getting Event details',
+      });
+      setTitleData({
+        value: params?.eventData?.name,
+        fontID: params?.eventData?.font_id.toString(),
+      });
+
+      setDateTime({
+        date: params?.eventData?.date ? params?.eventData?.date : '',
+        time: params?.eventData?.time ? params?.eventData?.time : '',
+      });
+      setLocationData({
+        location:
+          params?.eventData?.location.length > 0
+            ? params?.eventData?.location
+            : params?.eventData?.link,
+        isOnline: params?.eventData?.type === 'off' ? false : true,
+      });
+
+      setDisc(params?.eventData?.event_disc);
+      setRSVPStatus(params?.eventData?.rsvp);
+
+      if (params?.eventData?.cover_img) {
+        await setEventImgFn(params.eventData.cover_img);
+      }
+      if (params.galleryData && params.galleryData.length > 0) {
+        await setGalleryFn(params?.galleryData);
+      }
+      setTimeout(() => {
+        setLoading({
+          status: false,
+          text: '',
+        });
+      }, 200);
+    }
+  };
+
+  const setEventImgFn = async (imgData: string) => {
+
+    try {
+      // Fetch the image
+      const response = await fetch(imgData);
+      const blob = await response.blob();
+
+      // Convert blob to Base64 using FileReader wrapped in a Promise
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(blob);
+      });
+      
+      setMainImg({
+        image: base64,
+      });
+    } catch (error) {
+      console.error('Error converting image to Base64:', error);
+    }
+  };
+
+  const setGalleryFn = async (galleryData: string[]) => {
+    const newGalleryArr = await Promise.all(
+      galleryData.map(async itm => {
+        try {
+          // Fetch the image
+          const response = await fetch(itm);
+          const blob = await response.blob();
+
+          // Convert blob to Base64 using FileReader wrapped in a Promise
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(blob);
+          });
+
+          return base64;
+        } catch (error) {
+          console.error('Error converting image to Base64:', error);
+          return null; // Return null for failed conversions
+        }
+      }),
+    );
+    // Filter out null values and ensure the type is string[]
+    const filteredGalleryArr = newGalleryArr.filter(
+      (item): item is string => item !== null,
+    );
+    setGalleryArr(filteredGalleryArr); // Correctly assign filtered array to state
+  };
 
   //
   const [loading, setLoading] = useState({
@@ -118,7 +240,7 @@ export default function () {
     if (popupModal.buttOne === 'BACK') {
       setPopupModal({...popupModal, state: false});
     } else if (popupModal.buttOne === 'CANCEL') {
-      navigateEvent();
+      navigateEvent(eventID);
       //
     } else {
       setPopupModal({...popupModal, state: false});
@@ -149,7 +271,7 @@ export default function () {
       });
       return;
     }
-    if (!(mainImg.length > 1)) {
+    if (!(mainImg.image.length > 1)) {
       setPopupModal({
         state: true,
         title: `Please Select Event Image!`,
@@ -208,12 +330,13 @@ export default function () {
       id !== undefined
     ) {
       const formData = {
-        mode: 'ADD_EVENT',
+        mode: editEvent ? 'UPDATE_EVENT' : 'ADD_EVENT',
         token: token,
         id: id,
+        event_id: editEvent ? (params.eventID ? params.eventID : null) : null,
         title: titleData.value,
         fontId: titleData.fontID,
-        cover_img: mainImg,
+        cover_img: mainImg.image,
         bg_img: bgImg.image,
         colorHex: bgImg.colorCode,
         date: dateTime.date,
@@ -225,11 +348,12 @@ export default function () {
         eventDisc: disc,
         rsvp: rsvpStatus,
       };
+
       setLoading({
         status: true,
         text: 'Saving Event...',
       });
-      
+
       mutation.mutate(formData);
     }
   };
@@ -238,20 +362,36 @@ export default function () {
     mutationFn: (formData: eventItemType) =>
       postData<eventItemType, eventSucccess>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
+      // event successfully registered
       if (StatusCode === 200) {
-        if (galleryArr.length > 0) {
+        // if gallery data exist
+        if (galleryArr.length > 0 || editEvent) {
           setLoading({
             status: true,
             text: 'Uploading Gallery...',
           });
-          setEventID(data.event_id);
-          saveGallery(data.event_id);
-        }else{
-          setLoading({
-            status: false,
-            text: '',
-          });
-          navigateEvent();
+
+          // save event ID
+          setEventID(
+            editEvent ? (params.eventID ? params.eventID : -1) : data.event_id,
+          );
+
+          // upload gallery
+          saveGallery(
+            editEvent ? (params.eventID ? params.eventID : -1) : data.event_id,
+          );
+        } else {
+          // else
+          // check if event settings exist
+          const tempSettingsData = storage.getString('SettingsData');
+          if (tempSettingsData !== null && tempSettingsData !== undefined) {
+            // save event settings for that event
+            setEventSettings(data.event_id);
+          } else {
+            // else navigate
+
+            navigateEvent(data.event_id);
+          }
         }
         //
       } else {
@@ -299,12 +439,13 @@ export default function () {
       id !== null &&
       id !== undefined
     ) {
+
       mutationGallery.mutate({
         mode: 'ADD_GALLERY',
         token: token,
         id: id,
         event_id,
-        gallery: galleryArr,
+        gallery: JSON.stringify(galleryArr),
       });
     }
   };
@@ -313,11 +454,16 @@ export default function () {
       postData<galleryForm, eventSucccess>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
       if (StatusCode === 200) {
-        setLoading({
-          status: false,
-          text: '',
-        });
-        navigateEvent();
+        // check if event settings exist
+        const tempSettingsData = storage.getString('SettingsData');
+        if (tempSettingsData !== null && tempSettingsData !== undefined) {
+          // save event settings for that event
+          setEventSettings(eventID);
+        } else {
+          // else navigate
+
+          navigateEvent(eventID);
+        }
       } else {
         setPopupModal({
           state: true,
@@ -354,34 +500,110 @@ export default function () {
     },
   });
 
-  const navigateEvent = () => {
-    const params = {
+  const setEventSettings = (event_id: number) => {
+    const tempSettingsData = storage.getString('SettingsData');
+    if (tempSettingsData !== null && tempSettingsData !== undefined) {
+      const token = storage.getString('user.token');
+      const id = storage.getString('user.id');
+      if (
+        token !== null &&
+        token !== undefined &&
+        id !== null &&
+        id !== undefined
+      ) {
+        mutationSettings.mutate({
+          ...JSON.parse(tempSettingsData),
+          mode: 'UPDATE_EVENT_CONFIG',
+          token,
+          id,
+          event_id: event_id,
+        });
+      }
+    } else {
+      navigateEvent(eventID);
+    }
+  };
+  const mutationSettings = useMutation<eventSucccess, eventError, galleryForm>({
+    mutationFn: (formData: galleryForm) =>
+      postData<galleryForm, eventSucccess>(Urls.EVENT, formData),
+    onSuccess: ({data, StatusCode}) => {
+      if (StatusCode === 200) {
+        navigateEvent(eventID);
+      } else {
+        setPopupModal({
+          state: true,
+          title: `Oops! Couldn't update Event Settings.${
+            StatusCode ? ` [${StatusCode}]` : ''
+          }`,
+          disc: "We couldn't complete your request, please try again!",
+          buttOne: 'CANCEL',
+          buttTwo: 'RETRY',
+        });
+      }
+      setLoading({
+        status: false,
+        text: '',
+      });
+    },
+    onError: (error: eventError) => {
+      setLoading({
+        status: false,
+        text: '',
+      });
+
+      setPopupModal({
+        state: true,
+        title: `Oops! Couldn't update Event Settings.${
+          error?.StatusCode ? ` [${error.StatusCode}]` : ''
+        }`,
+        disc: error?.error?.description
+          ? error.error.description
+          : "We couldn't complete your request, please try again!",
+        buttOne: 'CANCEL',
+        buttTwo: 'RETRY',
+      });
+    },
+  });
+
+  const navigateEvent = (newID?: number) => {
+    setLoading({
+      status: false,
+      text: '',
+    });
+    const paramstoSend = {
       title: titleData.value,
       fontId: titleData.fontID,
-      cover_img: mainImg,
+      cover_img: mainImg.image,
       bg_img: bgImg.image,
       colorHex: bgImg.colorCode,
       date: dateTime.date,
       time: dateTime.time,
-      location: locationData.location,
+      location: locationData.isOnline ? '' : locationData.location,
+      link: locationData.isOnline ? locationData.location : '',
       description: disc,
       rsvp: rsvpStatus,
       gallery: galleryArr,
-      id: eventID,
+      id: eventID === -1 ? newID : eventID,
     };
-    
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [
-          {name: 'HomeScreen'},
-          {
-            name: 'EventConfirmDetails',
-            params,
-          },
-        ],
-      }),
-    );
+    storage.delete('SettingsData');
+
+    if (editEvent === true) {
+      if (params.onGoBack) params.onGoBack();
+      navigation.goBack();
+    } else {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            {name: 'HomeScreen'},
+            {
+              name: 'EventConfirmDetails',
+              params: paramstoSend,
+            },
+          ],
+        }),
+      );
+    }
   };
 
   return (
@@ -419,121 +641,135 @@ export default function () {
           resizeMode={bgImg.repeat ? 'repeat' : 'cover'}
         />
       )}
-      <ScrollView
-        contentContainerStyle={{
-          // paddingTop: height * 0.03,
-          paddingBottom: height * 0.04,
-        }}>
-        <View
-          style={{
-            width: width * 0.85,
-            alignSelf: 'center',
-            gap: GapOne,
+      {!loading.status && (
+        <ScrollView
+          contentContainerStyle={{
+            // paddingTop: height * 0.03,
+            paddingBottom: height * 0.04,
           }}>
-          <Text
-            variant={'TitleTwo'}
-            style={[styles.color_W, {alignSelf: 'center', paddingBottom: 18}]}>
-            Create Event
-          </Text>
-
-          <EventTitleCompo
-            onTitleChange={value => {
-              setTitleData(pre => ({
-                ...pre,
-                value,
-              }));
-            }}
-            onFontChange={fontID => {
-              setTitleData(pre => ({
-                ...pre,
-                fontID,
-              }));
-            }}
-          />
-
-          <ImageCompo
-            getImage={baseImg => {
-              setMainImg(baseImg);
-            }}
-          />
-
-          <BackgroundDataCompo
-            updateImg={image => {
-              setBg(pre => ({
-                ...pre,
-                image,
-                colorCode: '',
-              }));
-            }}
-            changeRepeat={repeat => {
-              setBg(pre => ({
-                ...pre,
-                repeat,
-              }));
-            }}
-            getcolorCode={colorCode => {
-              setBg(pre => ({
-                ...pre,
-                colorCode,
-                image: '',
-                repeat: false,
-              }));
-            }}
-          />
-          <DateTimeCompo
-            defDate={dateTime.date}
-            defTime={dateTime.time}
-            onDateChange={dt => {
-              setDateTime(pre => ({...pre, date: dt}));
-            }}
-            onTimeChange={tm => {
-              setDateTime(pre => ({...pre, time: tm}));
-            }}
-          />
-
-          <LocationCompo
-            updateLocation={(val, isOn) => {
-              setLocationData({
-                location: val,
-                isOnline: isOn,
-              });
-            }}
-          />
-
-          <HostedByCompo />
-
-          <EventDiscCompo setDisc={setDisc} />
-
-          <GalleryCompo
-            galleryArr={galleryArr}
-            setGalleryArr={(val: any) => setGalleryArr(val)}
-          />
-
-          <RSVPCompo
-            onPress={val => {
-              setRSVPStatus(val);
-            }}
-          />
-
           <View
             style={{
-              alignItems: 'center',
+              width: width * 0.85,
               alignSelf: 'center',
-              marginVertical: 24,
+              gap: GapOne,
             }}>
-            <Button
-              lable="Save Event"
-              onPress={onSubmit}
-              buttonStyles={{
-                backgroundColor: '#F9BC52',
-                borderRadius: 500,
-                paddingVertical: 12,
+            <Text
+              variant={'TitleTwo'}
+              entering={FadeIn}
+              exiting={FadeOut}
+              style={[
+                styles.color_W,
+                {alignSelf: 'center', paddingBottom: 18},
+              ]}>
+              {editEvent ? 'Edit' : 'Create'} Event
+            </Text>
+
+            <EventTitleCompo
+              titleData={titleData}
+              onTitleChange={value => {
+                setTitleData(pre => ({
+                  ...pre,
+                  value,
+                }));
               }}
-              variant="BodyBold"
+              onFontChange={fontID => {
+                setTitleData(pre => ({
+                  ...pre,
+                  fontID,
+                }));
+              }}
             />
+
+            <ImageCompo
+              mainImg={mainImg.image}
+              getImage={baseImg => {
+                setMainImg({
+                  image: baseImg,
+                });
+              }}
+            />
+
+            <BackgroundDataCompo
+              updateImg={image => {
+                setBg(pre => ({
+                  ...pre,
+                  image,
+                  colorCode: '',
+                }));
+              }}
+              changeRepeat={repeat => {
+                setBg(pre => ({
+                  ...pre,
+                  repeat,
+                }));
+              }}
+              getcolorCode={colorCode => {
+                setBg(pre => ({
+                  ...pre,
+                  colorCode,
+                  image: '',
+                  repeat: false,
+                }));
+              }}
+            />
+            <DateTimeCompo
+              defDate={dateTime.date}
+              defTime={dateTime.time}
+              onDateChange={dt => {
+                setDateTime(pre => ({...pre, date: dt}));
+              }}
+              onTimeChange={tm => {
+                setDateTime(pre => ({...pre, time: tm}));
+              }}
+            />
+
+            <LocationCompo
+              locationData={locationData}
+              updateLocation={(val, isOn) => {
+                setLocationData({
+                  location: val,
+                  isOnline: isOn,
+                });
+              }}
+            />
+
+            <HostedByCompo />
+
+            <EventDiscCompo disc={disc} setDisc={setDisc} />
+
+            <GalleryCompo
+              galleryArr={galleryArr}
+              setGalleryArr={(val: any) => setGalleryArr(val)}
+            />
+
+            <RSVPCompo
+              rsvpStatus={rsvpStatus}
+              onPress={val => {
+                setRSVPStatus(val);
+              }}
+            />
+
+            <View
+              style={{
+                alignItems: 'center',
+                alignSelf: 'center',
+                marginVertical: 24,
+              }}>
+              <Button
+                lable="Save Event"
+                onPress={onSubmit}
+                buttonStyles={{
+                  backgroundColor: '#F9BC52',
+                  borderRadius: 500,
+                  paddingVertical: 12,
+                }}
+                variant="BodyBold"
+              />
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
+      <SetingsIcon />
       {loading.status && <LoadingCompo text={loading.text} />}
       <PopupCompo
         isVisible={popupModal.state}
@@ -548,23 +784,78 @@ export default function () {
     </Animated.View>
   );
 }
+const SetingsIcon = memo(() => {
+  const navigation = useNavigation<MainStackNavigation>();
 
+  const buttState = useAnimationState({
+    from: {
+      rotate: '-45deg',
+    },
+    to: {
+      rotate: '0deg',
+    },
+    pressd: {rotate: '-45deg'},
+  });
+  return (
+    <Pressable
+      style={{
+        borderRadius: 100,
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        backgroundColor: '#C5B1C3',
+      }}
+      onPressIn={() => buttState.transitionTo('pressd')}
+      onPressOut={() => buttState.transitionTo('to')}
+      onPress={() => {
+        navigation.navigate('EventSettingsScreen', {});
+      }}>
+      <MotiView
+        style={{
+          borderRadius: 100,
+          padding: 12,
+        }}
+        state={buttState}>
+        <SettingSVG width={35} height={35} fill={'#fff'} />
+      </MotiView>
+    </Pressable>
+  );
+});
 const EventTitleCompo = memo(
   ({
+    titleData,
     onTitleChange,
     onFontChange,
   }: {
+    titleData: {
+      value: string;
+      fontID: string;
+    };
     onTitleChange: (val: string) => void;
     onFontChange: (val: string) => void;
   }) => {
     const [val, setVal] = useState('');
     const [selectedFont, setSelectedFont] = useState(fonts[0]);
+
+    useEffect(() => {
+      setVal(titleData.value);
+      let fontIdx = fonts.findIndex(
+        itm => itm.id.toString() === titleData.fontID.toString(),
+      );
+      if (fontIdx !== -1) {
+        setSelectedFont(fonts[fontIdx]);
+      }
+    }, []);
+
     return (
-      <View
+      <Animated.View
         style={{
           gap: GapTwo,
         }}>
-        <View style={styles.inputContain}>
+        <Animated.View
+          style={styles.inputContain}
+          entering={FadeIn.delay(150)}
+          exiting={FadeOut}>
           <Text variant={'BodyRegular'} style={[styles.color_W]}>
             Event Title
           </Text>
@@ -583,9 +874,13 @@ const EventTitleCompo = memo(
               color: '#fff',
             }}
           />
-        </View>
+        </Animated.View>
         <View>
-          <ScrollView horizontal contentContainerStyle={{gap: 10}}>
+          <Animated.ScrollView
+            horizontal
+            contentContainerStyle={{gap: 10}}
+            entering={FadeInRight.delay(300)}
+            exiting={FadeOut}>
             {fonts.map(itm => (
               <FontItem
                 lable={itm.lable}
@@ -597,9 +892,9 @@ const EventTitleCompo = memo(
                 }}
               />
             ))}
-          </ScrollView>
+          </Animated.ScrollView>
         </View>
-      </View>
+      </Animated.View>
     );
   },
 );
@@ -643,126 +938,138 @@ const FontItem = memo(
   },
 );
 
-const ImageCompo = memo(({getImage}: {getImage: (val: string) => void}) => {
-  const [imageUri, setImageUri] = useState<{
-    base64: string | undefined;
-  }>({
-    base64: '',
-  });
-  const handleUploadImage = () => {
-    Alert.alert(
-      'Upload Image',
-      'Choose an option:',
-      [
-        {
-          text: 'Capture Image',
-          onPress: () => {
-            launchCamera(
-              {
-                mediaType: 'photo',
-                maxHeight: 500,
-                maxWidth: 500,
-                includeBase64: true,
-              },
-              response => {
-                if (response.didCancel) {
-                  // console.log('User cancelled image capture');
-                } else if (response.errorCode) {
-                  // console.log('Camera Error:', response.errorMessage);
-                } else if (response.assets && response.assets.length > 0) {
-                  setImageUri({
-                    base64: `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
-                  });
-                  getImage(
-                    `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
-                  );
-                }
-              },
-            );
+const ImageCompo = memo(
+  ({mainImg, getImage}: {mainImg: string; getImage: (val: string) => void}) => {
+    //
+    const [imageUri, setImageUri] = useState<{
+      base64: string | undefined;
+    }>({
+      base64: '',
+    });
+
+    useEffect(() => {
+      setImageUri({
+        base64: mainImg,
+      });
+    }, []);
+
+    const handleUploadImage = () => {
+      Alert.alert(
+        'Upload Image',
+        'Choose an option:',
+        [
+          {
+            text: 'Capture Image',
+            onPress: () => {
+              launchCamera(
+                {
+                  mediaType: 'photo',
+                  maxHeight: 500,
+                  maxWidth: 500,
+                  includeBase64: true,
+                },
+                response => {
+                  if (response.didCancel) {
+                    // console.log('User cancelled image capture');
+                  } else if (response.errorCode) {
+                    // console.log('Camera Error:', response.errorMessage);
+                  } else if (response.assets && response.assets.length > 0) {
+                    setImageUri({
+                      base64: `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                    });
+                    getImage(
+                      `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                    );
+                  }
+                },
+              );
+            },
           },
-        },
-        {
-          text: 'Select from Gallery',
-          onPress: () => {
-            launchImageLibrary(
-              {
-                mediaType: 'photo',
-                maxHeight: 500,
-                maxWidth: 500,
-                selectionLimit: 1,
-                includeBase64: true,
-              },
-              response => {
-                if (response.didCancel) {
-                  // console.log('User cancelled image picker');
-                } else if (response.errorCode) {
-                  // console.log('Gallery Error:', response.errorMessage);
-                } else if (response.assets && response.assets.length > 0) {
-                  setImageUri({
-                    base64: `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
-                  });
-                  getImage(
-                    `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
-                  );
-                }
-              },
-            );
+          {
+            text: 'Select from Gallery',
+            onPress: () => {
+              launchImageLibrary(
+                {
+                  mediaType: 'photo',
+                  maxHeight: 500,
+                  maxWidth: 500,
+                  selectionLimit: 1,
+                  includeBase64: true,
+                },
+                response => {
+                  if (response.didCancel) {
+                    // console.log('User cancelled image picker');
+                  } else if (response.errorCode) {
+                    // console.log('Gallery Error:', response.errorMessage);
+                  } else if (response.assets && response.assets.length > 0) {
+                    setImageUri({
+                      base64: `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                    });
+                    getImage(
+                      `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                    );
+                  }
+                },
+              );
+            },
           },
-        },
-        {text: 'Cancel', style: 'cancel'},
-      ],
-      {cancelable: true},
-    );
-  };
-  return (
-    <Pressable
-      style={{
-        width: width * 0.85,
-        height: width * 0.85,
-        borderRadius: 10,
-        backgroundColor: '#C5B1C33D',
-      }}
-      onPress={handleUploadImage}>
-      <Image
-        source={
-          imageUri?.base64
-            ? {uri: imageUri.base64}
-            : require('../../assets/images/EventImg.png')
-        }
+          {text: 'Cancel', style: 'cancel'},
+        ],
+        {cancelable: true},
+      );
+    };
+    return (
+      <AnimatedPressable
         style={{
-          width: '100%',
-          height: '100%',
+          width: width * 0.85,
+          height: width * 0.85,
           borderRadius: 10,
+          backgroundColor: '#gTttwtytwyy',
         }}
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: width * 0.5,
-          paddingTop: width * 0.2,
-          bottom: 0,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row',
-          gap: 6,
-          borderBottomLeftRadius: 10,
-          borderBottomRightRadius: 10,
-        }}>
-        <EditSVG width={20} height={20} />
-        <Text
-          variant={'BodyRegular'}
+        entering={FadeIn.delay(400)}
+        exiting={FadeOut}
+        onPress={handleUploadImage}>
+        <Image
+          source={
+            imageUri?.base64
+              ? {uri: imageUri.base64}
+              : require('../../assets/images/EventImg.png')
+          }
           style={{
-            color: '#fff',
+            width: '100%',
+            height: '100%',
+            borderRadius: 10,
+          }}
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.8)']}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: width * 0.5,
+            paddingTop: width * 0.2,
+            bottom: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 6,
+            borderBottomLeftRadius: 10,
+            borderBottomRightRadius: 10,
           }}>
-          Edit image
-        </Text>
-      </LinearGradient>
-    </Pressable>
-  );
-});
+          <EditSVG width={20} height={20} />
+          <Text
+            variant={'BodyRegular'}
+            style={{
+              color: '#fff',
+            }}>
+            Edit image
+          </Text>
+        </LinearGradient>
+      </AnimatedPressable>
+    );
+  },
+);
 
 const BackgroundDataCompo = memo(
   ({
@@ -852,136 +1159,108 @@ const BackgroundDataCompo = memo(
       );
     };
     return (
-      <View
+      <Animated.View
         style={{
           gap: GapTwo,
-        }}>
+        }}
+        entering={FadeIn.delay(500)}
+        exiting={FadeOut}>
         <Text variant={'BodyRegular'} style={[styles.color_W]}>
-          Background
+          Theme
         </Text>
-        <View
+        <Pressable
+          onPress={() => {
+            ToastAndroid.showWithGravity(
+              'Coming Soon',
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER,
+            );
+          }}
           style={{
             flexDirection: 'row',
-            gap: 18,
+            alignItems: 'center',
+            gap: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 14,
+            backgroundColor: '#C5B1C33D',
+            flex: 1,
+            borderRadius: 10,
           }}>
-          <Pressable
+          <View
             style={{
-              backgroundColor: '#fff',
-              borderRadius: 10,
-              flex: 1,
-              paddingVertical: 16,
-              alignItems: 'center',
+              width: 20,
+              height: 20,
+              borderRadius: 20,
+              backgroundColor: '#212121',
+              borderWidth: 1,
+              borderColor: '#fff',
             }}
-            onPress={handleUploadImage}>
-            <Text variant={'DetailBold'} style={{color: '#2D2D2D'}}>
-              Upload image
-            </Text>
-          </Pressable>
-          {imageUri.base64.length > 0 && (
-            <Pressable
-              style={{
-                backgroundColor: repeat ? '#ffffffA1' : '#fff',
-                borderRadius: 10,
-                // flex: 1,
-                paddingHorizontal: 12,
-                paddingVertical: 16,
-                alignItems: 'center',
-              }}
-              onPress={() => {
-                setRepeat(pre => {
-                  changeRepeat(!pre);
-                  return !pre;
-                });
-              }}>
-              <Text variant={'DetailBold'} style={{color: '#2D2D2D'}}>
-                Repeat
-              </Text>
-            </Pressable>
-          )}
-          <Pressable
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: 10,
-              flex: 1,
-              paddingVertical: 16,
-              alignItems: 'center',
-            }}
-            onPress={() => setIsVisible(true)}>
-            <Text variant={'DetailBold'} style={{color: '#2D2D2D'}}>
-              Choose color
-            </Text>
-          </Pressable>
-        </View>
-        <ColorPickerModal
-          isVisible={isVisible}
-          onDismiss={onDismiss}
-          onPress={hex => {
-            onDismiss();
-            getcolorCode(hex);
-            setImageUri({base64: ''});
-          }}
-        />
-      </View>
+          />
+          <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+            Select Theme
+          </Text>
+        </Pressable>
+      </Animated.View>
     );
   },
 );
 
-const ColorPickerModal = memo(
-  ({
-    isVisible,
-    onDismiss,
-    onPress,
-  }: {
-    isVisible: boolean;
-    onDismiss: () => void;
-    onPress: (val: string) => void;
-  }) => {
-    const onSelectColor = ({hex}: {hex: string}) => {
-      setHexCode(hex);
-    };
-    const [hexCode, setHexCode] = useState('');
-    return (
-      <Modal
-        isVisible={isVisible}
-        style={{
-          alignItems: 'center',
-        }}
-        animationIn={'zoomIn'}
-        animationOut={'fadeOutDown'}
-        onDismiss={onDismiss}
-        onBackdropPress={onDismiss}
-        onBackButtonPress={onDismiss}>
-        <View
-          style={{
-            backgroundColor: '#fff',
-            borderRadius: 18,
-            padding: width * 0.05,
-          }}>
-          <ColorPicker
-            style={{width: '70%', gap: 10}}
-            value="#75486F"
-            onComplete={onSelectColor}>
-            <Preview />
-            <Panel1 />
-            <HueSlider />
-            <OpacitySlider />
-            <Swatches />
-          </ColorPicker>
-          <Button
-            lable="Confirm"
-            onPress={() => onPress(hexCode)}
-            buttonStyles={{
-              width: 'auto',
-              paddingHorizontal: 12,
-              paddingVertical: 12,
-              backgroundColor: '#75486F',
-            }}
-          />
-        </View>
-      </Modal>
-    );
-  },
-);
+// const ColorPickerModal = memo(
+//   ({
+//     isVisible,
+//     onDismiss,
+//     onPress,
+//   }: {
+//     isVisible: boolean;
+//     onDismiss: () => void;
+//     onPress: (val: string) => void;
+//   }) => {
+//     const onSelectColor = ({hex}: {hex: string}) => {
+//       setHexCode(hex);
+//     };
+//     const [hexCode, setHexCode] = useState('');
+//     return (
+//       <Modal
+//         isVisible={isVisible}
+//         style={{
+//           alignItems: 'center',
+//         }}
+//         animationIn={'zoomIn'}
+//         animationOut={'fadeOutDown'}
+//         onDismiss={onDismiss}
+//         onBackdropPress={onDismiss}
+//         onBackButtonPress={onDismiss}>
+//         <View
+//           style={{
+//             backgroundColor: '#fff',
+//             borderRadius: 18,
+//             padding: width * 0.05,
+//           }}>
+//           <ColorPicker
+//             style={{width: '70%', gap: 10}}
+//             value="#75486F"
+//             onComplete={onSelectColor}>
+//             <Preview />
+//             <Panel1 />
+//             <HueSlider />
+//             <OpacitySlider />
+//             <Swatches />
+//           </ColorPicker>
+//           <Button
+//             lable="Confirm"
+//             onPress={() => onPress(hexCode)}
+//             buttonStyles={{
+//               width: 'auto',
+//               paddingHorizontal: 12,
+//               paddingVertical: 12,
+//               backgroundColor: '#75486F',
+//             }}
+//           />
+//         </View>
+//       </Modal>
+//     );
+//   },
+// );
 
 const DateTimeCompo = memo(
   ({
@@ -1033,10 +1312,12 @@ const DateTimeCompo = memo(
     };
 
     return (
-      <View
+      <Animated.View
         style={{
           gap: GapTwo,
-        }}>
+        }}
+        entering={FadeIn.delay(600)}
+        exiting={FadeOut}>
         <Text variant={'BodyRegular'} style={[styles.color_W]}>
           Date & Time of the event
         </Text>
@@ -1091,27 +1372,65 @@ const DateTimeCompo = memo(
           onConfirm={handleConfirm}
           onCancel={hideDatePicker}
         />
-      </View>
+      </Animated.View>
     );
   },
 );
 
 const LocationCompo = memo(
   ({
+    locationData,
     updateLocation,
   }: {
+    locationData: {location: string; isOnline: boolean};
     updateLocation: (val: string, isOn: boolean) => void;
   }) => {
-    const [value, setValue] = useState('');
-    const [online, setOnline] = useState(false);
+    const [value, setValue] = useState(locationData.location);
+    const [online, setOnline] = useState(locationData.isOnline);
     return (
-      <View
+      <Animated.View
         style={{
           gap: GapTwo,
-        }}>
-        <Text variant={'BodyRegular'} style={[styles.color_W]}>
-          Location / Link
-        </Text>
+        }}
+        entering={FadeIn.delay(700)}
+        exiting={FadeOut}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+          <Text variant={'BodyRegular'} style={[styles.color_W]}>
+            {online ? 'Link URL' : 'Location'}
+          </Text>
+          <Pressable
+            onPress={() => {
+              setOnline(pre => {
+                updateLocation(value, !pre);
+                return !pre;
+              });
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+            <CustomCheckBox
+              checked={online}
+              height={20}
+              width={20}
+              checkMarkColor={'#fff'}
+              checkedBorderColor={'#fff'}
+              unCheckedBorderColor={'#fff'}
+              checkedBackgroundColor={'#fff'}
+              unCheckedBackgroundColor={'#fff'}
+              duration={300}
+            />
+            <Text variant={'BodyRegular'} style={styles.color_W}>
+              Online
+            </Text>
+          </Pressable>
+        </View>
         <TextInput
           value={value}
           onChangeText={text => {
@@ -1129,7 +1448,7 @@ const LocationCompo = memo(
           }}
           iconName="loc"
         />
-        <View
+        {/* <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -1143,8 +1462,8 @@ const LocationCompo = memo(
           <Text variant={'BodyRegular'} style={styles.color_W}>
             Online
           </Text>
-        </View>
-      </View>
+        </View> */}
+      </Animated.View>
     );
   },
 );
@@ -1172,7 +1491,9 @@ const HostedByCompo = memo(() => {
   }, []);
 
   return (
-    <View
+    <Animated.View
+      entering={FadeIn.delay(800)}
+      exiting={FadeOut}
       style={{
         gap: GapTwo,
       }}>
@@ -1189,21 +1510,30 @@ const HostedByCompo = memo(() => {
           borderRadius: 10,
           backgroundColor: '#C5B1C33D',
         }}>
-        <Image
-          source={{
-            uri: data.pic,
-          }}
-          style={{
-            width: 21,
-            height: 21,
-            borderRadius: 100,
-          }}
-        />
+        {data.pic.length > 0 && (
+          <Image
+            source={{
+              uri: data.pic,
+            }}
+            style={{
+              width: 21,
+              height: 21,
+              borderRadius: 100,
+            }}
+          />
+        )}
         <Text variant={'BodyBold'} style={{color: '#fff'}}>
           {data.name}
         </Text>
       </View>
-      <View
+      <Pressable
+        onPress={() => {
+          ToastAndroid.showWithGravity(
+            'Coming Soon',
+            ToastAndroid.SHORT,
+            ToastAndroid.CENTER,
+          );
+        }}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -1217,43 +1547,47 @@ const HostedByCompo = memo(() => {
         <Text style={{color: '#ffffff80'}} variant={'BodyRegular'}>
           + Add Co host
         </Text>
-      </View>
-    </View>
+      </Pressable>
+    </Animated.View>
   );
 });
 
-const EventDiscCompo = memo(({setDisc}: {setDisc: (val: string) => void}) => {
-  const [value, setValue] = useState('');
-  return (
-    <View
-      style={{
-        gap: GapTwo,
-      }}>
-      <Text variant={'BodyRegular'} style={[styles.color_W]}>
-        Event Description
-      </Text>
-      <TextInput
-        textInputStyle={{
-          fontFamily: 'PoppinsBold',
-          fontWeight: '700',
-          letterSpacing: 0,
-          fontSize: 14,
-          lineHeight: 21,
-          minHeight: 100,
+const EventDiscCompo = memo(
+  ({setDisc, disc}: {setDisc: (val: string) => void; disc: string}) => {
+    const [value, setValue] = useState(disc);
+    return (
+      <Animated.View
+        style={{
+          gap: GapTwo,
         }}
-        textInputProps={{
-          multiline: true,
-          textAlignVertical: 'top',
-        }}
-        value={value}
-        onChangeText={txt => {
-          setValue(txt);
-          setDisc(txt);
-        }}
-      />
-    </View>
-  );
-});
+        entering={FadeIn.delay(900)}
+        exiting={FadeOut}>
+        <Text variant={'BodyRegular'} style={[styles.color_W]}>
+          Event Description
+        </Text>
+        <TextInput
+          textInputStyle={{
+            fontFamily: 'PoppinsBold',
+            fontWeight: '700',
+            letterSpacing: 0,
+            fontSize: 14,
+            lineHeight: 21,
+            minHeight: 100,
+          }}
+          textInputProps={{
+            multiline: true,
+            textAlignVertical: 'top',
+          }}
+          value={value}
+          onChangeText={txt => {
+            setValue(txt);
+            setDisc(txt);
+          }}
+        />
+      </Animated.View>
+    );
+  },
+);
 
 const GalleryCompo = memo(
   ({
@@ -1321,7 +1655,10 @@ const GalleryCompo = memo(
       );
     };
     return (
-      <View style={styles.viewSty}>
+      <Animated.View
+        style={styles.viewSty}
+        entering={FadeIn.delay(1000)}
+        exiting={FadeOut}>
         <Text variant={'BodyRegular'} style={[styles.color_W]}>
           Photo Gallery
         </Text>
@@ -1332,6 +1669,8 @@ const GalleryCompo = memo(
             paddingVertical: 12,
           }}>
           <Pressable
+            key={0}
+            android_ripple={{color: `#ffffff80`, borderless: false}}
             style={styles.imgGalleryUp}
             onPress={() => {
               handleUploadImage();
@@ -1341,8 +1680,10 @@ const GalleryCompo = memo(
               Upload Image
             </Text>
           </Pressable>
+
           {galleryArr.map((itm, idx) => (
             <GalleryItem
+              key={idx + 1}
               uri={itm}
               removeImg={() => {
                 const arr = galleryArr;
@@ -1355,7 +1696,7 @@ const GalleryCompo = memo(
             />
           ))}
         </ScrollView>
-      </View>
+      </Animated.View>
     );
   },
 );
@@ -1364,7 +1705,9 @@ const GalleryItem = memo(
     const [delStatus, setDelStatus] = useState(false);
 
     return (
-      <Pressable
+      <AnimatedPressable
+        entering={ZoomIn}
+        exiting={ZoomOut}
         onPressIn={() => setDelStatus(true)}
         onPressOut={() => setDelStatus(false)}
         onLongPress={() => {
@@ -1403,16 +1746,24 @@ const GalleryItem = memo(
             <BinSVG width={16} height={16} fill="#fff" />
           </Pressable>
         )}
-      </Pressable>
+      </AnimatedPressable>
     );
   },
 );
 const IconSize = width * 0.15;
 const RSVPCompo = memo(
-  ({onPress}: {onPress: (val: 'Y' | 'N' | 'M') => void}) => {
-    const [value, setValue] = useState('');
+  ({
+    rsvpStatus,
+    onPress,
+  }: {
+    rsvpStatus: 'Y' | 'N' | 'M' | '' | null;
+    onPress: (val: 'Y' | 'N' | 'M') => void;
+  }) => {
+    const [value, setValue] = useState(rsvpStatus);
     return (
-      <View
+      <Animated.View
+        entering={FadeIn.delay(1100)}
+        exiting={FadeOut}
         style={{
           gap: GapTwo,
         }}>
@@ -1425,93 +1776,91 @@ const RSVPCompo = memo(
             alignItems: 'center',
             gap: 12,
           }}>
-          <Pressable
-            style={{
-              alignItems: 'center',
-              gap: 12,
-              flex: 1,
-            }}
+          <RSVPcompoItem
             onPress={() => {
               onPress('Y');
               setValue('Y');
-            }}>
-            <ThumbsUpSVG
-              width={IconSize}
-              height={IconSize}
-              fill={value === 'Y' ? '#FFF' : '#C5B1C3'}
-            />
-            <Text
-              variant={value === 'Y' ? 'SubTitleTwo' : 'BodyRegular'}
-              style={[
-                styles.color_W,
-                {
-                  lineHeight: 24,
-                },
-              ]}>
-              Going
-            </Text>
-          </Pressable>
-          <Pressable
-            style={{
-              alignItems: 'center',
-              gap: 12,
-              flex: 1,
             }}
+            icon="Y"
+            selected={value === 'Y'}
+            lable={'Going'}
+          />
+          <RSVPcompoItem
             onPress={() => {
               onPress('M');
               setValue('M');
-            }}>
-            <QuesSVG
-              width={IconSize}
-              height={IconSize}
-              fill={value === 'M' ? '#FFF' : '#C5B1C3'}
-            />
-            <Text
-              variant={value === 'M' ? 'SubTitleTwo' : 'BodyRegular'}
-              style={[
-                styles.color_W,
-                {
-                  lineHeight: 24,
-                },
-              ]}>
-              May be
-            </Text>
-          </Pressable>
-          <Pressable
-            style={{
-              alignItems: 'center',
-              gap: 12,
-              flex: 1,
             }}
+            icon="M"
+            selected={value === 'M'}
+            lable={'May be'}
+          />
+          <RSVPcompoItem
             onPress={() => {
               onPress('N');
               setValue('N');
-            }}>
-            <ThumbsUpSVG
-              width={IconSize}
-              height={IconSize}
-              fill={value === 'N' ? '#FFF' : '#C5B1C3'}
-              style={{
-                transform: [{rotate: '180deg'}],
-              }}
-            />
-            <Text
-              variant={value === 'N' ? 'SubTitleTwo' : 'BodyRegular'}
-              style={[
-                styles.color_W,
-                {
-                  lineHeight: 24,
-                },
-              ]}>
-              No
-            </Text>
-          </Pressable>
+            }}
+            icon="N"
+            selected={value === 'N'}
+            lable={'No'}
+          />
         </View>
-      </View>
+      </Animated.View>
     );
   },
 );
-
+const RSVPcompoItem = ({
+  selected,
+  icon,
+  lable,
+  onPress,
+}: {
+  selected: boolean;
+  icon: string;
+  lable: string;
+  onPress: () => void;
+}) => {
+  const buttState = useAnimationState({
+    from: {
+      scale: 0.95,
+    },
+    to: {
+      scale: 1,
+    },
+    pressd: {scale: 1.05},
+  });
+  return (
+    <Pressable
+      style={{
+        flex: 1,
+      }}
+      onPress={onPress}
+      onPressIn={() => buttState.transitionTo('pressd')}
+      onPressOut={() => buttState.transitionTo('to')}>
+      <MotiView
+        style={{
+          alignItems: 'center',
+          gap: 12,
+        }}
+        state={buttState}>
+        <RSVPIconCompo
+          fill={selected ? '#FFF' : '#C5B1C3'}
+          icon={icon}
+          size={IconSize}
+        />
+        <Text
+          variant={selected ? 'SubTitleTwo' : 'BodyRegular'}
+          style={[
+            styles.color_W,
+            {
+              lineHeight: 24,
+            },
+          ]}>
+          {lable}
+        </Text>
+      </MotiView>
+    </Pressable>
+  );
+};
 const styles = StyleSheet.create({
   color_W: {
     color: '#fff',

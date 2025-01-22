@@ -30,18 +30,7 @@ import {
 import {postData} from '../../api';
 import Urls from '../../api/urls';
 import PopupCompo from '../../components/PopupCompo';
-import Animated, {
-  CurvedTransition,
-  FadeInLeft,
-  FadeInRight,
-  FadeInUp,
-  FadeOut,
-  FadeOutLeft,
-  FadingTransition,
-  JumpingTransition,
-  LinearTransition,
-  SequencedTransition,
-} from 'react-native-reanimated';
+import Animated, {FadeInLeft, FadeOutLeft} from 'react-native-reanimated';
 import Button from '../../components/Button';
 import {useNavigation} from '@react-navigation/native';
 import {MainStackNavigation} from '../../navigation';
@@ -242,7 +231,8 @@ export default function () {
   }, [popupModal.state]);
 
   const AddEvent = () => {
-    navigation.navigate('EventCreation');
+    storage.delete('SettingsData');
+    navigation.navigate('EventCreation', {});
   };
   return (
     <Animated.View
@@ -365,8 +355,8 @@ const EventsCompo = memo(({lable}: {lable: EventListType}) => {
     mutationFn: (formData: dashFormType) =>
       postData<dashFormType, dashEventsResponse>(Urls.HOME, formData),
     onSuccess: ({data, StatusCode}) => {
+      // console.log(data.event_list[0]);
       if (StatusCode === 200) {
-        console.log(data.event_list);
         if (type === 'Upcoming') {
           setUpEventsList(data.event_list);
           setTotalCount(pre => ({

@@ -118,6 +118,7 @@ export default function () {
     if (imageUri.base64 === null || imageUri.base64 === undefined) {
       return;
     }
+
     let country_code = '';
     let tempCode = storage.getString('country.code');
     if (tempCode !== null && tempCode !== undefined) {
@@ -235,9 +236,21 @@ export default function () {
             returnKeyType: 'done',
             dataDetectorTypes: 'all',
           }}
+          textInputStyle={{
+            color: '#fff',
+          }}
         />
       </View>
-      <Button lable="CONTINUE" onPress={registerFn} loading={loading} />
+      {/* name: name,
+      pic: imageUri.base64, */}
+      <Button
+        lable="CONTINUE"
+        onPress={registerFn}
+        disabled={
+          !(imageUri?.base64.length > 0 && name.length > 0)
+        }
+        loading={loading}
+      />
 
       <View />
       <View />

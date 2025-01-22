@@ -17,7 +17,7 @@ export default function () {
 
   const {params} =
     useRoute<RouteProp<RootStackParamList, 'EventConfirmDetails'>>();
-    
+
   return (
     <View
       style={{
@@ -45,7 +45,12 @@ export default function () {
           colorHex={params.colorHex}
           date={params.date}
           time={params.time}
-          location={params.location}
+          location={
+            params.location.length > 0
+              ? params.location
+              : params.link
+          }
+          isLink={params.location.length > 0 ? false : true}
           description={params.description}
           rsvp={params.rsvp}
           gallery={params.gallery}
@@ -64,7 +69,9 @@ export default function () {
           textStyles={{
             color: '#fff',
           }}
-          onPress={() => {}}
+          onPress={() => {
+            navigation.navigate('ContactsScreen', {eventID: params.id});
+          }}
           buttonStyles={{
             // width: 'auto',
             // paddingHorizontal:

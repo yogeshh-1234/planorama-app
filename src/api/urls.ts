@@ -5,4 +5,5 @@ export default class Urls {
   static HOME = 'dashboard';
   static PROFILE = 'profile';
   static EVENT = 'event';
+  static WHATSAPP = 'whatsapp';
 }

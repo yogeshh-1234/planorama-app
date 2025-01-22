@@ -16,3 +16,7 @@ single contact add
 import contact 
 upload contacts page
 error display & loading
+
+
+add skeleton loading
+add haptic feedback
