@@ -142,8 +142,8 @@ const MainContainer = () => {
                   gap: 6,
                 }}>
                 <Image
-                  source={require('../../assets/images/EventImg.png')}
-                  resizeMode="stretch"
+                  source={{uri: params.eventPic}}
+                  resizeMode="cover"
                   style={{
                     borderRadius: 6,
                     width: width * 0.65 - 16 - 6,
@@ -195,12 +195,15 @@ const MainContainer = () => {
       </View>
 
       <SendMsgButt
-        lable={`SEND MESSAGE TO ${params.guestsIds.length} GUESTS`}
+        lable={`SEND MESSAGE TO ${params.guestsIds.length} GUEST${
+          params.guestsIds.length === 1 ? '' : 'S'
+        }`}
         event_id={params.eventID}
         guests_ids={JSON.stringify(params.guestsIds)}
         message={params.message}
         count={params.guestsIds.length}
         eventName={params.eventName}
+        eventPic={params.eventPic}
       />
     </View>
   );

@@ -25,6 +25,7 @@ export default function ({
   message,
   count,
   eventName,
+  eventPic,
 }: {
   lable: string;
   event_id: number;
@@ -32,12 +33,13 @@ export default function ({
   message: string;
   count: number;
   eventName: string;
+  eventPic: string;
 }) {
   const navigation = useNavigation<MainStackNavigation>();
   const [loading, setLoading] = useState(false);
-
   const [popupModal, setPopupModal] = useState(PopupModal);
-  const handleSend = () => {
+
+  const handleSend = async () => {
     const token = storage.getString('user.token');
     const id = storage.getString('user.id');
     if (
@@ -46,19 +48,44 @@ export default function ({
       id !== null &&
       id !== undefined
     ) {
-      const formData = {
-        mode: 'SEND_MESSAGE',
-        token,
-        id,
-        event_id,
-        guests_ids,
-        message,
-        file_base64: '',
-        file_name: '',
-      };
+      try {
+        // Fetch the image
+        const response = await fetch(eventPic);
+        const contentType = response.headers.get('Content-Type') || 'image/png'; // Fallback to PNG if Content-Type is not provided
+        const blob = await response.blob();
 
-      setLoading(true);
-      mutation.mutate(formData);
+        // Convert blob to Base64 using FileReader wrapped in a Promise
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64Data = (reader.result as string).replace(
+              /^data:application\/octet-stream/,
+              `data:${contentType}`,
+            ); // Replace the default MIME type if necessary
+            resolve(base64Data);
+          };
+          reader.onerror = error => reject(error);
+          reader.readAsDataURL(blob);
+        });
+
+        const imageName = eventPic.split('/').pop();
+
+        const formData = {
+          mode: 'SEND_MESSAGE',
+          token,
+          id,
+          event_id,
+          guests_ids,
+          message,
+          file_base64: base64,
+          file_name: imageName ? imageName : '',
+        };
+        
+        setLoading(true);
+        mutation.mutate(formData);
+      } catch (error) {
+        console.error('Error converting image to Base64:', error);
+      }
     }
   };
 

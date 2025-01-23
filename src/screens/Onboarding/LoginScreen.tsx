@@ -36,9 +36,9 @@ export default function ({onPress}: {onPress: () => void}) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    storage.delete('new.user');
-    storage.delete('phone.number');
-    storage.delete('display.number');
+    if (storage.contains('new.user')) storage.delete('new.user');
+    if (storage.contains('phone.number')) storage.delete('phone.number');
+    if (storage.contains('display.number')) storage.delete('display.number');
   }, []);
 
   const checkNum = () => {
@@ -162,8 +162,8 @@ export default function ({onPress}: {onPress: () => void}) {
                 color: '#fff',
                 fontFamily: 'PoppinsBold',
                 fontWeight: '700',
-                fontSize: 25,
-                lineHeight: 37.5,
+                fontSize: 20,
+                lineHeight: 30,
               }}
             />
           </View>

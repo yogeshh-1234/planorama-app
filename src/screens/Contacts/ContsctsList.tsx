@@ -1,5 +1,12 @@
 import React, {useCallback, useMemo, useState} from 'react';
-import {FlatList, Image, Pressable, RefreshControl, View} from 'react-native';
+import {
+  FlatList,
+  Image,
+  Pressable,
+  RefreshControl,
+  ToastAndroid,
+  View,
+} from 'react-native';
 import {BinSVG, DownSVG, TickSVG} from '../../assets/SVG/IconsSVG';
 import Text from '../../components/Text';
 import {ItemType, contactListItem} from './ContactsScreen';
@@ -266,9 +273,9 @@ export default function ({
           data={memoizedData}
           renderItem={renderItem}
           keyExtractor={item => item.id.toString()}
-          initialNumToRender={20}
-          maxToRenderPerBatch={10}
-          windowSize={20}
+          initialNumToRender={25}
+          maxToRenderPerBatch={25}
+          windowSize={25}
           // onReload
           refreshControl={
             <RefreshControl
@@ -313,7 +320,6 @@ const RSVPCompo = ({
   //
 
   const [loading, setLoading] = useState(false);
-  const [popupModal, setPopupModal] = useState(PopupModal);
 
   const selectRSVP = (sel: string) => {
     settempVal(sel);
@@ -359,15 +365,16 @@ const RSVPCompo = ({
 
   const errorPopUp = (code: number, desc: string | null) => {
     setLoading(false);
-    setPopupModal({
-      state: true,
-      title: `Oops! Something went wrong.${code ? ` [${code}]` : ''}`,
-      disc: desc
+
+    ToastAndroid.showWithGravity(
+      desc
         ? desc
-        : "We couldn't complete your request, please try again!",
-      buttOne: 'LOGOUT',
-      buttTwo: 'RETRY',
-    });
+        : `We couldn't complete your request, please try again!${
+            code ? ` [${code}]` : ''
+          }`,
+      ToastAndroid.SHORT,
+      ToastAndroid.CENTER,
+    );
   };
 
   //
@@ -428,19 +435,35 @@ const RSVPUI = ({
         alignItems: 'center',
         // justifyContent: 'space-between',
       }}>
-      {rsvp === '' ? (
+      {/* {rsvp === '' ? (
         <View
           style={{
-            width: 20,
-            height: 20,
+            // width: 20,
+            // height: 20,
           }}
         />
-      ) : (
-        <RSVPIconCompo icon={rsvp} size={20} />
+      ) : */}
+      {rsvp === '' && (
+        <View
+          style={{
+            width: 6,
+            height: 6,
+          }}
+        />
       )}
+      {rsvp !== '' && <RSVPIconCompo icon={rsvp} size={20} />}
+
       <Text variant={'DetailBold'} style={{color: '#fff'}}>
         {rsvpTitle ? rsvpTitle : 'Select '}
       </Text>
+      {rsvp === '' && (
+        <View
+          style={{
+            width: 6,
+            height: 6,
+          }}
+        />
+      )}
       {menu && <DownSVG />}
     </AnimatedPressable>
   );

@@ -19,7 +19,8 @@ export default memo(
     return (
       <View
         style={{
-          padding: 20,
+          paddingHorizontal: 20,
+          paddingVertical: 14,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',

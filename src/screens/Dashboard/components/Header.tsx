@@ -5,6 +5,7 @@ import {
   Image,
   Pressable,
   StyleSheet,
+  ToastAndroid,
   View,
 } from 'react-native';
 import {NotiSVG, UsersSVG} from '../../../assets/SVG/IconsSVG';
@@ -37,7 +38,7 @@ export default function ({
       pic,
     });
 
-  const onContacts = () => navigation.navigate('ContactsScreen',{eventID:-1});
+  const onContacts = () => navigation.navigate('ContactsScreen', {eventID: -1});
   return (
     <View style={styles.container}>
       <View
@@ -64,6 +65,13 @@ export default function ({
       <Pressable
         style={{
           padding: 10,
+        }}
+        onPress={() => {
+          ToastAndroid.showWithGravity(
+            "Coming Soon",
+            ToastAndroid.SHORT,
+            ToastAndroid.CENTER,
+          );
         }}>
         <NotiSVG width={30} height={30} />
       </Pressable>

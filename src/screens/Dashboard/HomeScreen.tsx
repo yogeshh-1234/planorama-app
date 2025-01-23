@@ -3,8 +3,10 @@ import {
   Dimensions,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
+  TextInput,
   View,
 } from 'react-native';
 import {BGline} from '../../assets/SVG/VectorSVG';
@@ -34,6 +36,7 @@ import Animated, {FadeInLeft, FadeOutLeft} from 'react-native-reanimated';
 import Button from '../../components/Button';
 import {useNavigation} from '@react-navigation/native';
 import {MainStackNavigation} from '../../navigation';
+import LoadingCompo from '../../components/LoadingCompo';
 const {width, height} = Dimensions.get('screen');
 const PopupModal = {
   state: false,
@@ -128,6 +131,7 @@ export default function () {
   });
   const [loading, setLoading] = useState(false);
   const [popupModal, setPopupModal] = useState(PopupModal);
+  const [justToReload, setJustToReload] = useState(false);
 
   useEffect(() => {
     const tempName = storage.getString('user.name');
@@ -145,7 +149,7 @@ export default function () {
       }));
     }
     callAPI();
-  }, []);
+  }, [justToReload]);
 
   const callAPI = () => {
     const token = storage.getString('user.token');
@@ -188,7 +192,7 @@ export default function () {
           title: `Oops! Something went wrong.${
             StatusCode ? ` [${StatusCode}]` : ''
           }`,
-          disc: "We couldn't complete your request, please try again!",
+          disc: "Couldn't load profile data, please try again!",
           buttOne: 'LOGOUT',
           buttTwo: 'RETRY',
         });
@@ -265,16 +269,30 @@ export default function () {
       />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: height * 0.03,
+          paddingTop: height * 0.01,
           paddingBottom: height * 0.04,
           gap: 12,
-        }}>
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={false}
+            onRefresh={() => setJustToReload(pre => !pre)}
+            title="Pull to refresh"
+            colors={['#F2F2F2']}
+            progressBackgroundColor={'#0E0E0E'}
+            titleColor="grey"
+          />
+        }>
         <WelcomeCompo name={profileData.name} />
         <SearchCompo />
-        <EventsCompo lable={'your'} />
-        <EventsCompo lable={'invited'} />
+        {!loading && (
+          <>
+            <EventsCompo lable={'your'} justToReload={justToReload} />
+            <EventsCompo lable={'invited'} justToReload={justToReload} />
+          </>
+        )}
       </ScrollView>
-
+      {loading && <LoadingCompo text="Getting events data" />}
       <View
         style={{
           position: 'absolute',
@@ -304,154 +322,156 @@ export default function () {
   );
 }
 
-const EventsCompo = memo(({lable}: {lable: EventListType}) => {
-  const [type, setType] = useState<EventTypeText>('Upcoming');
-  const [loading, setLoading] = useState(false);
-  const [popupModal, setPopupModal] = useState(PopupModal);
-  const [preEventsList, setPreEventsList] = useState<eventItem[]>([]);
-  const [upEventsList, setUpEventsList] = useState<eventItem[]>([]);
-  const [totalCount, setTotalCount] = useState({
-    up: '',
-    pre: '',
-  });
+const EventsCompo = memo(
+  ({lable, justToReload}: {lable: EventListType; justToReload: boolean}) => {
+    const [type, setType] = useState<EventTypeText>('Upcoming');
+    const [loading, setLoading] = useState(false);
+    const [popupModal, setPopupModal] = useState(PopupModal);
+    const [preEventsList, setPreEventsList] = useState<eventItem[]>([]);
+    const [upEventsList, setUpEventsList] = useState<eventItem[]>([]);
+    const [totalCount, setTotalCount] = useState({
+      up: '',
+      pre: '',
+    });
 
-  useEffect(() => {
-    if (
-      (type === 'Previous' && preEventsList.length === 0) ||
-      (type === 'Upcoming' && upEventsList.length === 0)
-    ) {
-      callAPI();
-    }
-  }, [type, lable]);
+    useEffect(() => {
+      if (
+        (type === 'Previous' && preEventsList.length === 0) ||
+        (type === 'Upcoming' && upEventsList.length === 0)
+      ) {
+        callAPI();
+      }
+    }, [type, lable, justToReload]);
 
-  const callAPI = () => {
-    const token = storage.getString('user.token');
-    const id = storage.getString('user.id');
-    if (
-      token !== null &&
-      token !== undefined &&
-      id !== null &&
-      id !== undefined
-    ) {
-      const mode =
-        lable === 'your'
-          ? type === 'Upcoming'
-            ? 'MY_EVT_LIST_UP'
-            : 'MY_EVT_LIST_PREV'
-          : type === 'Upcoming'
-          ? 'INV_EVT_LIST_UP'
-          : 'INV_EVT_LIST_PREV';
-      const formData = {
-        mode,
-        token,
-        id,
-      };
-      setLoading(true);
+    const callAPI = () => {
+      const token = storage.getString('user.token');
+      const id = storage.getString('user.id');
+      if (
+        token !== null &&
+        token !== undefined &&
+        id !== null &&
+        id !== undefined
+      ) {
+        const mode =
+          lable === 'your'
+            ? type === 'Upcoming'
+              ? 'MY_EVT_LIST_UP'
+              : 'MY_EVT_LIST_PREV'
+            : type === 'Upcoming'
+            ? 'INV_EVT_LIST_UP'
+            : 'INV_EVT_LIST_PREV';
+        const formData = {
+          mode,
+          token,
+          id,
+        };
+        setLoading(true);
 
-      mutation.mutate(formData);
-    }
-  };
-  const mutation = useMutation<dashEventsResponse, dashError, dashFormType>({
-    mutationFn: (formData: dashFormType) =>
-      postData<dashFormType, dashEventsResponse>(Urls.HOME, formData),
-    onSuccess: ({data, StatusCode}) => {
-      // console.log(data.event_list[0]);
-      if (StatusCode === 200) {
-        if (type === 'Upcoming') {
-          setUpEventsList(data.event_list);
-          setTotalCount(pre => ({
-            ...pre,
-            up: data.event_list.length.toString(),
-          }));
+        mutation.mutate(formData);
+      }
+    };
+    const mutation = useMutation<dashEventsResponse, dashError, dashFormType>({
+      mutationFn: (formData: dashFormType) =>
+        postData<dashFormType, dashEventsResponse>(Urls.HOME, formData),
+      onSuccess: ({data, StatusCode}) => {
+        // console.log(data.event_list[0]);
+        if (StatusCode === 200) {
+          if (type === 'Upcoming') {
+            setUpEventsList(data.event_list);
+            setTotalCount(pre => ({
+              ...pre,
+              up: data.event_list.length.toString(),
+            }));
+          } else {
+            setPreEventsList(data.event_list);
+            setTotalCount(pre => ({
+              ...pre,
+              pre: data.event_list.length.toString(),
+            }));
+          }
+
+          //
         } else {
-          setPreEventsList(data.event_list);
-          setTotalCount(pre => ({
-            ...pre,
-            pre: data.event_list.length.toString(),
-          }));
+          setPopupModal({
+            state: true,
+            title: `Error getting ${lable} ${type} events.${
+              StatusCode ? ` [${StatusCode}]` : ''
+            }`,
+            disc: "We couldn't complete your request, please try again!",
+            buttOne: 'LOGOUT',
+            buttTwo: 'RETRY',
+          });
         }
+        setLoading(false);
+      },
+      onError: error => {
+        setLoading(false);
 
-        //
-      } else {
         setPopupModal({
           state: true,
           title: `Error getting ${lable} ${type} events.${
-            StatusCode ? ` [${StatusCode}]` : ''
+            error?.StatusCode ? ` [${error.StatusCode}]` : ''
           }`,
-          disc: "We couldn't complete your request, please try again!",
+          disc: error?.error?.description
+            ? error.error.description
+            : "We couldn't complete your request, please try again!",
           buttOne: 'LOGOUT',
           buttTwo: 'RETRY',
         });
+      },
+    });
+
+    const onDismiss = useCallback(() => {
+      setPopupModal({...popupModal, state: false});
+    }, [popupModal.state]);
+
+    const buttOnePress = useCallback(() => {
+      if (popupModal.buttOne === 'LOGOUT') {
+        setPopupModal({...popupModal, state: false});
+        storage.clearAll();
       }
-      setLoading(false);
-    },
-    onError: error => {
-      setLoading(false);
+    }, [popupModal.state]);
 
-      setPopupModal({
-        state: true,
-        title: `Error getting ${lable} ${type} events.${
-          error?.StatusCode ? ` [${error.StatusCode}]` : ''
-        }`,
-        disc: error?.error?.description
-          ? error.error.description
-          : "We couldn't complete your request, please try again!",
-        buttOne: 'LOGOUT',
-        buttTwo: 'RETRY',
-      });
-    },
-  });
+    const buttTwoPress = useCallback(() => {
+      if (popupModal.buttTwo === 'RETRY') {
+        setPopupModal({...popupModal, state: false});
+        callAPI();
+      }
+    }, [popupModal.state]);
 
-  const onDismiss = useCallback(() => {
-    setPopupModal({...popupModal, state: false});
-  }, [popupModal.state]);
-
-  const buttOnePress = useCallback(() => {
-    if (popupModal.buttOne === 'LOGOUT') {
-      setPopupModal({...popupModal, state: false});
-      storage.clearAll();
-    }
-  }, [popupModal.state]);
-
-  const buttTwoPress = useCallback(() => {
-    if (popupModal.buttTwo === 'RETRY') {
-      setPopupModal({...popupModal, state: false});
-      callAPI();
-    }
-  }, [popupModal.state]);
-
-  return (
-    <Animated.View style={{}}>
-      <Text
-        style={{
-          color: '#fff',
-          marginVertical: 8,
-          paddingHorizontal,
-          textTransform: 'capitalize',
-        }}
-        variant={'SubTitleTwo'}>
-        {lable} Events
-      </Text>
-      <SelectionRow type={type} setType={setType} total={totalCount} />
-      <EventsDisplay
-        eventList={type === 'Previous' ? preEventsList : upEventsList}
-        type={type}
-        lable={lable}
-        loading={loading}
-      />
-      <PopupCompo
-        isVisible={popupModal.state}
-        onDismiss={onDismiss}
-        title={popupModal.title}
-        disc={popupModal.disc}
-        buttOne={popupModal.buttOne}
-        buttTwo={popupModal.buttTwo}
-        buttOnePress={buttOnePress}
-        buttTwoPress={buttTwoPress}
-      />
-    </Animated.View>
-  );
-});
+    return (
+      <Animated.View style={{}}>
+        <Text
+          style={{
+            color: '#fff',
+            marginVertical: 8,
+            paddingHorizontal,
+            textTransform: 'capitalize',
+          }}
+          variant={'SubTitleTwo'}>
+          {lable} Events
+        </Text>
+        <SelectionRow type={type} setType={setType} total={totalCount} />
+        <EventsDisplay
+          eventList={type === 'Previous' ? preEventsList : upEventsList}
+          type={type}
+          lable={lable}
+          loading={loading}
+        />
+        <PopupCompo
+          isVisible={popupModal.state}
+          onDismiss={onDismiss}
+          title={popupModal.title}
+          disc={popupModal.disc}
+          buttOne={popupModal.buttOne}
+          buttTwo={popupModal.buttTwo}
+          buttOnePress={buttOnePress}
+          buttTwoPress={buttTwoPress}
+        />
+      </Animated.View>
+    );
+  },
+);
 
 const EventsDisplay = memo(
   ({
@@ -476,7 +496,7 @@ const EventsDisplay = memo(
         contentContainerStyle={{
           // gap: 18,
           paddingVertical: 14,
-          paddingLeft: paddingHorizontal,
+          paddingHorizontal: paddingHorizontal,
         }}
         // LinearTransition
         // layout={SequencedTransition}
@@ -729,9 +749,9 @@ const SelectionItm = memo(
           gap: 6,
           borderWidth: type ? 1 : 0,
           borderColor: '#fff',
-          borderRadius: 1000,
+          borderRadius: 100,
           paddingHorizontal: 12,
-          paddingVertical: 10,
+          paddingVertical: 8,
           backgroundColor: '#C5B1C33D',
         }}
         onPress={onPress}>
@@ -749,8 +769,8 @@ const SelectionItm = memo(
 
 const WelcomeCompo = memo(({name}: {name: string}) => {
   return (
-    <Animated.View style={{paddingHorizontal, gap: 12}}>
-      <Text variant={'Heading'} style={{color: '#fff'}}>
+    <Animated.View style={{paddingHorizontal, gap: 6}}>
+      <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
         Welcome, {name}!
       </Text>
       <Text variant={'DetailBold'} style={{color: '#fff'}}>
@@ -765,26 +785,31 @@ const SearchCompo = memo(() => {
   const [value, setValue] = useState('');
   return (
     <Animated.View style={{paddingHorizontal}}>
-      <Searchbar
+      <View
         style={{
+          flexDirection: 'row',
+          alignItems: 'center',
           backgroundColor: '#C5B1C33D',
           borderRadius: 10,
-          alignItems: 'center',
-          // justifyContent:'center'
-        }}
-        inputStyle={
-          {
-            // borderWidth:1,
-            // lineHeight:10,
-            // height:10
-          }
-        }
-        value={value}
-        onChangeText={setValue}
-        icon={() => <SearchSVG width={20} height={20} />}
-        placeholder="Search"
-        placeholderTextColor={'#FFFFFF'}
-      />
+          paddingHorizontal: 10,
+          gap: 8,
+        }}>
+        <SearchSVG width={14} height={14} />
+        <TextInput
+          value={value}
+          onChangeText={setValue}
+          style={{
+            flex: 1,
+            paddingVertical: 4,
+            fontFamily: 'PoppinsMedium',
+            fontWeight: '500',
+            letterSpacing: 0,
+            fontSize: 14,
+            lineHeight: 15,
+            color: '#fff',
+          }}
+        />
+      </View>
     </Animated.View>
   );
 });

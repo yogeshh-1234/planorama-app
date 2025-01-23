@@ -134,7 +134,6 @@ export default function () {
   
       <View
         style={{
-          paddingTop: 30,
           gap: 18,
           flex: 1,
         }}>
@@ -182,6 +181,7 @@ export default function () {
           eventID={params.eventID}
           onReload={callAPI}
           eventName={params.eventName}
+          eventPic={params.eventPic}
         />
       </View>
 

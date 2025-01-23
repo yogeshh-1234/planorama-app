@@ -82,8 +82,7 @@ export default function () {
       <HeaderCompo />
       <View
         style={{
-          paddingTop: 30,
-          // paddingBottom: height * 0.04,
+          // paddingTop: 30,
           paddingHorizontal: width * 0.05,
           gap: 18,
           flex: 1,
@@ -144,6 +143,7 @@ export default function () {
               letterSpacing: 0,
               fontSize: 14,
               lineHeight: 18.2,
+              paddingVertical: 6,
             }}
             textInputProps={{
               placeholder: 'Find a guest....',
@@ -151,14 +151,15 @@ export default function () {
             }}
           />
         </Animated.View>
-        <View>
+        {/* <View>
           <FiltersTab />
-        </View>
+        </View> */}
         <ContactList
           justToReload={loading}
           search={value}
           eventID={params.eventID}
           fromGuest={params.fromGuest}
+          key="eventcontacts"
         />
       </View>
     </View>
@@ -228,7 +229,6 @@ const ContactList = memo(
     eventID: number;
     fromGuest: boolean | undefined;
   }) => {
-    
     const {params} =
       useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
 
@@ -502,7 +502,13 @@ const ContactList = memo(
                 borderRadius: 10,
                 width: width * 0.42,
               }}
-              onPress={() => {}}
+              onPress={() => {
+                ToastAndroid.showWithGravity(
+                  'Coming Soon',
+                  ToastAndroid.SHORT,
+                  ToastAndroid.CENTER,
+                );
+              }}
               icon={() => <ShareSVG width={12} height={12} />}
             />
           </View>

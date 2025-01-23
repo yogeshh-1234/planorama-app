@@ -24,6 +24,9 @@ export interface connectionResponce {
     description: string;
     status: boolean;
     interval: number;
+    instance: {
+      credits: number;
+    };
   };
   StatusCode: number;
 }

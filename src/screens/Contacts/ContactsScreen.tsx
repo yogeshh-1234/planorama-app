@@ -2,6 +2,7 @@ import React, {memo, useCallback, useEffect, useMemo, useState} from 'react';
 import {
   Dimensions,
   FlatList,
+  Keyboard,
   PermissionsAndroid,
   Platform,
   Pressable,
@@ -36,13 +37,16 @@ import {
 import ContsctsList from './ContsctsList';
 import Animated, {
   FadeIn,
+  FadeInDown,
   FadeInLeft,
   FadeInRight,
   FadeOut,
+  FadeOutDown,
   FadeOutLeft,
   FadeOutRight,
 } from 'react-native-reanimated';
 import {Tooltip} from 'react-native-paper';
+import TextInput from '../../components/TextInput';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -89,14 +93,14 @@ export default function () {
         <HeaderCompo />
         <View
           style={{
-            paddingTop: 30,
+            // paddingTop: 30,
             paddingHorizontal: width * 0.05,
             gap: 18,
             flex: 1,
           }}>
           <View
             style={{
-              gap: 18,
+              gap: 10,
             }}>
             <Text
               variant={'TitleTwo'}
@@ -138,6 +142,27 @@ const ContactsCompo = memo(() => {
 
   const [selectedItems, setSelectedItems] = useState<ItemType>({}); // Object to store selected items
 
+  //
+
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  //
+
   // getting the data
   useEffect(() => {
     const requestPermission = async () => {
@@ -160,6 +185,10 @@ const ContactsCompo = memo(() => {
   }, []);
 
   const fetchContacts = () => {
+    setLoading({
+      status: true,
+      text: `Getting Contacts...`,
+    });
     Contacts.getAll()
       .then(contacts => {
         let formattedContacts: contactListItem[] = [];
@@ -185,6 +214,10 @@ const ContactsCompo = memo(() => {
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setContacts(newformattedContacts);
+        setLoading({
+          status: false,
+          text: `Getting Contacts...`,
+        });
       })
       .catch(error => {});
   };
@@ -296,35 +329,39 @@ const ContactsCompo = memo(() => {
     },
   });
 
+  const [value, setValue] = useState('');
+  const [viewAll, setViewAll] = useState(true);
   return (
     <View
       style={{
         // borderWidth: 1,
         flex: 1,
       }}>
-      {contacts.length > 0 && (
+      <View
+        style={{
+          gap: 20,
+          flex: 1,
+        }}>
         <View
           style={{
-            gap: 20,
-            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            //   marginVertical: 12,
           }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              //   marginVertical: 12,
-            }}>
-            <Text
-              style={{color: '#fff'}}
-              variant={'SubTitleTwo'}
-              entering={FadeInLeft.delay(200)}
-              exiting={FadeOutLeft}>
-              Edit your guest list below
-            </Text>
-            <AnimatedPressable
+          <Text
+            style={{color: '#fff'}}
+            variant={'SubTitleTwo'}
+            entering={FadeInLeft.delay(200)}
+            exiting={FadeOutLeft}>
+            Edit your guest list below
+          </Text>
+          {/* <AnimatedPressable
               entering={FadeInRight.delay(200)}
               exiting={FadeOutRight}
+              onPress={()=>{
+
+              }}
               style={{
                 paddingVertical: 12,
                 paddingHorizontal: 24,
@@ -332,20 +369,98 @@ const ContactsCompo = memo(() => {
                 backgroundColor: '#C71D40',
               }}>
               <BinSVG fill={'#fff'} width={14} height={14} />
-            </AnimatedPressable>
-          </View>
-          <ContsctsList
-            staticData={false}
-            selectedItems={selectedItems}
-            setSelectedItems={(val: any) => setSelectedItems(val)}
-            contacts={contacts}
-            delay={300}
-          />
+            </AnimatedPressable> */}
         </View>
-      )}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+          <View
+            style={{
+              flex: 1,
+            }}>
+            <TextInput
+              iconName="search"
+              value={value}
+              onChangeText={setValue}
+              iconsize={16}
+              textInputStyle={{
+                fontFamily: 'PoppinsMedium',
+                fontWeight: '500',
+                letterSpacing: 0,
+                fontSize: 14,
+                lineHeight: 18.2,
+                paddingVertical: 6,
+              }}
+              textInputProps={{
+                placeholder: 'Find a guest....',
+                placeholderTextColor: '#ffffff80',
+                returnKeyType: 'search',
+              }}
+              onRightButt={() => {
+                setValue('');
+              }}
+            />
+          </View>
+          <View>
+            <Button
+              onPress={() => setViewAll(pre => !pre)}
+              lable={viewAll ? 'Selected' : 'All'}
+              buttonStyles={{
+                // width: width * 0.42,
+                backgroundColor: '#FFFFFF80',
+                borderColor: '#EDEDED',
+                borderWidth: 1,
+                paddingVertical: 12,
+                minWidth: 100,
+                width: 'auto',
+              }}
+              variant="BodyRegular"
+            />
+          </View>
+        </View>
+        {contacts.length > 0 && (
+          <>
+            {viewAll && (
+              <ContsctsList
+                key="all"
+                staticData={false}
+                selectedItems={selectedItems}
+                setSelectedItems={(val: any) => setSelectedItems(val)}
+                contacts={contacts.filter(item =>
+                  item.name.toLowerCase().includes(value.toLowerCase()),
+                )}
+                delay={0}
+              />
+            )}
+            {!viewAll && (
+              <ContsctsList
+                key="selected"
+                staticData={true}
+                selectedItems={selectedItems}
+                setSelectedItems={(val: any) => setSelectedItems(val)}
+                contacts={Object.values(selectedItems)
+                  .map((itm, id) => ({
+                    ...itm,
+                    id,
+                  }))
+                  .filter(item =>
+                    item.name.toLowerCase().includes(value.toLowerCase()),
+                  )}
+                delay={0}
+              />
+            )}
+          </>
+        )}
+      </View>
 
-      {contacts.length > 0 && (
-        <View style={{paddingVertical: height * 0.01, gap: height * 0.01}}>
+      {contacts.length > 0 && !isKeyboardVisible && (
+        <Animated.View
+          entering={FadeInDown}
+          exiting={FadeOutDown}
+          style={{paddingVertical: height * 0.01, gap: height * 0.01}}>
           <Tooltip
             enterTouchDelay={0}
             title={Object.values(selectedItems)
@@ -364,12 +479,13 @@ const ContactsCompo = memo(() => {
             buttonStyles={{
               backgroundColor: '#F9BC52',
               borderRadius: 10,
+              width: '100%',
             }}
             onPress={() => {
               onSubmitData();
             }}
           />
-        </View>
+        </Animated.View>
       )}
       {loading.status && <LoadingCompo text={loading.text} />}
       <PopupCompo

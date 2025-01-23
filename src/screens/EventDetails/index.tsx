@@ -278,6 +278,7 @@ const BottomBar = memo(
       navigation.navigate('EventGuest', {
         eventID,
         eventName: eventData.name,
+        eventPic:eventData.cover_img
       });
     };
     return (

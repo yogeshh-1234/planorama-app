@@ -1,6 +1,7 @@
-import React, {memo, useEffect, useMemo, useState} from 'react';
+import React, {memo, useCallback, useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   Linking,
@@ -45,14 +46,24 @@ import {
 } from './ProfileTypes';
 import WhatsAppLogo from '../../components/WhatsAppLogo';
 import DeviceInfo from 'react-native-device-info';
+import PopupCompo from '../../components/PopupCompo';
+import CreditsCompo from './CreditsCompo';
 const {width, height} = Dimensions.get('screen');
 
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
-
+const PopupModal = {
+  state: false,
+  title: '',
+  disc: '',
+  buttOne: '',
+  buttTwo: '',
+};
 export default function () {
   const {params} = useRoute<RouteProp<RootStackParamList, 'ProfileScreen'>>();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(false);
+  const [credits, setCredits] = useState<null | number>(null);
+  const [popupModal, setPopupModal] = useState(PopupModal);
   useEffect(() => {
     checkWhatsappStatus();
   }, []);
@@ -77,17 +88,82 @@ export default function () {
   >({
     mutationFn: (formData: connectionForm) =>
       postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
-    onSuccess: ({data: {status}}) => {
-      setStatus(status);
+    onSuccess: ({data, StatusCode}) => {
+      if (StatusCode === 200) {
+        setStatus(data.status);
+        setCredits(data.instance.credits);
+      } else {
+        errorPopUp(StatusCode, null, 'BACK');
+      }
       setLoading(false);
     },
-    onError: () => {
-      setStatus(false);
-      setLoading(false);
-    },
+    onError: error =>
+      errorPopUp(error?.StatusCode, error?.error?.description, 'BACK'),
   });
 
   const appVersion = DeviceInfo.getVersion();
+  const dissconnectWAPrompt = () => {
+    Alert.alert(
+      'Dissconect Whatsapp?',
+      '',
+      [
+        {
+          text: 'Yes',
+          onPress: dissconnectWA,
+        },
+        {text: 'Cancel', style: 'cancel'},
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const dissconnectWA = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (token && id) {
+      const formData = {
+        mode: 'DISCONNECT_CONNECTION',
+        token,
+        id,
+      };
+      setLoading(true);
+      disWAMutation.mutate(formData);
+    }
+  };
+
+  const disWAMutation = useMutation<
+    connectionResponce,
+    profileError,
+    connectionForm
+  >({
+    mutationFn: (formData: connectionForm) =>
+      postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
+    onSuccess: ({data, StatusCode}) => {
+      StatusCode === 200
+        ? setStatus(false)
+        : errorPopUp(StatusCode, null, 'BACK');
+      setLoading(false);
+    },
+    onError: error =>
+      errorPopUp(error?.StatusCode, error?.error?.description, 'BACK'),
+  });
+  //
+  const errorPopUp = (code: number, desc: string | null, buttTxt: string) => {
+    setLoading(false);
+    setPopupModal({
+      state: true,
+      title: `Oops! Something went wrong.${code ? ` [${code}]` : ''}`,
+      disc: desc
+        ? desc
+        : "We couldn't complete your request, please try again!",
+      buttOne: '',
+      buttTwo: 'OKAY',
+    });
+  };
+  const onDismiss = useCallback(() => {
+    setPopupModal({...popupModal, state: false});
+  }, [popupModal.state]);
+
   return (
     <View
       style={{
@@ -112,7 +188,7 @@ export default function () {
       />
 
       <HeaderCompo />
-      {status && <WhatsAppLogo loading={loading} />}
+      {status && !loading && <WhatsAppLogo loading={loading} />}
       <ScrollView
         contentContainerStyle={{
           paddingTop: 50,
@@ -127,15 +203,34 @@ export default function () {
           code={params.country_code}
         />
         <View style={{gap: 20}}>
-          {!status && (
-            <ItemCompoContainer
-              type={'whatsapp'}
-              onSuccess={() => {
-                checkWhatsappStatus();
-              }}
-            />
-          )}
-          <ItemCompoContainer type={'logout'} />
+          <CreditsCompo
+            credits={
+              credits
+                ? credits.toString()
+                : loading
+                ? 'Loading'
+                : 'Not Available'
+            }
+            loading={loading}
+          />
+          {/* {(!status || loading) && ( */}
+          <ItemCompoContainer
+            type={'whatsapp'}
+            onSuccess={() => {
+              checkWhatsappStatus();
+            }}
+            loadingMain={loading}
+            title={
+              loading
+                ? 'Checking whatsapp connection'
+                : status
+                ? 'Disconnect whatsapp'
+                : 'Connect your whatsApp'
+            }
+            onPressTab={status ? dissconnectWAPrompt : undefined}
+          />
+          {/* )} */}
+          <ItemCompoContainer type={'logout'} title={'Logout'} />
         </View>
       </ScrollView>
       <Text
@@ -143,16 +238,32 @@ export default function () {
         variant={'DetailRegular'}>
         v {appVersion}
       </Text>
+      <PopupCompo
+        isVisible={popupModal.state}
+        onDismiss={onDismiss}
+        title={popupModal.title}
+        disc={popupModal.disc}
+        buttOne={popupModal.buttOne}
+        buttTwo={popupModal.buttTwo}
+        buttOnePress={onDismiss}
+        buttTwoPress={onDismiss}
+      />
       {/* {loading && <LoadingCompo text={'Logging out'} />} */}
     </View>
   );
 }
 const ItemCompoContainer = ({
   type,
+  title,
   onSuccess,
+  loadingMain = false,
+  onPressTab,
 }: {
   type: string;
+  title: string;
   onSuccess?: () => void;
+  loadingMain?: boolean;
+  onPressTab?: () => void;
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -189,19 +300,6 @@ const ItemCompoContainer = ({
     },
   });
 
-  const title = useMemo(() => {
-    switch (type) {
-      case 'logout':
-        return 'Logout';
-
-      case 'whatsapp':
-        return 'Connect your whatsApp';
-
-      default:
-        return '';
-    }
-  }, [type]);
-
   const onPress = () => {
     switch (type) {
       case 'logout':
@@ -222,8 +320,8 @@ const ItemCompoContainer = ({
       <ItemCompo
         type={type}
         title={title}
-        onPress={onPress}
-        loading={loading}
+        onPress={loadingMain ? () => {} : onPressTab ? onPressTab : onPress}
+        loading={loading || loadingMain}
       />
       {shareQR && (
         <ShareQRCompo
@@ -660,6 +758,7 @@ const SendEmail = () => {
             letterSpacing: 0,
             fontSize: 18,
             lineHeight: 27,
+            color: '#fff',
           }}
           textInputProps={{
             placeholder: 'Eg: mail@email.com',

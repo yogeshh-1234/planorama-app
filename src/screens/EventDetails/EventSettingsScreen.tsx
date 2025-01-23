@@ -260,8 +260,8 @@ export default function () {
       />
       <View
         style={{
-          paddingTop: 30,
-          gap: 18,
+          // paddingTop: 30,
+          gap: 8,
           flex: 1,
         }}>
         <View
@@ -368,7 +368,9 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
+    paddingBottom:12,
     paddingHorizontal,
+    // borderWidth:1
   },
   topTabButt: {
     flexDirection: 'row',
@@ -376,7 +378,7 @@ const style = StyleSheet.create({
     gap: 12,
 
     borderColor: '#fff',
-    paddingVertical: 12,
+    paddingVertical: 6,
     paddingHorizontal: 12,
   },
 });

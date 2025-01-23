@@ -172,20 +172,26 @@ export default function () {
   };
 
   const setEventImgFn = async (imgData: string) => {
-
     try {
       // Fetch the image
       const response = await fetch(imgData);
+      const contentType = response.headers.get('Content-Type') || 'image/png'; // Fallback to PNG if Content-Type is not provided
       const blob = await response.blob();
 
       // Convert blob to Base64 using FileReader wrapped in a Promise
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
+        reader.onloadend = () => {
+          const base64Data = (reader.result as string).replace(
+            /^data:application\/octet-stream/,
+            `data:${contentType}`,
+          ); // Replace the default MIME type if necessary
+          resolve(base64Data);
+        };
         reader.onerror = error => reject(error);
         reader.readAsDataURL(blob);
       });
-      
+
       setMainImg({
         image: base64,
       });
@@ -200,12 +206,20 @@ export default function () {
         try {
           // Fetch the image
           const response = await fetch(itm);
+          const contentType =
+            response.headers.get('Content-Type') || 'image/png'; // Fallback to PNG if Content-Type is not provided
           const blob = await response.blob();
 
           // Convert blob to Base64 using FileReader wrapped in a Promise
           const base64 = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
+            reader.onloadend = () => {
+              const base64Data = (reader.result as string).replace(
+                /^data:application\/octet-stream/,
+                `data:${contentType}`,
+              ); // Replace the default MIME type if necessary
+              resolve(base64Data);
+            };
             reader.onerror = error => reject(error);
             reader.readAsDataURL(blob);
           });
@@ -213,7 +227,6 @@ export default function () {
           return base64;
         } catch (error) {
           console.error('Error converting image to Base64:', error);
-          return null; // Return null for failed conversions
         }
       }),
     );
@@ -242,9 +255,11 @@ export default function () {
     } else if (popupModal.buttOne === 'CANCEL') {
       navigateEvent(eventID);
       //
-    } else {
-      setPopupModal({...popupModal, state: false});
     }
+    //  else {
+    //   setPopupModal({...popupModal, state: false});
+    // }
+    setPopupModal({...popupModal, state: false});
   }, [popupModal.state]);
 
   const buttTwoPress = useCallback(() => {
@@ -255,9 +270,11 @@ export default function () {
       popupModal.buttTwo === 'RETRY'
     ) {
       saveGallery(eventID);
-    } else {
-      setPopupModal({...popupModal, state: false});
-    }
+    } 
+    // else {
+    //   setPopupModal({...popupModal, state: false});
+    // }
+    setPopupModal({...popupModal, state: false});
   }, [popupModal.state]);
 
   const onSubmit = () => {
@@ -439,7 +456,6 @@ export default function () {
       id !== null &&
       id !== undefined
     ) {
-
       mutationGallery.mutate({
         mode: 'ADD_GALLERY',
         token: token,

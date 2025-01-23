@@ -7,6 +7,9 @@ import Svg, {
   ClipPath,
   Rect,
   Circle,
+  Pattern,
+  Use,
+  Image,
 } from 'react-native-svg';
 const ImageSVG = (props: SvgProps) => (
   <Svg width={42} height={42} viewBox="0 0 42 42" fill="white" {...props}>

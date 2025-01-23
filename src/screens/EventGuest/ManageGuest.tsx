@@ -28,6 +28,11 @@ import RSVPIconCompo from '../../components/RSVPIconCompo';
 import {useNavigation} from '@react-navigation/native';
 import {MainStackNavigation, guestListType} from '../../navigation';
 import WhatsAppLogo from '../../components/WhatsAppLogo';
+import {
+  connectionForm,
+  connectionResponce,
+  profileError,
+} from '../Profile/ProfileTypes';
 const {width, height} = Dimensions.get('screen');
 type filterType = '' | 'Y' | 'N' | 'M';
 const paddingHorizontal = width * 0.05;
@@ -50,11 +55,13 @@ export default function ({
   eventID,
   onReload,
   eventName,
+  eventPic,
 }: {
   eventGuest: guestItemType[];
   eventID: number;
   onReload: () => void;
   eventName: string;
+  eventPic: string;
 }) {
   const navigation = useNavigation<MainStackNavigation>();
 
@@ -69,6 +76,79 @@ export default function ({
     no: [],
   });
 
+  const [loading, setLoading] = useState({
+    status: false,
+    text: '',
+  });
+
+  const [status, setStatus] = useState(false);
+  const [popupModal, setPopupModal] = useState(PopupModal);
+
+  const onDismiss = useCallback(() => {
+    setPopupModal({...popupModal, state: false});
+  }, [popupModal.state]);
+
+  const buttOnePress = useCallback(() => {
+    setPopupModal({...popupModal, state: false});
+  }, [popupModal.state]);
+
+  const buttTwoPress = useCallback(() => {
+    setPopupModal({...popupModal, state: false});
+  }, [popupModal.state]);
+  useEffect(() => {
+    checkWhatsappStatus();
+  }, []);
+  const checkWhatsappStatus = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (token && id) {
+      const formData = {
+        mode: 'CHECK_CONNECTION',
+        token,
+        id,
+      };
+      setLoading({
+        status: true,
+        text: 'Checking whatsapp connection',
+      });
+      mutation.mutate(formData);
+    }
+  };
+
+  const mutation = useMutation<
+    connectionResponce,
+    profileError,
+    connectionForm
+  >({
+    mutationFn: (formData: connectionForm) =>
+      postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
+    onSuccess: ({data: {status}, StatusCode}) => {
+      StatusCode === 200
+        ? setStatus(status)
+        : errorPopUp(StatusCode, null, 'BACK');
+      setLoading({
+        status: false,
+        text: '',
+      });
+    },
+    onError: error =>
+      errorPopUp(error?.StatusCode, error?.error?.description, 'BACK'),
+  });
+  const errorPopUp = (code: number, desc: string | null, buttTxt: string) => {
+    setLoading({
+      status: false,
+      text: '',
+    });
+    setPopupModal({
+      state: true,
+      title: `Oops! Something went wrong.${code ? ` [${code}]` : ''}`,
+      disc: desc
+        ? desc
+        : "We couldn't complete your request, please try again!",
+      buttOne: '',
+      buttTwo: 'OKAY',
+    });
+  };
   useEffect(() => {
     let GuestTypeArr: filterArrType = {
       all: [],
@@ -90,34 +170,7 @@ export default function ({
     setGuestType(GuestTypeArr);
   }, [eventGuest]);
 
-  const [loading, setLoading] = useState({
-    status: false,
-    text: '',
-  });
-
-  const [popupModal, setPopupModal] = useState(PopupModal);
-
-  const onDismiss = useCallback(() => {
-    // setPopupModal({...popupModal, state: false});
-  }, [popupModal.state]);
-
-  const buttOnePress = useCallback(() => {
-    if (popupModal.buttOne === 'BACK') {
-      // setPopupModal({...popupModal, state: false});
-    }
-  }, [popupModal.state]);
-
-  const buttTwoPress = useCallback(() => {
-    if (popupModal.buttTwo === 'RETRY') {
-      // setPopupModal({...popupModal, state: false});
-      // callAPI();
-    }
-  }, [popupModal.state]);
-
   const onSendMsg = () => {
-    // Object.values(selectedItems).map((itm) => {
-    //   console.log('itm', itm);
-    // });
     let guestList: guestListType[] = [];
     Object.keys(selectedItems).forEach(function (key, index) {
       guestList = [
@@ -133,38 +186,8 @@ export default function ({
       guestList,
       eventID,
       eventName,
-      // params
+      eventPic,
     });
-    // const selectedItms = Object.keys(selectedItems).map(itm => parseInt(itm));
-    // console.log('selectedItems', selectedItms);
-    //
-    //
-    //
-    // if (selectedItms.length > 0) {
-    //   const token = storage.getString('user.token');
-    //   const id = storage.getString('user.id');
-    //   if (
-    //     token !== null &&
-    //     token !== undefined &&
-    //     id !== null &&
-    //     id !== undefined
-    //   ) {
-    //     const formData = {
-    //       mode: 'ADD_GUESTS',
-    //       token,
-    //       id,
-    //       event_id: eventID,
-    //       guests_ids: JSON.stringify(selectedItms),
-    //     };
-
-    //     setLoading({
-    //       status: true,
-    //       text: `Adding ${selectedItms.length} Contacts...`,
-    //     });
-    //     console.log('formDataformDataformData', formData);
-    //     mutation.mutate(formData);
-    //   }
-    // }
   };
   const guestListArr =
     selectedFilter === ''
@@ -198,6 +221,7 @@ export default function ({
             letterSpacing: 0,
             fontSize: 14,
             lineHeight: 18.2,
+            paddingVertical: 6,
           }}
           textInputProps={{
             placeholder: 'Find a guest....',
@@ -238,22 +262,40 @@ export default function ({
           onReload={onReload}
         />
       </View>
-      <View style={{alignSelf: 'center', paddingVertical: 12}}>
-        <Button
-          lable="SEND MESSAGE"
-          variant="SubTitleTwo"
-          textStyles={{
-            color: '#2D2D2D',
-          }}
-          buttonStyles={{
-            backgroundColor:
-              Object.keys(selectedItems).length !== 0 ? '#F9BC52' : '#F9BC5280',
-          }}
-          icon={() => <SendSVG fill={'#2D2D2D'} width={20} height={20} />}
-          onPress={onSendMsg}
-          small={true}
-          disabled={Object.keys(selectedItems).length === 0}
-        />
+      <View style={{alignSelf: 'center', paddingBottom: 12}}>
+        {status ? (
+          <Button
+            lable="SEND MESSAGE"
+            variant="SubTitleTwo"
+            textStyles={{
+              color: '#2D2D2D',
+            }}
+            buttonStyles={{
+              backgroundColor:
+                Object.keys(selectedItems).length !== 0
+                  ? '#F9BC52'
+                  : '#F9BC5280',
+            }}
+            icon={() => <SendSVG fill={'#2D2D2D'} width={20} height={20} />}
+            onPress={onSendMsg}
+            small={true}
+            disabled={Object.keys(selectedItems).length === 0}
+          />
+        ) : (
+          <Button
+            lable="Whatsapp not connected"
+            variant="SubTitleTwo"
+            textStyles={{
+              color: '#2D2D2D',
+            }}
+            buttonStyles={{
+              backgroundColor: '#F9BC5280',
+            }}
+            onPress={() => {}}
+            small={true}
+            disabled={true}
+          />
+        )}
       </View>
       <PopupCompo
         isVisible={popupModal.state}
@@ -317,7 +359,7 @@ const FilterRow = memo(
         <FilterItem
           title="No"
           count={guestListArr.no}
-          icon="'N'"
+          icon="N"
           selected={selectedFilter === 'N'}
           onPress={() => {
             setSelectedFilter('N');
@@ -364,8 +406,8 @@ const FilterItem = ({
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
-          paddingHorizontal: 18,
-          paddingVertical: 12,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
           borderRadius: 100,
           backgroundColor: '#C5B1C33D',
         }}

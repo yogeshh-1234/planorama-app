@@ -4,6 +4,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -21,7 +22,13 @@ import {
   guestListType,
 } from '../../navigation';
 import Text from '../../components/Text';
-import {BinSVG, CopySVG, EyeSVG, ImageSVG} from '../../assets/SVG/IconsSVG';
+import {
+  BinSVG,
+  CopySVG,
+  DownSVG,
+  EyeSVG,
+  ImageSVG,
+} from '../../assets/SVG/IconsSVG';
 import {RichEditor, RichToolbar, actions} from 'react-native-pell-rich-editor';
 import Button from '../../components/Button';
 import Animated, {
@@ -45,6 +52,7 @@ import LoadingCompo from '../../components/LoadingCompo';
 import WhatsAppCompo from './WhatsAppCompo';
 import SendMsgButt from './SendMsgButt';
 import PopupCompo from '../../components/PopupCompo';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -102,6 +110,26 @@ const MainContainer = () => {
   const [loading, setLoading] = useState(false);
   const [guestListArray, setGuestListArray] = useState<guestListType[]>([]);
   const [allData, setAllData] = useState<getMsgDataType | null>(null);
+  //
+
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  //
   useEffect(() => {
     setGuestListArray(params.guestList);
     getData();
@@ -221,20 +249,21 @@ const MainContainer = () => {
           }}>
           Send message via WhatsApp
         </Text>
-        <ImgCompo />
+        <ImgCompo uri={params.eventPic} />
+        {/* {console.log(`${allData?.message_template}`)} */}
         {!loading && (
           <MsgCompo
             richText={richText}
             msgData={allData?.message_template ? allData?.message_template : ''}
           />
         )}
-        {guestListArray.length > 0 && (
+        {/* {guestListArray.length > 0 && (
           <Button
             lable={'Send'}
             onPress={handleSend}
             buttonStyles={{alignSelf: 'center'}}
           />
-        )}
+        )} */}
         {allData?.rsvp_url && <EventLink link={allData?.rsvp_url} />}
         {guestListArray.length > 0 && (
           <GuestCompo
@@ -249,18 +278,17 @@ const MainContainer = () => {
         )}
       </ScrollView>
       {loading && <LoadingCompo text="getting message ready..." />}
-      {guestListArray.length > 0 && (
+      {guestListArray.length > 0 && !isKeyboardVisible && (
         <PreviewButt
           onPress={async () => {
             const msgDataText = await richText.current
               ?.getContentHtml()
               .then(htmlContent => {
                 const formatted = convertToWhatsAppFormat(htmlContent);
-
                 return {formatted, htmlContent};
               });
 
-            navigation.navigate('PreviewScreen', {
+              navigation.navigate('PreviewScreen', {
               eventID: params.eventID,
               guestsIds: guestListArray.map(itm => parseInt(itm.id)), // in array
               message: `${msgDataText?.formatted}`,
@@ -268,6 +296,7 @@ const MainContainer = () => {
               fileBase: '',
               fileName: '',
               eventName: params.eventName,
+              eventPic: params.eventPic,
             });
           }}
         />
@@ -286,13 +315,21 @@ const MainContainer = () => {
   );
 };
 
-const ImgCompo = memo(() => {
+const ImgCompo = memo(({uri}: {uri: string}) => {
   return (
     <View
       style={{
         paddingHorizontal: paddingHorizontal,
       }}>
-      <Pressable
+      <Image
+        source={{uri}}
+        style={{
+          borderRadius: 10,
+          height: 200,
+          width: '100%',
+        }}
+      />
+      {/* <Pressable
         key={0}
         android_ripple={{color: `#ffffff80`, borderless: false}}
         style={styles.imgGalleryUp}
@@ -304,7 +341,7 @@ const ImgCompo = memo(() => {
         <Text variant={'BodyRegular'} style={styles.upTxt}>
           Upload Image
         </Text>
-      </Pressable>
+      </Pressable> */}
     </View>
   );
 });
@@ -349,13 +386,27 @@ const MsgCompo = memo(
           paddingHorizontal,
           gap: 15,
         }}>
-        <Text
+        <View
           style={{
-            color: '#fff',
-          }}
-          variant={'BodyRegular'}>
-          Message
-        </Text>
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+          <Text
+            style={{
+              color: '#fff',
+            }}
+            variant={'BodyRegular'}>
+            Message
+          </Text>
+          <View>
+            <SelectNameCompo
+              onSelectedID={data => {
+                richText.current?.insertText(data);
+              }}
+            />
+          </View>
+        </View>
         <View>
           <RichToolbar
             editor={richText}
@@ -631,21 +682,70 @@ const PreviewButt = ({onPress}: {onPress: () => void}) => {
   );
 };
 
-const styles = StyleSheet.create({
-  imgGalleryUp: {
-    backgroundColor: '#C5B1C33D',
-    borderRadius: 10,
-    height: 150,
-    width: '100%',
-    // flex: 1,
-    // width: 150,
-    gap: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+const SelectNameCompo = ({
+  onSelectedID,
+}: {
+  onSelectedID: (id: string) => void;
+}) => {
+  const shortcodes = {
+    '[guest-name]': 'Guest Name',
+    '[event-name]': 'Event Name',
+    '[event-date]': 'Event Date',
+    '[event-place]': 'Event Place',
+  };
 
-  upTxt: {
-    color: '#fff',
-    textAlign: 'center',
+  // Convert shortcodes object to dropdown items
+  const dropdownItems = Object.entries(shortcodes).map(([value, label]) => ({
+    label, // Label to display
+    value, // Actual value
+  }));
+
+  const [open, setOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState(null); // Selected value from dropdown
+
+  return (
+    <DropDownPicker
+      open={open}
+      value={selectedValue}
+      items={dropdownItems}
+      setOpen={setOpen}
+      setValue={val => {
+        onSelectedID(val('').toString());
+      }}
+      placeholder="Insert name"
+      placeholderStyle={{
+        color: '#fff',
+      }}
+      textStyle={{
+        color: '#fff',
+      }}
+      ArrowUpIconComponent={() => (
+        <DownSVG
+          width={16}
+          height={16}
+          style={{
+            transform: [{rotate: '180deg'}],
+          }}
+        />
+      )}
+      ArrowDownIconComponent={() => <DownSVG width={16} height={16} />}
+      style={styles.dropdown}
+      dropDownContainerStyle={styles.dropdownContainer}
+    />
+  );
+};
+
+const styles = StyleSheet.create({
+  dropdown: {
+    minWidth: 150,
+    backgroundColor: '#C5B1C380',
+    // gap: 20,
+    // paddingHorizontal: 15,
+    paddingVertical: 8,
+    flex: 0,
+  },
+  dropdownContainer: {
+    minWidth: 150,
+    backgroundColor: '#75486F',
   },
 });

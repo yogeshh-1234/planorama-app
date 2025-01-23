@@ -20,3 +20,24 @@ error display & loading
 
 add skeleton loading
 add haptic feedback
+
+
+
+
+----------------------------
+
+
+done:
+LOGIN number FONT 
+no icon IN GUEST LIST
+remove top padding
+search in phonebook contact
+CONTACTS SCREEN search & selected list
+gust send butt disable on disconnect
+disconnect WhatsApp
+credits display
+
+
+dash pull to refresh
+check whatsapp text before send msg \n
+

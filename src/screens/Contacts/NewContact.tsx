@@ -51,7 +51,7 @@ export default function () {
         <HeaderCompo />
         <View
           style={{
-            paddingTop: 30,
+            // paddingTop: 30,
             paddingHorizontal: width * 0.05,
             gap: 18,
             flex: 1,

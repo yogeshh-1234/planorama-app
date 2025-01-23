@@ -288,7 +288,7 @@ const HostedByCompo = memo(() => {
 const styles = StyleSheet.create({
   container: {
     gap: 21,
-    paddingVertical: 21,
+    // paddingVertical: 21,
   },
   title: {
     fontSize: 25,

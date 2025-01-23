@@ -54,11 +54,12 @@ export type RootStackParamList = {
   ImportContacts: {onGoBack?: () => void};
   AddNewContact: undefined;
   EventSettingsScreen: {eventID?: number};
-  EventGuest: {eventID: number; eventName: string};
+  EventGuest: {eventID: number; eventName: string; eventPic: string};
   SendMsgScreen: {
     guestList: guestListType[];
     eventID: number;
     eventName: string;
+    eventPic: string;
   };
   PreviewScreen: {
     eventID: number;
@@ -67,14 +68,15 @@ export type RootStackParamList = {
     messageHTML: string;
     fileBase: string;
     fileName: string;
-    eventName:string
+    eventName: string;
+    eventPic: string;
   };
   SuccessScreen: {
     type: string;
     count?: number;
     title: string;
     eventID: number;
-    eventName:string
+    eventName: string;
   };
 };
 

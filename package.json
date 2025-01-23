@@ -26,6 +26,7 @@
     "react-native-contacts": "^8.0.4",
     "react-native-country-codes-picker": "^2.3.5",
     "react-native-device-info": "^14.0.2",
+    "react-native-dropdown-picker": "^5.4.6",
     "react-native-gesture-handler": "^2.21.2",
     "react-native-image-picker": "^7.2.1",
     "react-native-linear-gradient": "^2.8.3",
