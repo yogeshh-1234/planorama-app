@@ -53,7 +53,6 @@ export default function () {
   const {params} = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
 
   const navigation = useNavigation<MainStackNavigation>();
-  const [value, setValue] = useState('');
 
   const [loading, setLoading] = useState(false);
 
@@ -131,32 +130,12 @@ export default function () {
             variant="BodyRegular"
           />
         </Animated.View>
-        <Animated.View entering={FadeIn.delay(200)} exiting={FadeOut}>
-          <TextInput
-            iconName="search"
-            value={value}
-            onChangeText={setValue}
-            iconsize={16}
-            textInputStyle={{
-              fontFamily: 'PoppinsMedium',
-              fontWeight: '500',
-              letterSpacing: 0,
-              fontSize: 14,
-              lineHeight: 18.2,
-              paddingVertical: 6,
-            }}
-            textInputProps={{
-              placeholder: 'Find a guest....',
-              placeholderTextColor: '#ffffff80',
-            }}
-          />
-        </Animated.View>
+
         {/* <View>
           <FiltersTab />
         </View> */}
         <ContactList
           justToReload={loading}
-          search={value}
           eventID={params.eventID}
           fromGuest={params.fromGuest}
           key="eventcontacts"
@@ -166,49 +145,49 @@ export default function () {
   );
 }
 
-const FiltersTab = memo(() => {
-  return (
-    <Animated.View
-      entering={FadeIn.delay(300)}
-      exiting={FadeOut}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 20,
-      }}>
-      <FilterButt lable={' '} title="Events" />
-      <FilterButt lable={' '} title="RSVP status" />
-    </Animated.View>
-  );
-});
+// const FiltersTab = memo(() => {
+//   return (
+//     <Animated.View
+//       entering={FadeIn.delay(300)}
+//       exiting={FadeOut}
+//       style={{
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         gap: 20,
+//       }}>
+//       <FilterButt lable={' '} title="Events" />
+//       <FilterButt lable={' '} title="RSVP status" />
+//     </Animated.View>
+//   );
+// });
 
-const FilterButt = memo(({lable, title}: {lable: string; title: string}) => {
-  return (
-    <View
-      style={{
-        flex: 1,
-      }}>
-      <Text variant={'DetailRegular'} style={{color: '#fff'}}>
-        {title}
-      </Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          // flex: 1,
-          backgroundColor: '#C5B1C33D',
-          borderRadius: 5,
-          padding: 12,
-        }}>
-        <Text variant={'DetailRegular'} style={{color: '#fff'}}>
-          {lable}
-        </Text>
-        <DownSVG fill={'#fff'} width={12} height={12} />
-      </View>
-    </View>
-  );
-});
+// const FilterButt = memo(({lable, title}: {lable: string; title: string}) => {
+//   return (
+//     <View
+//       style={{
+//         flex: 1,
+//       }}>
+//       <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+//         {title}
+//       </Text>
+//       <View
+//         style={{
+//           flexDirection: 'row',
+//           alignItems: 'center',
+//           justifyContent: 'space-between',
+//           // flex: 1,
+//           backgroundColor: '#C5B1C33D',
+//           borderRadius: 5,
+//           padding: 12,
+//         }}>
+//         <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+//           {lable}
+//         </Text>
+//         <DownSVG fill={'#fff'} width={12} height={12} />
+//       </View>
+//     </View>
+//   );
+// });
 
 const PopupModal = {
   state: false,
@@ -220,12 +199,10 @@ const PopupModal = {
 const ContactList = memo(
   ({
     justToReload,
-    search,
     eventID,
     fromGuest,
   }: {
     justToReload: boolean;
-    search: string;
     eventID: number;
     fromGuest: boolean | undefined;
   }) => {
@@ -237,6 +214,8 @@ const ContactList = memo(
     const [contacts, setContacts] = useState<contactType[]>([]);
 
     const [selectedItems, setSelectedItems] = useState<ItemType>({}); // Object to store selected items
+
+    const [value, setValue] = useState('');
 
     const [loading, setLoading] = useState({
       status: false,
@@ -342,8 +321,8 @@ const ContactList = memo(
 
     const filteredData = contacts.filter(
       item =>
-        item.name.toLowerCase().includes(search.trim().toLowerCase()) ||
-        item.number.includes(search.trim()),
+        item.name.toLowerCase().includes(value.trim().toLowerCase()) ||
+        item.number.includes(value.trim()),
     );
 
     // upload contacts
@@ -437,6 +416,29 @@ const ContactList = memo(
         style={{
           flex: 1,
         }}>
+        {(filteredData.length > 0 || value.length > 0) && (
+          <Animated.View entering={FadeIn.delay(200)} exiting={FadeOut}>
+            <TextInput
+              iconName="search"
+              onRightButt={()=>setValue('')}
+              value={value}
+              onChangeText={setValue}
+              iconsize={16}
+              textInputStyle={{
+                fontFamily: 'PoppinsMedium',
+                fontWeight: '500',
+                letterSpacing: 0,
+                fontSize: 14,
+                lineHeight: 18.2,
+                paddingVertical: 6,
+              }}
+              textInputProps={{
+                placeholder: 'Find a guest....',
+                placeholderTextColor: '#ffffff80',
+              }}
+            />
+          </Animated.View>
+        )}
         {/* <FlatList data={filteredData} renderItem={renderItem} /> */}
         {loading.status ? (
           <View

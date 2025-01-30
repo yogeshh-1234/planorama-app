@@ -51,3 +51,11 @@ export interface WAmessageResponse {
   };
   StatusCode: number;
 }
+
+export interface updateProfForm {
+  mode: string;
+  token: string;
+  id: string;
+  name: string;
+  pic: string | null;
+}

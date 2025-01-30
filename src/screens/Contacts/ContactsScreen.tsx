@@ -47,6 +47,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Tooltip} from 'react-native-paper';
 import TextInput from '../../components/TextInput';
+import { debounce } from 'lodash';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -197,7 +198,7 @@ const ContactsCompo = memo(() => {
             formattedContacts = [
               ...formattedContacts,
               {
-                id: `${contact.recordID}${itm.id}`,
+                id: `${contact.recordID}${itm.number}`,
                 name: contact.displayName,
                 number: itm.number.replace(/[+\s]+/g, ''),
                 pic: null,
@@ -331,6 +332,29 @@ const ContactsCompo = memo(() => {
 
   const [value, setValue] = useState('');
   const [viewAll, setViewAll] = useState(true);
+
+  // Debounce the search input to optimize performance
+  const debouncedSetValue = useCallback(debounce(setValue, 300), []);
+
+  // Memoize the filtered contacts list
+  const filteredContacts = useMemo(() => {
+    return contacts.filter(item =>
+      item.name.toLowerCase().includes(value.toLowerCase())
+    );
+  }, [contacts, value]);
+
+  // Memoize the selected contacts list
+  const selectedContacts = useMemo(() => {
+    return Object.values(selectedItems)
+      .map((itm, id) => ({
+        ...itm,
+        id,
+      }))
+      .filter(item =>
+        item.name.toLowerCase().includes(value.toLowerCase())
+      );
+  }, [selectedItems, value]);
+
   return (
     <View
       style={{
@@ -383,8 +407,7 @@ const ContactsCompo = memo(() => {
             }}>
             <TextInput
               iconName="search"
-              value={value}
-              onChangeText={setValue}
+              onChangeText={debouncedSetValue}
               iconsize={16}
               textInputStyle={{
                 fontFamily: 'PoppinsMedium',
@@ -423,32 +446,22 @@ const ContactsCompo = memo(() => {
         </View>
         {contacts.length > 0 && (
           <>
-            {viewAll && (
+            {viewAll ? (
               <ContsctsList
                 key="all"
                 staticData={false}
                 selectedItems={selectedItems}
                 setSelectedItems={(val: any) => setSelectedItems(val)}
-                contacts={contacts.filter(item =>
-                  item.name.toLowerCase().includes(value.toLowerCase()),
-                )}
+                contacts={filteredContacts}
                 delay={0}
               />
-            )}
-            {!viewAll && (
+            ) : (
               <ContsctsList
                 key="selected"
                 staticData={true}
                 selectedItems={selectedItems}
                 setSelectedItems={(val: any) => setSelectedItems(val)}
-                contacts={Object.values(selectedItems)
-                  .map((itm, id) => ({
-                    ...itm,
-                    id,
-                  }))
-                  .filter(item =>
-                    item.name.toLowerCase().includes(value.toLowerCase()),
-                  )}
+                contacts={selectedContacts}
                 delay={0}
               />
             )}

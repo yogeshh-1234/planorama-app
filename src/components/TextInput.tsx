@@ -11,7 +11,7 @@ import {CloseSVG, LocSVG, SearchSVG} from '../assets/SVG/IconsSVG';
 
 export default ({
   lable = '',
-  value = '',
+  value,
   iconName,
   iconsize = 20,
   onChangeText,
@@ -75,7 +75,7 @@ export default ({
             letterSpacing: 0,
             fontSize: 25,
             lineHeight: 37.5,
-
+            color: '#fff',
             flex: 1,
           },
           textInputStyle,

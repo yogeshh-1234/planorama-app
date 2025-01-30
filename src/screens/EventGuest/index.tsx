@@ -108,6 +108,16 @@ export default function () {
     navigation.goBack();
   };
 
+  const addGuest = () => {
+    navigation.navigate('ContactsScreen', {
+      eventID: params.eventID,
+      fromGuest: true,
+      onGoBack: () => {
+        callAPI();
+      },
+    });
+  };
+
   return (
     <View
       style={{
@@ -131,7 +141,7 @@ export default function () {
         }}
       />
       <HeaderCompo onBack={onBack} />
-  
+
       <View
         style={{
           gap: 18,
@@ -148,45 +158,67 @@ export default function () {
             variant={'TitleTwo'}
             style={{
               color: '#fff',
+              paddingVertical: 12,
             }}>
             Manage guests
           </Text>
+          {eventGuest.length > 0 && (
+            <Pressable
+              style={{
+                paddingVertical: 12,
+                paddingHorizontal: 4,
+              }}
+              onPress={addGuest}>
+              <Text
+                variant={'DetailRegular'}
+                style={{
+                  color: '#fff',
+                }}>
+                + Add guests
+              </Text>
+            </Pressable>
+          )}
+        </View>
+        {eventGuest.length > 0 ? (
+          <ManageGuest
+            eventGuest={eventGuest}
+            eventID={params.eventID}
+            onReload={callAPI}
+            eventName={params.eventName}
+            eventPic={params.eventPic}
+          />
+        ) : (
           <Pressable
             style={{
-              paddingVertical: 12,
-              paddingHorizontal: 4,
+              flex: 1,
+              marginHorizontal: width * 0.05,
+              marginVertical: height * 0.02,
+              gap: height * 0.01,
+              borderRadius: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-            onPress={() => {
-
-              navigation.navigate('ContactsScreen', {
-                eventID: params.eventID,
-                fromGuest: true,
-                onGoBack: () => {
-                  callAPI();
-                },
-              });
-            }}>
+            android_ripple={{color: `#C5B1C31A`, borderless: false}}
+            onPress={addGuest}>
             <Text
-              variant={'DetailRegular'}
+              variant={'TitleOne'}
               style={{
                 color: '#fff',
               }}>
-              + Add guests
+              +
+            </Text>
+            <Text
+              variant={'SubTitleOne'}
+              style={{
+                color: '#fff',
+              }}>
+              Add guests
             </Text>
           </Pressable>
-        </View>
-
-        <ManageGuest
-          eventGuest={eventGuest}
-          eventID={params.eventID}
-          onReload={callAPI}
-          eventName={params.eventName}
-          eventPic={params.eventPic}
-        />
+        )}
       </View>
 
       {loading && <LoadingCompo text={'Getting event guest'} />}
     </View>
   );
 }
-

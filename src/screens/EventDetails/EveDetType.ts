@@ -23,6 +23,11 @@ export interface EventDetailsType {
   link: string;
   event_disc: string;
   rsvp: 'Y' | 'N' | 'M' | null;
+  host_list: {
+    event_assoc_id: string;
+    name: string;
+    pic: string;
+  }[];
 }
 
 export interface ErrorFormat {

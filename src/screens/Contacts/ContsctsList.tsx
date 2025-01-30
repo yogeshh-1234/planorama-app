@@ -1,7 +1,5 @@
 import React, {useCallback, useMemo, useState} from 'react';
 import {
-  FlatList,
-  Image,
   Pressable,
   RefreshControl,
   ToastAndroid,
@@ -12,9 +10,7 @@ import Text from '../../components/Text';
 import {ItemType, contactListItem} from './ContactsScreen';
 import RSVPIconCompo from '../../components/RSVPIconCompo';
 import Animated, {
-  FadeIn,
   FadeInLeft,
-  FadeOut,
   FadeOutLeft,
   ZoomIn,
   ZoomOut,
@@ -26,6 +22,7 @@ import {importContactResponse, rsvpSubmitForm} from './contactsType';
 import {postData} from '../../api';
 import Urls from '../../api/urls';
 import {ErrorFormat} from '../Onboarding/authType';
+import {FlashList} from '@shopify/flash-list';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function ({
   staticData,
@@ -36,6 +33,7 @@ export default function ({
   delay = 0,
   eventID,
   onReload,
+  onDelete,
 }: {
   staticData: boolean;
   selectedItems: ItemType;
@@ -45,6 +43,7 @@ export default function ({
   delay?: number;
   eventID?: number;
   onReload?: () => void;
+  onDelete?: () => void;
 }) {
   const [selectAll, setSelectAll] = useState(false);
 
@@ -69,18 +68,20 @@ export default function ({
   );
 
   const handleSelectAll = useCallback(() => {
-    if (!selectAll) {
-      const allSelected = contacts.reduce((acc, item) => {
-        acc[item.id] = {
-          name: item.name,
-          number: item.number,
-        };
-        return acc;
-      }, {} as Record<string, {name: string; number: string}>);
-      setSelectedItems(allSelected);
-    } else {
-      setSelectedItems({});
-    }
+    setSelectedItems(prev => {
+      if (!selectAll) {
+        const allSelected = contacts.reduce((acc, item) => {
+          acc[item.id] = {
+            name: item.name,
+            number: item.number,
+          };
+          return acc;
+        }, {} as Record<string, {name: string; number: string}>);
+        return allSelected;
+      } else {
+        return {};
+      }
+    });
     setSelectAll(!selectAll);
   }, [contacts, selectAll]);
 
@@ -206,77 +207,84 @@ export default function ({
     <View
       style={{
         flex: 1,
-        gap: fromGuest ? 12 : 0,
+        gap: fromGuest ? 6 : 0,
       }}>
-      {!staticData && (
-        <AnimatedPressable
-          entering={FadeInLeft.delay(delay)}
-          exiting={FadeOutLeft}
-          onPress={() => {
-            handleSelectAll();
-          }}
+      {!staticData && memoizedData.length > 0 && (
+        <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            paddingVertical: 2,
-            paddingHorizontal: 8,
-            backgroundColor: fromGuest ? 'transparent' : '#C5B1C326',
-            gap: 10,
           }}>
-          <View
+          <AnimatedPressable
+            entering={FadeInLeft.delay(delay)}
+            exiting={FadeOutLeft}
+            onPress={handleSelectAll}
             style={{
-              width: 20,
-              height: 20,
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: staticData ? 0 : 1,
-              borderColor: '#fff',
+              paddingVertical: 2,
+              paddingHorizontal: 8,
+              backgroundColor: fromGuest ? 'transparent' : '#C5B1C326',
+              gap: 10,
+              flex: 1,
             }}>
-            {selectAll && <TickSVG width={12} height={12} />}
-          </View>
-          {fromGuest ? (
-            <>
-              <Text variant={'DetailRegular'} style={{color: '#fff', flex: 1}}>
-                Select all
-              </Text>
-              <Pressable>
-                <BinSVG width={16} height={16} fill={'#fff'} />
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <View
-                style={{
-                  borderColor: '#fff',
-                  borderWidth: 0,
-                  borderRadius: 5,
-                  flex: 1,
-                  paddingVertical: 6,
-                  paddingHorizontal: 4,
-                }}>
-                <Text variant={'BodyRegular'} style={{color: '#fff'}}>
-                  Name
+            <View
+              style={{
+                width: 20,
+                height: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: staticData ? 0 : 1,
+                borderColor: '#fff',
+              }}>
+              {selectAll && <TickSVG width={12} height={12} />}
+            </View>
+            {fromGuest ? (
+              <>
+                <Text
+                  variant={'DetailRegular'}
+                  style={{color: '#fff', flex: 1}}>
+                  Select all
                 </Text>
-              </View>
-              <Text variant={'BodyRegular'} style={{color: '#fff', flex: 1}}>
-                Mobile Number
-              </Text>
-            </>
+              </>
+            ) : (
+              <>
+                <View
+                  style={{
+                    borderColor: '#fff',
+                    borderWidth: 0,
+                    borderRadius: 5,
+                    flex: 1,
+                    paddingVertical: 6,
+                    paddingHorizontal: 4,
+                  }}>
+                  <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+                    Name
+                  </Text>
+                </View>
+                <Text variant={'BodyRegular'} style={{color: '#fff', flex: 1}}>
+                  Mobile Number
+                </Text>
+              </>
+            )}
+          </AnimatedPressable>
+          {fromGuest && (
+            <Pressable onPress={onDelete} style={{padding: 12}}>
+              <BinSVG width={16} height={16} fill={'#fff'} />
+            </Pressable>
           )}
-        </AnimatedPressable>
+        </View>
       )}
       <View
         style={{
           flex: 1,
         }}>
-        <FlatList
+        <FlashList
           data={memoizedData}
           renderItem={renderItem}
+          extraData={selectedItems}
           keyExtractor={item => item.id.toString()}
-          initialNumToRender={25}
-          maxToRenderPerBatch={25}
-          windowSize={25}
-          // onReload
+          estimatedItemSize={50}
           refreshControl={
             <RefreshControl
               refreshing={false}

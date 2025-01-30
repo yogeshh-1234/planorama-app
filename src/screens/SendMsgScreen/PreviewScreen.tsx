@@ -8,7 +8,7 @@ import Text from '../../components/Text';
 import moment from 'moment';
 import WhatsAppCompo from './WhatsAppCompo';
 import {RichEditor} from 'react-native-pell-rich-editor';
-import SendMsgButt from './SendMsgButt';
+import SendMsgButt from './components/SendMsgButt';
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 

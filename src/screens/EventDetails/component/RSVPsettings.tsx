@@ -268,9 +268,9 @@ const DropdownCompo = memo(() => {
     <SelectDropdown
       data={[
         {title: 'All', id: 1},
-        {title: 'Not All', id: 2},
-        {title: 'Maybe All', id: 3},
-        {title: 'Maybe Not All', id: 2},
+        // {title: 'Not All', id: 2},
+        // {title: 'Maybe All', id: 3},
+        // {title: 'Maybe Not All', id: 2},
       ]}
       onSelect={(selectedItem, index) => {
         // console.log(selectedItem, index);

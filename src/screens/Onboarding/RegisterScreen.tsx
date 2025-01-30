@@ -18,7 +18,6 @@ import {AuthSuccess, ErrorFormat, registerFormType} from './authType';
 import Urls from '../../api/urls';
 import {postData} from '../../api';
 import PopupCompo from '../../components/PopupCompo';
-import ImageResizer from '@bam.tech/react-native-image-resizer';
 
 const {width, height} = Dimensions.get('screen');
 const PopupModal = {

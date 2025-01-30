@@ -28,16 +28,11 @@ add haptic feedback
 
 
 done:
-LOGIN number FONT 
-no icon IN GUEST LIST
-remove top padding
-search in phonebook contact
-CONTACTS SCREEN search & selected list
-gust send butt disable on disconnect
-disconnect WhatsApp
-credits display
-
-
-dash pull to refresh
-check whatsapp text before send msg \n
-
+removed send button
+fixed nextline bug in whatsapp msg
+added delete guest option for an event
+added profile name and pic update option
+into page crash on logout bug fixed 
+image viewer
+contacts view change
+homescreen invited view

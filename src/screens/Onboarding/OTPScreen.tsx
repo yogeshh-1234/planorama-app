@@ -122,7 +122,6 @@ export default function ({onPress}: {onPress: () => void}) {
         justifyContent: 'space-between',
       }}>
       <Animated.View
-        sharedTransitionTag="authTitle"
         style={{
           gap: height * 0.02,
         }}>

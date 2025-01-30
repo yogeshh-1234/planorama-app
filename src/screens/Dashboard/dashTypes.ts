@@ -16,6 +16,8 @@ export interface eventItem {
 export interface dashEventsResponse {
   data: {
     event_list: eventItem[];
+    event_type: string;
+    list_type: string;
   };
   StatusCode: number;
 }

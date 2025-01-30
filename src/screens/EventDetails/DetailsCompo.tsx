@@ -6,6 +6,7 @@ import {
   Linking,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   View,
 } from 'react-native';
@@ -29,7 +30,9 @@ import Animated, {
   ZoomOut,
 } from 'react-native-reanimated';
 import {storage} from '../../functions/storage';
+import ImageViewer from '../../components/ImageViewer';
 const {width, height} = Dimensions.get('screen');
+const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
 export default function ({
   title,
@@ -45,6 +48,7 @@ export default function ({
   rsvp,
   gallery,
   galleryLoading = false,
+  hostList,
 }: {
   title: string;
   fontId: string;
@@ -59,6 +63,11 @@ export default function ({
   rsvp: 'Y' | 'N' | 'M' | null;
   gallery: string[];
   galleryLoading?: boolean;
+  hostList?: {
+    event_assoc_id: string;
+    name: string;
+    pic: string;
+  }[];
 }) {
   const fontName = useMemo(() => {
     let idx = fonts.findIndex(itm => itm.id === fontId);
@@ -81,7 +90,7 @@ export default function ({
         ]}>
         {title}
       </Text>
-      <ImageCompo uri={cover_img} />
+      <ImageCompo uri={cover_img} ImgSize={width * 0.9} delay={100} />
       <View style={styles.dateLoc}>
         <View style={styles.dateRow}>
           <Text
@@ -127,6 +136,7 @@ export default function ({
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
+              flex: 1,
             }}
             onPress={
               isLink
@@ -148,9 +158,8 @@ export default function ({
             </Text>
           </Pressable>
         </Animated.View>
-
       </View>
-      <HostedByCompo />
+      <HostedByCompo hostList={hostList} />
       <View>
         <Text
           variant={'DetailBold'}
@@ -185,15 +194,12 @@ export default function ({
                 paddingVertical: 12,
               }}>
               {gallery.map((itm, idx) => (
-                <Animated.Image
-                  entering={FadeIn.delay(600 + idx * 50)}
-                  exiting={FadeOut}
-                  source={{uri: itm}}
-                  style={{
-                    width: width * 0.3,
-                    height: width * 0.3,
-                    borderRadius: 10,
-                  }}
+                // <GalleryImgCompo itm={itm} idx={idx} key={idx} />
+                <ImageCompo
+                  uri={itm}
+                  ImgSize={width * 0.3}
+                  delay={600 + idx * 50}
+                  key={idx}
                 />
               ))}
             </ScrollView>
@@ -203,87 +209,143 @@ export default function ({
     </View>
   );
 }
-const ImageCompo = memo(({uri}: {uri: string}) => {
-  const [loading, setLoading] = useState(false);
-  return (
-    <Animated.View
-      style={{
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: width * 0.9,
-        height: width * 0.9,
-        borderRadius: 10,
-      }}
-      entering={FadeIn.delay(100)}
-      exiting={FadeOut}>
-      <ActivityIndicator
-        color={'#fff'}
-        size={'large'}
+
+const ImageCompo = memo(
+  ({uri, ImgSize, delay}: {uri: string; ImgSize: number; delay: number}) => {
+    const [showImg, setShowImg] = useState(false);
+    const toggleImg = () => setShowImg(pre => !pre);
+    return (
+      <Animated.View
         style={{
-          position: 'absolute',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: ImgSize,
+          height: ImgSize,
+          borderRadius: 10,
         }}
-      />
-      {uri.length > 0 && (
-        <Image
-          style={styles.imgSty}
-          source={{uri}}
-          onLoadStart={() => setLoading(true)}
-          onLoadEnd={() => setLoading(false)}
-        />
-      )}
-    </Animated.View>
-  );
-});
-const HostedByCompo = memo(() => {
-  const [data, setProfileData] = useState({
-    name: '',
-    pic: '',
-  });
-
-  useEffect(() => {
-    const tempName = storage.getString('user.name');
-    const tempPic = storage.getString('user.pic');
-    if (
-      tempName !== null &&
-      tempName !== undefined &&
-      tempPic !== null &&
-      tempPic !== undefined
-    ) {
-      setProfileData({
-        pic: tempPic,
-        name: tempName,
-      });
-    }
-  }, []);
-
-  return (
-    <Animated.View
-      entering={FadeIn.delay(400)}
-      exiting={FadeOut}
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-      }}>
-      {data.pic.length > 0 && (
-        <Image
-          source={{
-            uri: data.pic,
-          }}
+        entering={FadeIn.delay(delay)}
+        exiting={FadeOut}>
+        <ActivityIndicator
+          color={'#fff'}
+          size={'large'}
           style={{
-            width: 21,
-            height: 21,
-            borderRadius: 100,
+            position: 'absolute',
           }}
         />
-      )}
-      <Text variant={'BodyBold'} style={{color: '#F9BC52'}}>
-        {data.name}
-      </Text>
-    </Animated.View>
-  );
-});
+        {uri.length > 0 && (
+          <Pressable onPress={toggleImg}>
+            <Image
+              style={{
+                width: ImgSize,
+                height: ImgSize,
+                borderRadius: 10,
+                alignSelf: 'center',
+              }}
+              source={{uri}}
+            />
+          </Pressable>
+        )}
 
+        {showImg && (
+          <ImageViewer
+            imageUrl={uri}
+            width={width}
+            height={height - 50 - Top_Height}
+            onRequestClose={toggleImg}
+          />
+        )}
+      </Animated.View>
+    );
+  },
+);
+const HostedByCompo = memo(
+  ({
+    hostList,
+  }: {
+    hostList:
+      | {
+          event_assoc_id: string;
+          name: string;
+          pic: string;
+        }[]
+      | undefined;
+  }) => {
+    const [data, setProfileData] = useState({
+      name: '',
+      pic: '',
+    });
+
+    useEffect(() => {
+      const tempName = storage.getString('user.name');
+      const tempPic = storage.getString('user.pic');
+      if (
+        tempName !== null &&
+        tempName !== undefined &&
+        tempPic !== null &&
+        tempPic !== undefined
+      ) {
+        setProfileData({
+          pic: tempPic,
+          name: tempName,
+        });
+      }
+    }, []);
+    
+    return (
+      <Animated.View
+        entering={FadeIn.delay(400)}
+        exiting={FadeOut}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+        }}>
+        {hostList && hostList.length > 0 ? (
+          <>
+            {/* {hostList.map(itm => ( */}
+            <Image
+              source={{
+                uri: hostList[0].pic,
+              }}
+              style={{
+                width: 21,
+                height: 21,
+                borderRadius: 100,
+              }}
+            />
+            {/* ))} */}
+            <Text variant={'BodyBold'} style={{color: '#F9BC52'}}>
+              {hostList[0].name}
+            </Text>
+            {hostList.length > 1 && (
+              <Text variant={'BodyBold'} style={{color: '#ffffff80'}}>
+                +{hostList.length - 1} more
+              </Text>
+            )}
+          </>
+        ) : (
+          <>
+            {data.pic.length > 0 && (
+              <Image
+                source={{
+                  uri: data.pic,
+                }}
+                style={{
+                  width: 21,
+                  height: 21,
+                  borderRadius: 100,
+                }}
+              />
+            )}
+            <Text variant={'BodyBold'} style={{color: '#F9BC52'}}>
+              {data.name}
+            </Text>
+          </>
+        )}
+      </Animated.View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -297,12 +359,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     textAlign: 'center',
   },
-  imgSty: {
-    width: width * 0.9,
-    height: width * 0.9,
-    borderRadius: 10,
-    alignSelf: 'center',
-  },
+  imgSty: {},
   dateLoc: {},
   dateRow: {
     flexDirection: 'row',
@@ -313,6 +370,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
+
+    paddingTop: 8,
   },
   hostDet: {},
   txtColor: {

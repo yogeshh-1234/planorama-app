@@ -1,16 +1,9 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {Dimensions, Image, StatusBar, View} from 'react-native';
-import Background from '../../components/Background';
-import BackgroundSVG from '../../assets/SVG/BackgroundSVG';
-import {BGline, IntroSVG} from '../../assets/SVG/VectorSVG';
-import Text from '../../components/Text';
-import Button from '../../components/Button';
+import {BGline} from '../../assets/SVG/VectorSVG';
 import LoginScreen from './LoginScreen';
 import OTPScreen from './OTPScreen';
 import RegisterScreen from './RegisterScreen';
-import {Portal} from 'react-native-paper';
-import LottieView from 'lottie-react-native';
-import Loading from '../../components/Loading';
 
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;

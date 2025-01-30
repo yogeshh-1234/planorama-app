@@ -48,7 +48,7 @@ export type RootStackParamList = {
     onGoBack?: () => void;
   };
   EventConfirmDetails: confirmEvent;
-  EventDetails: {id: number};
+  EventDetails: {id: number; invited?: boolean};
   ProfileScreen: profileType;
   ContactsScreen: {eventID: number; fromGuest?: boolean; onGoBack?: () => void};
   ImportContacts: {onGoBack?: () => void};

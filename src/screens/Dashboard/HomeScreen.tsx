@@ -374,22 +374,21 @@ const EventsCompo = memo(
       mutationFn: (formData: dashFormType) =>
         postData<dashFormType, dashEventsResponse>(Urls.HOME, formData),
       onSuccess: ({data, StatusCode}) => {
-        // console.log(data.event_list[0]);
         if (StatusCode === 200) {
-          if (type === 'Upcoming') {
+          if (data.list_type === 'up') {
             setUpEventsList(data.event_list);
             setTotalCount(pre => ({
               ...pre,
               up: data.event_list.length.toString(),
             }));
-          } else {
+          }
+          if (data.list_type === 'prev') {
             setPreEventsList(data.event_list);
             setTotalCount(pre => ({
               ...pre,
               pre: data.event_list.length.toString(),
             }));
           }
-
           //
         } else {
           setPopupModal({
@@ -525,7 +524,7 @@ const EventsDisplay = memo(
               // prev={type === 'Previous'}
               // invited={lable === 'invited'}
               prev={false}
-              invited={false}
+              invited={lable !== 'your'}
             />
           ))
         ) : (
@@ -563,7 +562,7 @@ const EventView = memo(
       <Pressable
         style={{paddingHorizontal: width * 0.02}}
         onPress={() => {
-          navigation.navigate('EventDetails', {id: data.evt_id});
+          navigation.navigate('EventDetails', {id: data.evt_id, invited: invited});
         }}>
         {prev && (
           <Text
@@ -714,12 +713,14 @@ const SelectionRow = memo(
           paddingHorizontal,
         }}>
         <SelectionItm
+          key={'upcoming'}
           lable={'Upcoming'}
           count={total.up}
           type={type === 'Upcoming'}
           onPress={() => setType('Upcoming')}
         />
         <SelectionItm
+          key={'previous'}
           lable={'Previous'}
           count={total.pre}
           type={type === 'Previous'}

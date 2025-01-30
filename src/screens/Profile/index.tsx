@@ -26,7 +26,7 @@ import {
 import Text from '../../components/Text';
 import HeaderCompo from '../../components/HeaderCompo';
 import {storage} from '../../functions/storage';
-import {dashError} from '../Dashboard/dashTypes';
+import {dashError, dashFormType, profileResponse} from '../Dashboard/dashTypes';
 import {useMutation} from '@tanstack/react-query';
 import {postData} from '../../api';
 import Urls from '../../api/urls';
@@ -43,11 +43,13 @@ import {
   mailQRForm,
   mailQRResponce,
   profileError,
+  updateProfForm,
 } from './ProfileTypes';
 import WhatsAppLogo from '../../components/WhatsAppLogo';
 import DeviceInfo from 'react-native-device-info';
 import PopupCompo from '../../components/PopupCompo';
 import CreditsCompo from './CreditsCompo';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 const {width, height} = Dimensions.get('screen');
 
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -196,12 +198,8 @@ export default function () {
           paddingHorizontal: width * 0.05,
           gap: 40,
         }}>
-        <ProfileCompo
-          uri={params.pic}
-          name={params.name}
-          number={params.number}
-          code={params.country_code}
-        />
+        <ProfileCompo />
+
         <View style={{gap: 20}}>
           <CreditsCompo
             credits={
@@ -213,12 +211,9 @@ export default function () {
             }
             loading={loading}
           />
-          {/* {(!status || loading) && ( */}
           <ItemCompoContainer
             type={'whatsapp'}
-            onSuccess={() => {
-              checkWhatsappStatus();
-            }}
+            onSuccess={checkWhatsappStatus}
             loadingMain={loading}
             title={
               loading
@@ -229,7 +224,6 @@ export default function () {
             }
             onPressTab={status ? dissconnectWAPrompt : undefined}
           />
-          {/* )} */}
           <ItemCompoContainer type={'logout'} title={'Logout'} />
         </View>
       </ScrollView>
@@ -248,7 +242,6 @@ export default function () {
         buttOnePress={onDismiss}
         buttTwoPress={onDismiss}
       />
-      {/* {loading && <LoadingCompo text={'Logging out'} />} */}
     </View>
   );
 }
@@ -392,86 +385,329 @@ const ItemCompo = ({
   );
 };
 
-const ProfileCompo = memo(
+const ProfileCompo = memo(() => {
+  const [name, setName] = useState('');
+  const [pic, setPic] = useState('');
+  const [picBASE64, setPicBASE64] = useState<string | null>(null);
+  const [num, setNum] = useState('');
+
+  const [nameModal, setNameModal] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const name = storage.getString('user.name');
+    const pic = storage.getString('user.pic');
+    const number = storage.getString('display.number');
+    setName(name ? name : '');
+    setPic(pic ? pic : '');
+    setNum(number ? number : '');
+  }, []);
+
+  const callAPI = (newName: string, newPic: string | null) => {
+    setNameModal(false);
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      const formData = {
+        mode: 'UPDATE_PROFILE',
+        token,
+        id,
+        name: newName,
+        pic: newPic,
+      };
+      setName(newName);
+      if (newPic && newPic.length > 0) setPicBASE64(newPic);
+      setLoading(true);
+      mutation.mutate(formData);
+    }
+  };
+
+  const mutation = useMutation<logoutResponse, dashError, updateProfForm>({
+    mutationFn: (formData: updateProfForm) =>
+      postData<updateProfForm, logoutResponse>(Urls.PROFILE, formData),
+    onSuccess: ({StatusCode}) => {
+      // get here profile immage url
+      if (StatusCode === 200) {
+        storage.set('user.name', name);
+        if (picBASE64 && picBASE64.length > 0) {
+          // call profile api
+          // and clear base64
+          getProfileData();
+        }
+        // storage.set('user.pic', data.pic);
+      } else {
+        resetData();
+      }
+      setLoading(false);
+    },
+    onError: error => {
+      resetData();
+      setLoading(false);
+    },
+  });
+
+  const getProfileData = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      const formData = {
+        mode: 'VIEW_PROFILE',
+        token,
+        id,
+      };
+      mutationPic.mutate(formData);
+    }
+  };
+
+  const mutationPic = useMutation<profileResponse, dashError, dashFormType>({
+    mutationFn: (formData: dashFormType) =>
+      postData<dashFormType, profileResponse>(Urls.PROFILE, formData),
+    onSuccess: ({data, StatusCode}) => {
+      if (StatusCode === 200) {
+        setPicBASE64(null);
+        storage.set('user.name', data.name);
+        storage.set('user.pic', data.pic);
+      }
+      setLoading(false);
+    },
+    onError: () => {},
+  });
+
+  const resetData = () => {
+    ToastAndroid.showWithGravity(
+      `Couldn't update profile, please try again!`,
+      ToastAndroid.SHORT,
+      ToastAndroid.CENTER,
+    );
+
+    const oldname = storage.getString('user.name');
+    const oldpic = storage.getString('user.pic');
+    setName(oldname ? oldname : '');
+    setPic(oldpic ? oldpic : '');
+  };
+
+  return (
+    <View
+      style={{
+        alignItems: 'center',
+        gap: 20,
+      }}>
+      {/*  */}
+      <ProfilePicView
+        uri={picBASE64 ? picBASE64 : pic}
+        loading={loading}
+        callAPI={img => callAPI(name, img)}
+      />
+      <View
+        style={{
+          gap: 12,
+        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+          <Text variant={'TitleOne'} style={{color: '#fff'}}>
+            {name}
+          </Text>
+          <Pressable
+            onPress={
+              loading
+                ? null
+                : () => {
+                    setNameModal(true);
+                  }
+            }>
+            {loading ? (
+              <ActivityIndicator color={'#fff'} />
+            ) : (
+              <EditSVG width={20} height={20} fill={'#fff'} />
+            )}
+          </Pressable>
+        </View>
+        <Text
+          variant={'BodyRegular'}
+          style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
+          {num}
+        </Text>
+      </View>
+      <Modal
+        isVisible={nameModal}
+        collapsable={true}
+        onDismiss={() => setNameModal(pre => !pre)}>
+        <ChangeName
+          name={name}
+          onClose={() => setNameModal(pre => !pre)}
+          onChange={val => callAPI(val, null)}
+        />
+      </Modal>
+    </View>
+  );
+});
+const ChangeName = memo(
   ({
-    uri,
     name,
-    number,
-    code,
+    onClose,
+    onChange,
   }: {
-    uri: string;
     name: string;
-    number: string;
-    code: string;
+    onClose: () => void;
+    onChange: (val: string) => void;
   }) => {
+    const [value, setValue] = useState(name);
     return (
       <View
         style={{
-          alignItems: 'center',
-          gap: 20,
+          backgroundColor: '#75486F',
+          borderRadius: 20,
+          paddingVertical: 20,
+          paddingHorizontal: 20,
+          gap: 16,
         }}>
-        <View>
-          <Image
-            source={{uri}}
-            style={{
-              width: width * 0.25,
-              height: width * 0.25,
-              borderRadius: width * 0.25,
-            }}
-          />
-          <Pressable
-            onPress={() => {
-              ToastAndroid.showWithGravity(
-                `Coming Soon!`,
-                ToastAndroid.SHORT,
-                ToastAndroid.CENTER,
-              );
-            }}
-            style={{
-              backgroundColor: '#2D2D2D',
-              borderRadius: 100,
-              position: 'absolute',
-              bottom: -13,
-              alignSelf: 'center',
-              padding: 6,
-            }}>
-            <EditSVG width={20} height={20} fill={'#fff'} />
-          </Pressable>
-        </View>
-        <View
+        <Pressable
+          onPress={onClose}
           style={{
-            gap: 12,
+            padding: 10,
+            position: 'absolute',
+            right: 10,
+            top: 10,
           }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-            }}>
-            <Text variant={'TitleOne'} style={{color: '#fff'}}>
-              {name}
-            </Text>
-            <Pressable
-              onPress={() => {
-                ToastAndroid.showWithGravity(
-                  `Coming Soon!`,
-                  ToastAndroid.SHORT,
-                  ToastAndroid.CENTER,
-                );
-              }}>
-              <EditSVG width={20} height={20} fill={'#fff'} />
-            </Pressable>
-          </View>
-          <Text
-            variant={'BodyRegular'}
-            style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
-            +{code} {number}
-          </Text>
-        </View>
+          <CloseSVG width={20} height={20} fill={'#fff'} />
+        </Pressable>
+        <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
+          Change Name:
+        </Text>
+
+        <TextInput
+          value={value}
+          onChangeText={setValue}
+          textInputStyle={{
+            fontFamily: 'PoppinsSemiBold',
+            fontWeight: '600',
+            letterSpacing: 0,
+            fontSize: 18,
+            lineHeight: 27,
+          }}
+        />
+        <Button
+          lable="CONFIRM"
+          buttonStyles={{
+            width: 'auto',
+          }}
+          onPress={() => onChange(value)}
+        />
       </View>
     );
   },
 );
+
+const ProfilePicView = ({
+  uri,
+  loading,
+  callAPI,
+}: {
+  uri: string;
+  loading: boolean;
+  callAPI: (img: string) => void;
+}) => {
+  const handleUploadImage = () => {
+    Alert.alert(
+      'Upload Image',
+      'Choose an option:',
+      [
+        {
+          text: 'Capture Image',
+          onPress: () => {
+            launchCamera(
+              {
+                mediaType: 'photo',
+                maxHeight: 500,
+                maxWidth: 500,
+                includeBase64: true,
+              },
+              response => {
+                if (response.didCancel) {
+                  // console.log('User cancelled image capture');
+                } else if (response.errorCode) {
+                  // console.log('Camera Error:', response.errorMessage);
+                } else if (response.assets && response.assets.length > 0) {
+                  callAPI(
+                    `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                  );
+                }
+              },
+            );
+          },
+        },
+        {
+          text: 'Select from Gallery',
+          onPress: () => {
+            launchImageLibrary(
+              {
+                mediaType: 'photo',
+                maxHeight: 500,
+                maxWidth: 500,
+                selectionLimit: 1,
+                includeBase64: true,
+              },
+              response => {
+                if (response.didCancel) {
+                  // console.log('User cancelled image picker');
+                } else if (response.errorCode) {
+                  // console.log('Gallery Error:', response.errorMessage);
+                } else if (response.assets && response.assets.length > 0) {
+                  callAPI(
+                    `data:${response?.assets[0].type};base64,${response?.assets[0].base64}`,
+                  );
+                }
+              },
+            );
+          },
+        },
+        {text: 'Cancel', style: 'cancel'},
+      ],
+      {cancelable: true},
+    );
+  };
+  return (
+    <View>
+      <Image
+        source={{uri}}
+        style={{
+          width: width * 0.25,
+          height: width * 0.25,
+          borderRadius: width * 0.25,
+        }}
+      />
+      {!loading && (
+        <Pressable
+          onPress={handleUploadImage}
+          style={{
+            backgroundColor: '#2D2D2D',
+            borderRadius: 100,
+            position: 'absolute',
+            bottom: -13,
+            alignSelf: 'center',
+            padding: 6,
+          }}>
+          <EditSVG width={20} height={20} fill={'#fff'} />
+        </Pressable>
+      )}
+    </View>
+  );
+};
 
 const ShareQRCompo = ({
   shareQR,
@@ -523,7 +759,7 @@ const ShareQRCompo = ({
         // console.log("WhatsApp Opened")
       })
       .catch(() => {
-        alert('Make sure Whatsapp installed on your device');
+        Alert.alert('Make sure Whatsapp installed on your device');
       });
   };
   return (

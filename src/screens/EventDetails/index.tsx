@@ -3,6 +3,7 @@ import {
   Dimensions,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -81,6 +82,7 @@ export default function () {
     link: '',
     event_disc: '',
     rsvp: null,
+    host_list: [],
   });
 
   const [galleryData, setGalleyData] = useState<string[]>([]);
@@ -195,7 +197,17 @@ export default function () {
         contentContainerStyle={{
           paddingBottom: 100,
           paddingHorizontal: width * 0.05,
-        }}>
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={mainFn}
+            title="Pull to refresh"
+            colors={['#F2F2F2']}
+            progressBackgroundColor={'#0E0E0E'}
+            titleColor="grey"
+          />
+        }>
         {!loading && (
           <DetailsCompo
             title={eventData.name}
@@ -213,16 +225,22 @@ export default function () {
             isLink={eventData.location.length > 0 ? false : true}
             description={eventData.event_disc}
             rsvp={eventData.rsvp}
+            hostList={eventData.host_list}
             gallery={galleryData}
             galleryLoading={galleryLoading}
           />
         )}
         {!loading && (
-          <GuestListCompo event_id={params.id} eventName={eventData.name} />
+          <GuestListCompo
+            event_id={params.id}
+            eventName={eventData.name}
+            eventPic={eventData.cover_img}
+            disable={params.invited === true}
+          />
         )}
         {!loading && <RSVPCompo value={eventData.rsvp} />}
       </ScrollView>
-      {!loading && (
+      {!loading && !(params.invited === true) && (
         <BottomBar
           eventID={params.id}
           eventData={eventData}
@@ -278,7 +296,7 @@ const BottomBar = memo(
       navigation.navigate('EventGuest', {
         eventID,
         eventName: eventData.name,
-        eventPic:eventData.cover_img
+        eventPic: eventData.cover_img,
       });
     };
     return (
@@ -422,7 +440,17 @@ const RSVPCompo = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
 
 const ImgCount = 3;
 const GuestListCompo = memo(
-  ({event_id, eventName}: {event_id: number; eventName: string}) => {
+  ({
+    event_id,
+    eventName,
+    eventPic,
+    disable,
+  }: {
+    event_id: number;
+    eventName: string;
+    eventPic: string;
+    disable: boolean;
+  }) => {
     const navigation = useNavigation<MainStackNavigation>();
 
     const [loading, setLoading] = useState(false);
@@ -484,11 +512,15 @@ const GuestListCompo = memo(
         }}>
         <Pressable
           style={{gap: 4}}
-          onPress={() =>
-            navigation.navigate('EventGuest', {
-              eventID: event_id,
-              eventName: eventName,
-            })
+          onPress={
+            disable
+              ? null
+              : () =>
+                  navigation.navigate('EventGuest', {
+                    eventID: event_id,
+                    eventName: eventName,
+                    eventPic: eventPic,
+                  })
           }>
           <Text variant={'SubTitleTwo'} style={{color: '#EDEDED'}}>
             Guest List

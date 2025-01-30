@@ -3,12 +3,7 @@ import {Dimensions, Pressable, ScrollView, View} from 'react-native';
 import TextInput from '../../components/TextInput';
 import {guestItemType} from './EventGuestType';
 import Text from '../../components/Text';
-import {
-  QuesSVG,
-  SendSVG,
-  ShareSVG,
-  ThumbsUpSVG,
-} from '../../assets/SVG/IconsSVG';
+import {SendSVG} from '../../assets/SVG/IconsSVG';
 import {MotiView, useAnimationState} from 'moti';
 import ContsctsList from '../Contacts/ContsctsList';
 import {ItemType} from '../Contacts/ContactsScreen';
@@ -17,22 +12,21 @@ import PopupCompo from '../../components/PopupCompo';
 import LoadingCompo from '../../components/LoadingCompo';
 import {storage} from '../../functions/storage';
 import {useMutation} from '@tanstack/react-query';
-import {
-  errorType,
-  importContactResponse,
-  importGuestForm,
-} from '../Contacts/contactsType';
 import {postData} from '../../api';
 import Urls from '../../api/urls';
 import RSVPIconCompo from '../../components/RSVPIconCompo';
 import {useNavigation} from '@react-navigation/native';
 import {MainStackNavigation, guestListType} from '../../navigation';
-import WhatsAppLogo from '../../components/WhatsAppLogo';
 import {
   connectionForm,
   connectionResponce,
   profileError,
 } from '../Profile/ProfileTypes';
+import {
+  errorType,
+  importContactResponse,
+  importGuestForm,
+} from '../Contacts/contactsType';
 const {width, height} = Dimensions.get('screen');
 type filterType = '' | 'Y' | 'N' | 'M';
 const paddingHorizontal = width * 0.05;
@@ -189,6 +183,83 @@ export default function ({
       eventPic,
     });
   };
+
+  const onDelete = () => {
+    const selectedItms = Object.keys(selectedItems).map(itm => parseInt(itm));
+    if (selectedItms.length > 0) {
+      const token = storage.getString('user.token');
+      const id = storage.getString('user.id');
+      if (
+        token !== null &&
+        token !== undefined &&
+        id !== null &&
+        id !== undefined
+      ) {
+        const formData = {
+          mode: 'DELETE_GUESTS',
+          token,
+          id,
+          event_id: eventID,
+          guests_ids: JSON.stringify(selectedItms),
+        };
+
+        setLoading({
+          status: true,
+          text: `Removing ${selectedItms.length} Contacts...`,
+        });
+        delGuestMutation.mutate(formData);
+      }
+    }
+  };
+
+  const delGuestMutation = useMutation<
+    importContactResponse,
+    errorType,
+    importGuestForm
+  >({
+    mutationFn: (formData: importGuestForm) =>
+      postData<importGuestForm, importContactResponse>(Urls.EVENT, formData),
+    onSuccess: ({data, StatusCode}) => {
+      if (StatusCode === 200) {
+        //
+        setSelectedItems({});
+        onReload();
+      } else {
+        setPopupModal({
+          state: true,
+          title: `Oops! Something went wrong.${
+            StatusCode ? ` [${StatusCode}]` : ''
+          }`,
+          disc: "We couldn't complete your request, please try again!",
+          buttOne: 'BACK',
+          buttTwo: 'RETRY',
+        });
+      }
+      setLoading({
+        status: false,
+        text: '',
+      });
+    },
+    onError: (error: errorType) => {
+      setLoading({
+        status: false,
+        text: '',
+      });
+
+      setPopupModal({
+        state: true,
+        title: `Oops! Something went wrong.${
+          error?.StatusCode ? ` [${error.StatusCode}]` : ''
+        }`,
+        disc: error?.error?.description
+          ? error.error.description
+          : "We couldn't complete your request, please try again!",
+        buttOne: 'BACK',
+        buttTwo: 'RETRY',
+      });
+    },
+  });
+
   const guestListArr =
     selectedFilter === ''
       ? guestType.all
@@ -260,6 +331,7 @@ export default function ({
           fromGuest={true}
           eventID={eventID}
           onReload={onReload}
+          onDelete={onDelete}
         />
       </View>
       <View style={{alignSelf: 'center', paddingBottom: 12}}>
@@ -389,15 +461,10 @@ const FilterItem = ({
     to: {
       scale: 1,
     },
-    pressd: {scale: 0.97},
+    pressd: {scale: 0.95},
   });
   return (
     <Pressable
-      style={{
-        borderRadius: 100,
-        borderWidth: 1,
-        borderColor: selected ? '#fff' : 'transparent',
-      }}
       onPressIn={() => buttState.transitionTo('pressd')}
       onPressOut={() => buttState.transitionTo('to')}
       onPress={onPress}>
@@ -408,8 +475,10 @@ const FilterItem = ({
           gap: 12,
           paddingHorizontal: 12,
           paddingVertical: 8,
-          borderRadius: 100,
           backgroundColor: '#C5B1C33D',
+          borderRadius: 100,
+          borderWidth: 1,
+          borderColor: selected ? '#fff' : 'transparent',
         }}
         state={buttState}>
         <RSVPIconCompo icon={icon} size={20} />

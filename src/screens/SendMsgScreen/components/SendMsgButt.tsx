@@ -1,15 +1,15 @@
 import React, {useCallback, useState} from 'react';
-import Button from '../../components/Button';
-import {WASVG} from '../../assets/SVG/IconsSVG';
-import {storage} from '../../functions/storage';
+import Button from '../../../components/Button';
+import {WASVG} from '../../../assets/SVG/IconsSVG';
+import {storage} from '../../../functions/storage';
 import {useMutation} from '@tanstack/react-query';
-import {getMsgError, msgFormType, msgSendResponce} from './sendMsgType';
-import Urls from '../../api/urls';
-import {postData} from '../../api';
-import PopupCompo from '../../components/PopupCompo';
-import Loading from '../../components/Loading';
-import LoadingCompo from '../../components/LoadingCompo';
-import {MainStackNavigation} from '../../navigation';
+import {getMsgError, msgFormType, msgSendResponce} from '../sendMsgType';
+import Urls from '../../../api/urls';
+import {postData} from '../../../api';
+import PopupCompo from '../../../components/PopupCompo';
+import Loading from '../../../components/Loading';
+import LoadingCompo from '../../../components/LoadingCompo';
+import {MainStackNavigation} from '../../../navigation';
 import {useNavigation} from '@react-navigation/native';
 const PopupModal = {
   state: false,

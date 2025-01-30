@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useRef, useState} from 'react';
+import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
 import {
   Clipboard,
   Dimensions,
@@ -22,20 +22,10 @@ import {
   guestListType,
 } from '../../navigation';
 import Text from '../../components/Text';
-import {
-  BinSVG,
-  CopySVG,
-  DownSVG,
-  EyeSVG,
-  ImageSVG,
-} from '../../assets/SVG/IconsSVG';
+import {BinSVG, CopySVG, DownSVG, EyeSVG} from '../../assets/SVG/IconsSVG';
 import {RichEditor, RichToolbar, actions} from 'react-native-pell-rich-editor';
 import Button from '../../components/Button';
-import Animated, {
-  FadeInLeft,
-  FadeOut,
-  FadeOutLeft,
-} from 'react-native-reanimated';
+import Animated, {FadeInLeft} from 'react-native-reanimated';
 import {storage} from '../../functions/storage';
 import {useMutation} from '@tanstack/react-query';
 import {
@@ -50,9 +40,9 @@ import Urls from '../../api/urls';
 import {postData} from '../../api';
 import LoadingCompo from '../../components/LoadingCompo';
 import WhatsAppCompo from './WhatsAppCompo';
-import SendMsgButt from './SendMsgButt';
 import PopupCompo from '../../components/PopupCompo';
 import DropDownPicker from 'react-native-dropdown-picker';
+import PreviewButt from './components/PreviewButt';
 
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -164,44 +154,12 @@ const MainContainer = () => {
   });
 
   const [popupModal, setPopupModal] = useState(PopupModal);
-  const handleSend = async () => {
-    const token = storage.getString('user.token');
-    const id = storage.getString('user.id');
-    if (
-      token !== null &&
-      token !== undefined &&
-      id !== null &&
-      id !== undefined
-    ) {
-      const msgDataText = await richText.current
-        ?.getContentHtml()
-        .then(htmlContent => {
-          const formatted = convertToWhatsAppFormat(htmlContent);
-
-          return {formatted, htmlContent};
-        });
-
-      const formData = {
-        mode: 'SEND_MESSAGE',
-        token,
-        id,
-        event_id: params.eventID,
-        guests_ids: JSON.stringify(guestListArray.map(itm => parseInt(itm.id))),
-        message: `${msgDataText?.formatted}`,
-        file_base64: '',
-        file_name: '',
-      };
-
-      setLoading(true);
-      sndMsgMutation.mutate(formData);
-    }
-  };
 
   const sndMsgMutation = useMutation<msgSendResponce, getMsgError, msgFormType>(
     {
       mutationFn: (formData: msgFormType) =>
         postData<msgFormType, msgSendResponce>(Urls.WHATSAPP, formData),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({StatusCode}) => {
         StatusCode === 200
           ? navigation.navigate('SuccessScreen', {
               type: 'invite',
@@ -232,12 +190,40 @@ const MainContainer = () => {
   };
   const onDismiss = () => setPopupModal({...popupModal, state: false});
 
+  // functions
+
+  const onRemoveGuest = (id: string) => {
+    setGuestListArray(pre => {
+      const updatedData = pre.filter(item => item.id !== id);
+      return updatedData;
+    });
+  };
+
+  const previewButtOnPress = async () => {
+    const msgDataText = await richText.current
+      ?.getContentHtml()
+      .then(htmlContent => {
+        const formatted = convertToWhatsAppFormat(htmlContent);
+        return {formatted, htmlContent};
+      });
+      
+    navigation.navigate('PreviewScreen', {
+      eventID: params.eventID,
+      guestsIds: guestListArray.map(itm => parseInt(itm.id)), // in array
+      message: `${msgDataText?.formatted}`,
+      messageHTML: `${msgDataText?.htmlContent}`,
+      fileBase: '',
+      fileName: '',
+      eventName: params.eventName,
+      eventPic: params.eventPic,
+    });
+  };
+
   return (
     <>
       <ScrollView
         nestedScrollEnabled
         contentContainerStyle={{
-          // flex: 1,
           gap: 20,
           paddingBottom: 120,
         }}>
@@ -250,56 +236,24 @@ const MainContainer = () => {
           Send message via WhatsApp
         </Text>
         <ImgCompo uri={params.eventPic} />
-        {/* {console.log(`${allData?.message_template}`)} */}
+
         {!loading && (
           <MsgCompo
             richText={richText}
             msgData={allData?.message_template ? allData?.message_template : ''}
           />
         )}
-        {/* {guestListArray.length > 0 && (
-          <Button
-            lable={'Send'}
-            onPress={handleSend}
-            buttonStyles={{alignSelf: 'center'}}
-          />
-        )} */}
         {allData?.rsvp_url && <EventLink link={allData?.rsvp_url} />}
         {guestListArray.length > 0 && (
           <GuestCompo
             guestListArray={guestListArray}
-            onRemoveGuest={id => {
-              setGuestListArray(pre => {
-                const updatedData = pre.filter(item => item.id !== id);
-                return updatedData;
-              });
-            }}
+            onRemoveGuest={onRemoveGuest}
           />
         )}
       </ScrollView>
       {loading && <LoadingCompo text="getting message ready..." />}
       {guestListArray.length > 0 && !isKeyboardVisible && (
-        <PreviewButt
-          onPress={async () => {
-            const msgDataText = await richText.current
-              ?.getContentHtml()
-              .then(htmlContent => {
-                const formatted = convertToWhatsAppFormat(htmlContent);
-                return {formatted, htmlContent};
-              });
-
-              navigation.navigate('PreviewScreen', {
-              eventID: params.eventID,
-              guestsIds: guestListArray.map(itm => parseInt(itm.id)), // in array
-              message: `${msgDataText?.formatted}`,
-              messageHTML: `${msgDataText?.htmlContent}`,
-              fileBase: '',
-              fileName: '',
-              eventName: params.eventName,
-              eventPic: params.eventPic,
-            });
-          }}
-        />
+        <PreviewButt onPress={previewButtOnPress} />
       )}
       <PopupCompo
         isVisible={popupModal.state}
@@ -345,40 +299,10 @@ const ImgCompo = memo(({uri}: {uri: string}) => {
     </View>
   );
 });
-function convertWhatsappTextToHTML(text: string) {
-  // Convert bold text (*bold*)
-  text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-
-  // Convert italic text (_italic_)
-  text = text.replace(/_(.*?)_/g, '<em>$1</em>');
-
-  // Convert strikethrough text (~strikethrough~)
-  text = text.replace(/~(.*?)~/g, '<del>$1</del>');
-
-  // Convert monospace text (`monospace`)
-  text = text.replace(/`(.*?)`/g, '<code>$1</code>');
-
-  // Replace newlines with <br /> tags
-  text = text.replace(/\n/g, '<br />');
-
-  return text;
-}
 
 const MsgCompo = memo(
   ({richText, msgData}: {richText: RichEditor; msgData: string}) => {
     const scrollRef = useRef<ScrollView>(null);
-
-    // const handleSend = () => {
-    //   // Get the HTML content from the editor
-    //   richText.current?.getContentHtml().then(htmlContent => {
-    //     // Convert HTML content to WhatsApp format
-    //     const formatted = convertToWhatsAppFormat(htmlContent);
-    //     // setFormattedText(formastted);
-    //     Clipboard.setString(formatted);
-    //     console.log('WhatsApp Formatted Text:', formatted);
-    //     // You can now send `formatted` as a WhatsApp message
-    //   });
-    // };
 
     return (
       <View
@@ -408,24 +332,11 @@ const MsgCompo = memo(
           </View>
         </View>
         <View>
-          <RichToolbar
-            editor={richText}
-            actions={[
-              actions.setBold,
-              actions.setItalic,
-              actions.setStrikethrough,
-              actions.code,
-              actions.undo,
-              actions.redo,
-            ]}
-            selectedButtonStyle={{
-              backgroundColor: '#C5B1C33D',
-            }}
-          />
           <View
             style={{
               backgroundColor: '#C5B1C33D',
-              borderRadius: 10,
+              borderTopLeftRadius: 10,
+              borderTopRightRadius:10,
               height: 200,
             }}>
             <ScrollView
@@ -448,7 +359,7 @@ const MsgCompo = memo(
                     // <div><b style=""><strike>hey</strike></b></div>
                     // <code type="">hey</code>`
                   }
-                  onChange={descriptionText => {}}
+                  onChange={() => {}}
                   useContainer={true} // Enable internal scroll handling within the editor
                   // onCursorPosition={handleCursorPosition} // Handle scroll adjustment
                   editorStyle={{
@@ -479,6 +390,20 @@ const MsgCompo = memo(
               </KeyboardAvoidingView>
             </ScrollView>
           </View>
+          <RichToolbar
+            editor={richText}
+            actions={[
+              actions.setBold,
+              actions.setItalic,
+              actions.setStrikethrough,
+              actions.code,
+              actions.undo,
+              actions.redo,
+            ]}
+            selectedButtonStyle={{
+              backgroundColor: '#75486F80',
+            }}
+          />
         </View>
       </View>
     );
@@ -616,6 +541,7 @@ const convertToWhatsAppFormat = (html: string): string => {
     '</br>': '', // Treat <br> as a line break
     '<br/>': '',
     '<br />': '', // Treat <br /> as a line break
+    '&nbsp;': ''
   };
 
   // Remove inline styles like `style=""` from tags
@@ -652,35 +578,28 @@ const convertToWhatsAppFormat = (html: string): string => {
   return formattedText;
 };
 
-const PreviewButt = ({onPress}: {onPress: () => void}) => {
-  const navigation = useNavigation<MainStackNavigation>();
-  const {params} = useRoute<RouteProp<RootStackParamList, 'SendMsgScreen'>>();
 
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        bottom: 20,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-      }}>
-      <Button
-        lable="PREVIEW"
-        onPress={() => {
-          onPress();
-        }}
-        buttonStyles={{
-          backgroundColor: '#fff',
-        }}
-        textStyles={{
-          color: '#2D2D2D',
-        }}
-        icon={() => <EyeSVG width={26} height={26} />}
-      />
-    </View>
-  );
-};
+function convertWhatsappTextToHTML(text: string) {
+  // Convert bold text (*bold*)
+  text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+
+  // Convert italic text (_italic_)
+  text = text.replace(/_(.*?)_/g, '<em>$1</em>');
+
+  // Convert strikethrough text (~strikethrough~)
+  text = text.replace(/~(.*?)~/g, '<del>$1</del>');
+
+  // Convert monospace text (`monospace`)
+  text = text.replace(/`(.*?)`/g, '<code>$1</code>');
+
+  // Split text by newlines and wrap each line in a <div>
+  const lines = text.split('\n');
+  text = lines.map(line => `<div>${line}</div>`).join('');
+
+  return text;
+}
+
+
 
 const SelectNameCompo = ({
   onSelectedID,
