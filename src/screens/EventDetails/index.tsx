@@ -195,7 +195,7 @@ export default function () {
       <HeaderCompo onBack={onBack} />
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: 100,
+          paddingBottom: params.invited === true ? 250 : 100,
           paddingHorizontal: width * 0.05,
         }}
         refreshControl={
@@ -238,8 +238,11 @@ export default function () {
             disable={params.invited === true}
           />
         )}
-        {!loading && <RSVPCompo value={eventData.rsvp} />}
+        {!loading && !(params.invited === true) && (
+          <RSVPCompo value={eventData.rsvp} />
+        )}
       </ScrollView>
+      {params.invited === true && <SelectRSVP value={eventData.rsvp} />}
       {!loading && !(params.invited === true) && (
         <BottomBar
           eventID={params.id}
@@ -253,7 +256,13 @@ export default function () {
     </View>
   );
 }
-
+const SelectRSVP = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
+  return (
+    <View style={{position: 'absolute', bottom: 0, left: 0, right: 0}}>
+      <RSVPCompo value={value} />
+    </View>
+  );
+});
 const BottomBar = memo(
   ({
     eventID,
@@ -427,7 +436,7 @@ const RSVPCompo = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
           height={IconSize}
           fill={'#C5B1C3'}
           style={{
-            transform: [{rotate: '180deg'}],
+            transform: [{scaleY: -1}],
           }}
         />
         <Text variant={'BodyRegular'} style={[styles.color_W]}>
