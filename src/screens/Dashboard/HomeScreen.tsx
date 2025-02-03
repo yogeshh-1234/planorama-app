@@ -37,6 +37,11 @@ import Button from '../../components/Button';
 import {useNavigation} from '@react-navigation/native';
 import {MainStackNavigation} from '../../navigation';
 import LoadingCompo from '../../components/LoadingCompo';
+import messaging from '@react-native-firebase/messaging';
+import notifee, {
+  AndroidImportance,
+  AndroidCategory,
+} from '@notifee/react-native';
 const {width, height} = Dimensions.get('screen');
 const PopupModal = {
   state: false,
@@ -120,6 +125,16 @@ interface goingListType {
 // ];
 type EventListType = 'your' | 'invited';
 type EventTypeText = 'Upcoming' | 'Previous';
+interface formDataFCM {
+  mode: string;
+  token: string;
+  id: string;
+  device_token: string;
+}
+interface SuccessResponseType {
+  message: string;
+  statusCode: number;
+}
 export default function () {
   const navigation = useNavigation<MainStackNavigation>();
   const [profileData, setProfileData] = useState({
@@ -238,6 +253,48 @@ export default function () {
     storage.delete('SettingsData');
     navigation.navigate('EventCreation', {});
   };
+
+  //
+  //
+  //
+  const gettokenFn = async () => {
+    const fcmToken = await messaging().getToken();
+
+    // call api
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      mutationFCM.mutate({
+        mode: 'UPDATE_DEVICE_TOKEN',
+        token,
+        id,
+        device_token: fcmToken,
+      });
+    }
+  };
+
+  // API call
+  const mutationFCM = useMutation({
+    mutationFn: (formData: formDataFCM) =>
+      postData<formDataFCM, SuccessResponseType>(Urls.PROFILE, formData),
+    onSuccess: data => {
+      // console.log(data);
+    },
+    onError: error => {
+      // console.log(error);
+    },
+  });
+
+  useEffect(() => {
+    gettokenFn();
+
+  }, []);
+
   return (
     <Animated.View
       style={{
@@ -562,7 +619,10 @@ const EventView = memo(
       <Pressable
         style={{paddingHorizontal: width * 0.02}}
         onPress={() => {
-          navigation.navigate('EventDetails', {id: data.evt_id, invited: invited});
+          navigation.navigate('EventDetails', {
+            id: data.evt_id,
+            invited: invited,
+          });
         }}>
         {prev && (
           <Text

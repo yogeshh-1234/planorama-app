@@ -28,6 +28,7 @@ export interface EventDetailsType {
     name: string;
     pic: string;
   }[];
+  rsvp_guest_id?: number;
 }
 
 export interface ErrorFormat {

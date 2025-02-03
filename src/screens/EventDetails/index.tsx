@@ -136,6 +136,7 @@ export default function () {
     mutationFn: (formData: EventDetailsForm) =>
       postData<EventDetailsForm, EventResponse>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
+      // console.log('data', data);
       StatusCode === 200 ? setEventData(data) : errorPopUp(StatusCode, null);
       setLoading(false);
     },
@@ -242,7 +243,13 @@ export default function () {
           <RSVPCompo value={eventData.rsvp} />
         )}
       </ScrollView>
-      {params.invited === true && <SelectRSVP value={eventData.rsvp} />}
+      {params.invited === true && (
+        <SelectRSVP
+          value={eventData.rsvp}
+          rsvpGuestId={eventData.rsvp_guest_id}
+          eventID={params.id}
+        />
+      )}
       {!loading && !(params.invited === true) && (
         <BottomBar
           eventID={params.id}
@@ -256,13 +263,106 @@ export default function () {
     </View>
   );
 }
-const SelectRSVP = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
-  return (
-    <View style={{position: 'absolute', bottom: 0, left: 0, right: 0}}>
-      <RSVPCompo value={value} />
-    </View>
-  );
-});
+
+type RSVPtype = 'Y' | 'N' | 'M' | null;
+
+const SelectRSVP = memo(
+  ({
+    value,
+    rsvpGuestId,
+    eventID,
+  }: {
+    value: RSVPtype;
+    rsvpGuestId: number | undefined;
+    eventID: number;
+  }) => {
+    const [RSVPval, setRSVPval] = useState<RSVPtype>(value);
+    const [tempRSVPval, setTempRSVPval] = useState<RSVPtype>(null);
+    const [loading, setLoading] = useState(false);
+
+    const changeRVP = (val: RSVPtype) => {
+      const token = storage.getString('user.token');
+      const id = storage.getString('user.id');
+      if (
+        token !== null &&
+        token !== undefined &&
+        id !== null &&
+        id !== undefined
+      ) {
+        const formData = {
+          mode: 'UPDATE_GUESTS_RSVP',
+          token,
+          id,
+          event_id: eventID,
+          guest_id: rsvpGuestId,
+          rsvp: 'Y',
+        };
+        setTempRSVPval(val);
+        setLoading(true);
+        eventMutation.mutate(formData);
+      }
+    };
+
+    const eventMutation = useMutation<
+      GuestEventResponse,
+      ErrorFormat,
+      EventGuestsForm
+    >({
+      mutationFn: (formData: EventGuestsForm) =>
+        postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
+      onSuccess: ({data, StatusCode}) => {
+        setTempRSVPval(null);
+        if (StatusCode === 200) {
+          setRSVPval(tempRSVPval);
+        } else {
+          ToastAndroid.showWithGravity(
+            `Something went wrong, please try again! ${StatusCode} `,
+            ToastAndroid.SHORT,
+            ToastAndroid.CENTER,
+          );
+        }
+
+        setLoading(false);
+      },
+      onError: error => {
+        setTempRSVPval(null);
+        ToastAndroid.showWithGravity(
+          error?.error?.description
+            ? `${error?.error?.description} ${error?.StatusCode}`
+            : `Something went wrong, please try again! ${error?.StatusCode}`,
+          ToastAndroid.SHORT,
+          ToastAndroid.CENTER,
+        );
+        setLoading(false);
+      },
+    });
+
+    return (
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+
+          backgroundColor: '#3A2537A1',
+          paddingHorizontal: 20
+        }}>
+        <RSVPCompo
+          value={RSVPval}
+          onChange={
+            loading
+              ? null
+              : val => {
+                  changeRVP(val);
+                }
+          }
+        />
+        {loading && <LoadingCompo text="Changing RSVP..." />}
+      </View>
+    );
+  },
+);
 const BottomBar = memo(
   ({
     eventID,
@@ -403,49 +503,60 @@ const ButtonPress = ({
 };
 
 const IconSize = width * 0.15;
-const RSVPCompo = memo(({value}: {value: 'Y' | 'N' | 'M' | null}) => {
-  return (
-    <View style={styles.rsvpRow}>
-      <View
-        style={{
-          ...styles.rsvpCompo,
-          borderColor: value === 'Y' ? '#FFF' : '#C5B1C33D',
-        }}>
-        <ThumbsUpSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
-        <Text variant={'BodyRegular'} style={[styles.color_W]}>
-          Going
-        </Text>
-      </View>
-      <View
-        style={{
-          ...styles.rsvpCompo,
-          borderColor: value === 'M' ? '#FFF' : '#C5B1C33D',
-        }}>
-        <QuesSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
-        <Text variant={'BodyRegular'} style={[styles.color_W, {}]}>
-          May be
-        </Text>
-      </View>
-      <View
-        style={{
-          ...styles.rsvpCompo,
-          borderColor: value === 'N' ? '#FFF' : '#C5B1C33D',
-        }}>
-        <ThumbsUpSVG
-          width={IconSize}
-          height={IconSize}
-          fill={'#C5B1C3'}
+const RSVPCompo = memo(
+  ({
+    value,
+    onChange,
+  }: {
+    value: 'Y' | 'N' | 'M' | null;
+    onChange?: ((val: RSVPtype) => void) | null;
+  }) => {
+    return (
+      <View style={styles.rsvpRow}>
+        <Pressable
+          onPress={() => onChange && onChange('Y')}
           style={{
-            transform: [{scaleY: -1}],
-          }}
-        />
-        <Text variant={'BodyRegular'} style={[styles.color_W]}>
-          No
-        </Text>
+            ...styles.rsvpCompo,
+            borderColor: value === 'Y' ? '#FFF' : '#C5B1C33D',
+          }}>
+          <ThumbsUpSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
+          <Text variant={'BodyRegular'} style={[styles.color_W]}>
+            Going
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => onChange && onChange('M')}
+          style={{
+            ...styles.rsvpCompo,
+            borderColor: value === 'M' ? '#FFF' : '#C5B1C33D',
+          }}>
+          <QuesSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
+          <Text variant={'BodyRegular'} style={[styles.color_W, {}]}>
+            May be
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => onChange && onChange('N')}
+          style={{
+            ...styles.rsvpCompo,
+            borderColor: value === 'N' ? '#FFF' : '#C5B1C33D',
+          }}>
+          <ThumbsUpSVG
+            width={IconSize}
+            height={IconSize}
+            fill={'#C5B1C3'}
+            style={{
+              transform: [{scaleY: -1}],
+            }}
+          />
+          <Text variant={'BodyRegular'} style={[styles.color_W]}>
+            No
+          </Text>
+        </Pressable>
       </View>
-    </View>
-  );
-});
+    );
+  },
+);
 
 const ImgCount = 3;
 const GuestListCompo = memo(
