@@ -196,7 +196,7 @@ export default function () {
         image: base64,
       });
     } catch (error) {
-      console.error('Error converting image to Base64:', error);
+      // console.error('Error converting image to Base64:', error);
     }
   };
 
@@ -226,7 +226,7 @@ export default function () {
 
           return base64;
         } catch (error) {
-          console.error('Error converting image to Base64:', error);
+          // console.error('Error converting image to Base64:', error);
         }
       }),
     );

@@ -34,7 +34,7 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="https"
                   android:host="stage-m.planorama.in"
-                  android:pathPrefix="/event/index.php" />
+                  android:pathPrefix="/event/" />
         </intent-filter>
       </activity>
     </application>

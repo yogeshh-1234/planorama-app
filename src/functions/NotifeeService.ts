@@ -39,12 +39,16 @@ const generalNotifications = async (remoteMessage: any) => {
     android: {
       channelId: 'general',
       smallIcon: 'ic_stat_planorama', // Use your app icon
-      color: '#75486F', //  color
+      color: '#75486F', // Background color
       // largeIcon: profilePic, // Display sender's avatar if available
       category: AndroidCategory.SERVICE,
       importance: AndroidImportance.DEFAULT,
       showTimestamp: true,
-      // pressAction: {id: ``},
+      pressAction: {
+        id: 'default',
+      },
+      autoCancel: true,
+
       // actions: [
       //   {
       //     title: 'View Details',
@@ -56,48 +60,6 @@ const generalNotifications = async (remoteMessage: any) => {
   //
   //
   //
-  // // both can be true
-  // if (remoteMessage?.data?.InApp === 'true') {
-  //   // console.log('InApp');
-  //   const inAppNoti = {
-  //     title: `${title}`,
-  //     body: `${body}`,
-  //     requestType: `${requestype}`,
-  //     requestID: `${requestID}`,
-  //     notiType: `${type}`,
-  //   };
-  //   const jsonString = JSON.stringify(inAppNoti);
-  //   storage.set('inAppNoti', jsonString);
-  // }
-  // if (remoteMessage?.data?.push === 'true') {
-  //   // console.log('push');
-  //   await notifee.displayNotification({
-  //     id: `ViewRequest`,
-  //     title: `${title}`,
-  //     body: `${body}`,
-  //     data: {
-  //       requestID: `${requestID}`,
-  //       requestype: `${requestype}`,
-  //       type: `${type}`,
-  //     },
-  //     android: {
-  //       channelId: 'request-service',
-  //       smallIcon: 'ic_stat_rm', // Use your app icon
-  //       color: '#212121', //  color
-  //       // largeIcon: profilePic, // Display sender's avatar if available
-  //       category: AndroidCategory.SERVICE,
-  //       importance: AndroidImportance.DEFAULT,
-  //       showTimestamp: true,
-  //       pressAction: {id: `${remoteMessage?.data?.requestype}`},
-  //       actions: [
-  //         {
-  //           title: 'View Details',
-  //           pressAction: {id: 'ViewRequest'},
-  //         },
-  //       ],
-  //     },
-  //   });
-  // }
 };
 
 export function setupMessageListener() {
@@ -141,45 +103,11 @@ export function setupNotifeeEvents() {
         detail.notification?.data?.type === 'new_inv_event' ? true : false,
     };
 
-    navigate('EventDetails', chatDetails);
-
-    // const senderID = `${detail.notification?.data?.senderID}`;
-    // const senderName = `${detail.notification?.data?.senderName}`;
-    // const profilePic = `${detail.notification?.data?.profilePic}`;
-
-    // const NewProfilePic =
-    //   profilePic?.length > 0
-    //     ? profilePic
-    //     : `https://avatar.iran.liara.run/username?username=${senderName.replaceAll(
-    //         ' ',
-    //         '+',
-    //       )}`;
-
-    // const requestID = `${detail.notification?.data?.requestID}`;
-    // const requestype = `${detail.notification?.data?.requestype}`;
-
-    // if (type === EventType.ACTION_PRESS) {
-    //   const chatDetails = {
-    //     id: senderID,
-    //     name: senderName,
-    //     pic: NewProfilePic,
-    //   };
-    //   const requestData = {
-    //     id: requestID,
-    //     type: requestype,
-    //   };
-
-    //   if (detail.pressAction?.id === 'chatView') {
-    //     // navigate to message Screen
-    //     navigate('MessageScreen', chatDetails);
-    //     //
-    //   } else if (detail.pressAction?.id === 'ViewRequest') {
-    //     if (detail.notification?.data?.type === 'requestDetails') {
-    //       // navigate to view request
-    //       navigate('RequestDetails', requestData);
-    //     }
-    //   }
-    // }
+    switch (type) {
+      case EventType.PRESS:
+        navigate('EventDetails', chatDetails);
+        break;
+    }
   };
 }
 

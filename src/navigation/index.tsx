@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {NavigationContainer, NavigationProp} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import IntroScreen from '../screens/Onboarding/IntroScreen';
@@ -18,6 +18,7 @@ import EventGuest from '../screens/EventGuest';
 import SendMsgScreen from '../screens/SendMsgScreen';
 import PreviewScreen from '../screens/SendMsgScreen/PreviewScreen';
 import SuccessScreen from '../screens/SendMsgScreen/SuccessScreen';
+import { Linking } from 'react-native';
 
 export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   IntroScreen: 'IntroScreen',
@@ -113,7 +114,11 @@ type profileType = {
 export type MainStackNavigation = NavigationProp<RootStackParamList>;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
+// Handle deep links
+const handleDeepLink = (event: { url: string }) => {
+  // console.log('App opened with URL:', event.url,event);
+  // Navigate to the appropriate screen based on the URL
+};
 function MainNavigation(): React.JSX.Element {
   const [userToken, setUserToken] = React.useState('');
   //
@@ -150,7 +155,12 @@ function MainNavigation(): React.JSX.Element {
     };
   }, [userToken]);
   //
+  useEffect(() => {
 
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+    return () => subscription.remove();
+  
+  }, []);
   return (
     <NavigationContainer>
       <Stack.Navigator

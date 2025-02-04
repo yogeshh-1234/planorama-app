@@ -344,12 +344,11 @@ const SelectRSVP = memo(
           bottom: 0,
           left: 0,
           right: 0,
-
           backgroundColor: '#3A2537A1',
           paddingHorizontal: 20
         }}>
         <RSVPCompo
-          value={RSVPval}
+          value={RSVPval||value}
           onChange={
             loading
               ? null

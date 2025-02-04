@@ -1,5 +1,6 @@
 import React, {useCallback, useMemo, useState} from 'react';
 import {
+  Dimensions,
   Pressable,
   RefreshControl,
   ToastAndroid,
@@ -23,7 +24,10 @@ import {postData} from '../../api';
 import Urls from '../../api/urls';
 import {ErrorFormat} from '../Onboarding/authType';
 import {FlashList} from '@shopify/flash-list';
+import ImageIcon from '../../components/ImageIcon';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const {width, height} = Dimensions.get('screen');
 export default function ({
   staticData,
   selectedItems,
@@ -61,7 +65,6 @@ export default function ({
           delete updated[id];
         }
         return updated;
-        2;
       });
     },
     [],
@@ -85,7 +88,7 @@ export default function ({
     setSelectAll(!selectAll);
   }, [contacts, selectAll]);
 
-  const imgSize = fromGuest ? 20 : 16;
+  const imgSize = fromGuest ? width * 0.08 : width * 0.07;
 
   const renderItem = useCallback(
     ({item, index}: {item: contactListItem; index: number}) => {
@@ -160,7 +163,7 @@ export default function ({
                 style={{
                   width: imgSize,
                   height: imgSize,
-                  borderWidth: imgSize,
+                  borderRadius: imgSize,
                 }}
               />
             </View>

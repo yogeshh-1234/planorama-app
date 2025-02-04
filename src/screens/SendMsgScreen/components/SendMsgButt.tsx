@@ -84,7 +84,7 @@ export default function ({
         setLoading(true);
         mutation.mutate(formData);
       } catch (error) {
-        console.error('Error converting image to Base64:', error);
+        // console.error('Error converting image to Base64:', error);
       }
     }
   };
