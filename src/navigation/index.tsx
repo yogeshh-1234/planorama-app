@@ -1,5 +1,9 @@
-import React, { useEffect } from 'react';
-import {NavigationContainer, NavigationProp} from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  NavigationContainer,
+  NavigationProp,
+  useNavigation,
+} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import IntroScreen from '../screens/Onboarding/IntroScreen';
 import {storage} from '../functions/storage';
@@ -18,7 +22,10 @@ import EventGuest from '../screens/EventGuest';
 import SendMsgScreen from '../screens/SendMsgScreen';
 import PreviewScreen from '../screens/SendMsgScreen/PreviewScreen';
 import SuccessScreen from '../screens/SendMsgScreen/SuccessScreen';
-import { Linking } from 'react-native';
+import {Linking, ToastAndroid, View} from 'react-native';
+import {Portal} from 'react-native-paper';
+import Loading from '../components/Loading';
+import LoadingCompo from '../components/LoadingCompo';
 
 export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   IntroScreen: 'IntroScreen',
@@ -114,16 +121,54 @@ type profileType = {
 export type MainStackNavigation = NavigationProp<RootStackParamList>;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-// Handle deep links
-const handleDeepLink = (event: { url: string }) => {
-  // console.log('App opened with URL:', event.url,event);
-  // Navigate to the appropriate screen based on the URL
-};
+
+function DeepLinkHandler() {
+  const navigation = useNavigation<MainStackNavigation>();
+  const [loading, setLoading] = useState(false);
+  React.useEffect(() => {
+    const handleDeepLink = (event: {url: string}) => {
+      setLoading(true);
+      fetch(`${event.url}&a=Y`)
+        .then(response => response.json())
+        .then(data => {
+          setLoading(false);
+          if (data.event_id) {
+            navigation.navigate('EventDetails', {
+              id: data.event_id,
+              invited: false,
+            });
+          } else {
+            ToastAndroid.showWithGravity(
+              `Event Not Found!`,
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER,
+            );
+          }
+        })
+        .catch(error => {
+          setLoading(false);
+          ToastAndroid.showWithGravity(
+            `Error fetching event details:', ${error}`,
+            ToastAndroid.SHORT,
+            ToastAndroid.CENTER,
+          );
+        });
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [navigation]);
+
+  return loading ? <LoadingCompo text="Loading Event..." /> : null;
+}
+
 function MainNavigation(): React.JSX.Element {
   const [userToken, setUserToken] = React.useState('');
-  //
+
   React.useEffect(() => {
-    // storage.clearAll();
     const init = async () => {
       const token = storage.getString('user.token');
       if (token !== null && token !== undefined && token?.length > 1) {
@@ -135,7 +180,6 @@ function MainNavigation(): React.JSX.Element {
 
     init();
 
-    //  listener
     const listener = storage.addOnValueChangedListener(changedKey => {
       const newValue = storage.getString(changedKey);
       if (changedKey === 'user.token') {
@@ -150,19 +194,15 @@ function MainNavigation(): React.JSX.Element {
         }
       }
     });
+
     return () => {
       listener.remove();
     };
   }, [userToken]);
-  //
-  useEffect(() => {
 
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-    return () => subscription.remove();
-  
-  }, []);
   return (
     <NavigationContainer>
+      <DeepLinkHandler />
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
