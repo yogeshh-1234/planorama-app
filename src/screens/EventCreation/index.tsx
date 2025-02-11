@@ -3,9 +3,6 @@ import {
   Alert,
   Dimensions,
   Image,
-  Keyboard,
-  PermissionsAndroid,
-  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -17,7 +14,6 @@ import Animated, {
   FadeIn,
   FadeInRight,
   FadeOut,
-  SlideInRight,
   ZoomIn,
   ZoomOut,
 } from 'react-native-reanimated';
@@ -26,33 +22,19 @@ import PopupCompo from '../../components/PopupCompo';
 import {
   BinSVG,
   CalenderSVG,
-  DownSVG,
   EditSVG,
   ImageSVG,
-  QuesSVG,
   SettingSVG,
-  ThumbsUpSVG,
 } from '../../assets/SVG/IconsSVG';
 import Text from '../../components/Text';
 import TextInput from '../../components/TextInput';
 import {fonts} from '../../config/constants';
 import LinearGradient from 'react-native-linear-gradient';
 import Button from '../../components/Button';
-import Modal from 'react-native-modal';
-import ColorPicker, {
-  HueSlider,
-  OpacitySlider,
-  Panel1,
-  Preview,
-  Swatches,
-} from 'reanimated-color-picker';
-import {Switch} from 'react-native-paper';
 import {storage} from '../../functions/storage';
-import Contacts from 'react-native-contacts';
 import {
   CommonActions,
   RouteProp,
-  StackActions,
   useNavigation,
   useRoute,
 } from '@react-navigation/native';

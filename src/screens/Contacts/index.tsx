@@ -1,5 +1,6 @@
 import React, {memo, useCallback, useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -17,6 +18,7 @@ import Button from '../../components/Button';
 import {
   CloseSVG,
   DownSVG,
+  EditSVG,
   SearchSVG,
   ShareSVG,
 } from '../../assets/SVG/IconsSVG';
@@ -35,7 +37,11 @@ import Urls from '../../api/urls';
 import {postData} from '../../api';
 import PopupCompo from '../../components/PopupCompo';
 import LoadingCompo from '../../components/LoadingCompo';
-import {MainStackNavigation, RootStackParamList} from '../../navigation';
+import {
+  guestListType,
+  MainStackNavigation,
+  RootStackParamList,
+} from '../../navigation';
 import {
   RouteProp,
   StackActions,
@@ -45,7 +51,21 @@ import {
 import ContsctsList from './ContsctsList';
 import {ItemType} from './ContactsScreen';
 import LottieView from 'lottie-react-native';
-import Animated, {FadeIn, FadeOut} from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  FadeOutRight,
+  LightSpeedOutRight,
+  SlideOutRight,
+  ZoomIn,
+  ZoomOut,
+} from 'react-native-reanimated';
+import {
+  connectionForm,
+  connectionResponce,
+  profileError,
+} from '../Profile/ProfileTypes';
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
@@ -105,7 +125,11 @@ export default function () {
           exiting={FadeOut}>
           <Button
             onPress={() => {
-              navigation.navigate('AddNewContact');
+              navigation.navigate('AddNewContact', {
+                onGoBack: () => {
+                  setLoading(pre => !pre);
+                },
+              });
             }}
             lable="+ Add guests"
             buttonStyles={{width: width * 0.42, paddingVertical: 12}}
@@ -215,6 +239,7 @@ const ContactList = memo(
 
     const [selectedItems, setSelectedItems] = useState<ItemType>({}); // Object to store selected items
 
+    const [edit, setEdit] = useState(false);
     const [value, setValue] = useState('');
 
     const [loading, setLoading] = useState({
@@ -417,29 +442,82 @@ const ContactList = memo(
           flex: 1,
         }}>
         {(filteredData.length > 0 || value.length > 0) && (
-          <Animated.View entering={FadeIn.delay(200)} exiting={FadeOut}>
-            <TextInput
-              iconName="search"
-              onRightButt={()=>setValue('')}
-              value={value}
-              onChangeText={setValue}
-              iconsize={16}
-              textInputStyle={{
-                fontFamily: 'PoppinsMedium',
-                fontWeight: '500',
-                letterSpacing: 0,
-                fontSize: 14,
-                lineHeight: 18.2,
-                paddingVertical: 6,
-              }}
-              textInputProps={{
-                placeholder: 'Find a guest....',
-                placeholderTextColor: '#ffffff80',
-              }}
-            />
+          <Animated.View
+            entering={FadeIn.delay(200)}
+            exiting={FadeOut}
+            style={{
+              paddingBottom: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+            <Animated.View style={{flex: 1}}>
+              <TextInput
+                iconName="search"
+                onRightButt={() => setValue('')}
+                value={value}
+                onChangeText={setValue}
+                iconsize={16}
+                textInputStyle={{
+                  fontFamily: 'PoppinsMedium',
+                  fontWeight: '500',
+                  letterSpacing: 0,
+                  fontSize: 14,
+                  lineHeight: 18.2,
+                  paddingVertical: 6,
+                }}
+                textInputProps={{
+                  placeholder: 'Find a guest....',
+                  placeholderTextColor: '#ffffff80',
+                }}
+              />
+            </Animated.View>
+
+            {edit ? (
+              <>
+                <RemoveContacts
+                  selectedItems={selectedItems}
+                  onReload={() => {
+                    setEdit(false)
+                    setSelectedItems({});
+                    callAPI();
+                  }}
+                />
+                <AnimatedPressable
+                  entering={ZoomIn}
+                  exiting={ZoomOut}
+                  style={{
+                    backgroundColor: '#000',
+                    borderRadius: 4,
+                    height: 36,
+                    width: 36,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={() => {
+                    setEdit(false);
+                  }}>
+                  <CloseSVG width={20} height={20} fill="#fff" />
+                </AnimatedPressable>
+              </>
+            ) : (
+              <AnimatedPressable
+                entering={ZoomIn}
+                exiting={ZoomOut}
+                style={{
+                  backgroundColor: '#F9BC52',
+                  borderRadius: 4,
+                  padding: 8,
+                }}
+                onPress={() => {
+                  setEdit(true);
+                }}>
+                <EditSVG width={18} height={18} />
+              </AnimatedPressable>
+            )}
           </Animated.View>
         )}
-        {/* <FlatList data={filteredData} renderItem={renderItem} /> */}
+
         {loading.status ? (
           <View
             style={{
@@ -462,18 +540,24 @@ const ContactList = memo(
               {loading.text}
             </Text>
           </View>
+        ) : edit ? (
+          <ContsctsList
+            staticData={false}
+            selectedItems={selectedItems}
+            setSelectedItems={(val: any) => setSelectedItems(val)}
+            contacts={filteredData}
+            delay={0}
+          />
         ) : (
           <ContsctsList
             staticData={fromEvents ? false : true}
             selectedItems={selectedItems}
             setSelectedItems={(val: any) => setSelectedItems(val)}
             contacts={filteredData}
-            delay={400}
+            delay={0}
           />
         )}
 
-        {/* entering={FadeIn.delay(100)}
-          exiting={FadeOut} */}
         {fromEvents && !loading.status && (
           <View
             style={{
@@ -494,25 +578,7 @@ const ContactList = memo(
               }}
               onPress={addContactsToEvent}
             />
-            <Button
-              lable="INVITE"
-              textStyles={{
-                color: '#2D2D2D',
-              }}
-              buttonStyles={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: 10,
-                width: width * 0.42,
-              }}
-              onPress={() => {
-                ToastAndroid.showWithGravity(
-                  'Coming Soon',
-                  ToastAndroid.SHORT,
-                  ToastAndroid.CENTER,
-                );
-              }}
-              icon={() => <ShareSVG width={12} height={12} />}
-            />
+            <InviteButton selectedItems={selectedItems} />
           </View>
         )}
         {/* search */}
@@ -532,4 +598,195 @@ const ContactList = memo(
   },
 );
 
-const styles = StyleSheet.create({});
+const InviteButton = memo(({selectedItems}: {selectedItems: ItemType}) => {
+  const navigation = useNavigation<MainStackNavigation>();
+
+  const {params} = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
+  const [loading, setLoading] = useState(false);
+
+  const checkInvite = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (token && id) {
+      const formData = {
+        mode: 'CHECK_CONNECTION',
+        token,
+        id,
+      };
+      setLoading(true);
+      mutation.mutate(formData);
+    }
+  };
+
+  const mutation = useMutation<
+    connectionResponce,
+    profileError,
+    connectionForm
+  >({
+    mutationFn: (formData: connectionForm) =>
+      postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
+    onSuccess: ({data: {status}, StatusCode}) => {
+      // console.log(status);
+      StatusCode === 200
+        ? status
+          ? onSendMsg()
+          : ToastAndroid.showWithGravity(
+              `Whatsapp not connected!`,
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER,
+            )
+        : errorPopUp(StatusCode, null);
+      setLoading(false);
+    },
+    onError: error => errorPopUp(error?.StatusCode, error?.error?.description),
+  });
+  const errorPopUp = (code: number, desc: string | null) => {
+    setLoading(false);
+    ToastAndroid.showWithGravity(
+      `${desc ? desc : "We couldn't complete your request, please try again!"}${
+        code ? ` [${code}]` : ''
+      }`,
+      ToastAndroid.SHORT,
+      ToastAndroid.CENTER,
+    );
+  };
+
+  const onSendMsg = () => {
+    const selectedItms = Object.keys(selectedItems).map(itm => parseInt(itm));
+    // console.log('selectedItms', selectedItms);
+    if (selectedItms.length > 0) {
+      let guestList: guestListType[] = [];
+      Object.keys(selectedItems).forEach(function (key, index) {
+        guestList = [
+          ...guestList,
+          {
+            ...selectedItems[key],
+            id: key,
+          },
+        ];
+      });
+      // console.log({
+      //   guestList,
+      //   eventID: params.eventID,
+      //   eventName: params.eventName,
+      //   eventPic: params.eventPic,
+      // });
+      navigation.navigate('SendMsgScreen', {
+        guestList,
+        eventID: params.eventID,
+        eventName: `${params.eventName}`,
+        eventPic: `${params.eventPic}`,
+      });
+    }
+  };
+
+  return (
+    <Button
+      lable="INVITE"
+      textStyles={{
+        color: '#2D2D2D',
+      }}
+      buttonStyles={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        width: width * 0.42,
+      }}
+      onPress={checkInvite}
+      icon={() => <ShareSVG width={12} height={12} />}
+      loading={loading}
+    />
+  );
+});
+
+const RemoveContacts = memo(
+  ({
+    selectedItems,
+    onReload,
+  }: {
+    selectedItems: ItemType;
+    onReload: () => void;
+  }) => {
+    const [loading, setLoading] = useState(false);
+
+    const removeContacts = () => {
+      const selectedItms = Object.keys(selectedItems).map(itm => parseInt(itm));
+      if (selectedItms.length > 0) {
+        const token = storage.getString('user.token');
+        const id = storage.getString('user.id');
+        if (
+          token !== null &&
+          token !== undefined &&
+          id !== null &&
+          id !== undefined
+        ) {
+          const formData = {
+            mode: 'DELETE_CONTACTS',
+            token,
+            id,
+            contacts_ids: JSON.stringify(selectedItms),
+          };
+          setLoading(true);
+          mutation.mutate(formData);
+        }
+      }
+    };
+    const mutation = useMutation<
+      importContactResponse,
+      errorType,
+      importGuestForm
+    >({
+      mutationFn: (formData: importGuestForm) =>
+        postData<importGuestForm, importContactResponse>(
+          Urls.PROFILE,
+          formData,
+        ),
+      onSuccess: ({data, StatusCode}) => {
+        if (StatusCode === 200) {
+          //
+          onReload();
+        } else {
+          ToastAndroid.showWithGravity(
+            `Oops! Something went wrong.${
+              StatusCode ? ` [${StatusCode}]` : ''
+            }`,
+            ToastAndroid.SHORT,
+            ToastAndroid.CENTER,
+          );
+        }
+        setLoading(false);
+      },
+      onError: (error: errorType) => {
+        setLoading(false);
+        ToastAndroid.showWithGravity(
+          error?.error?.description
+            ? error.error.description
+            : "We couldn't complete your request, please try again!",
+          ToastAndroid.SHORT,
+          ToastAndroid.CENTER,
+        );
+      },
+    });
+    return (
+      <AnimatedPressable
+        entering={ZoomIn}
+        exiting={FadeOutRight}
+        style={{
+          backgroundColor: '#C71D40',
+          borderRadius: 4,
+          height: 36,
+          justifyContent: 'center',
+          paddingHorizontal: 8,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+        }}
+        disabled={loading}
+        onPress={removeContacts}>
+        {loading && <ActivityIndicator color={'#fff'} />}
+        <Text style={{color: '#fff'}} variant={'BodyRegular'}>
+          Remove
+        </Text>
+      </AnimatedPressable>
+    );
+  },
+);

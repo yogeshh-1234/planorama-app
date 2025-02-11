@@ -197,8 +197,8 @@ export default function () {
           id: data.id,
           number: data.number,
         });
-        storage.set('user.name', data.name);
-        storage.set('user.pic', data.pic);
+        data?.name && storage.set('user.name', data.name);
+        data?.pic && storage.set('user.pic', data.pic);
 
         //
       } else {
@@ -292,7 +292,6 @@ export default function () {
 
   useEffect(() => {
     gettokenFn();
-
   }, []);
 
   return (
@@ -513,6 +512,7 @@ const EventsCompo = memo(
           type={type}
           lable={lable}
           loading={loading}
+          reload={callAPI}
         />
         <PopupCompo
           isVisible={popupModal.state}
@@ -535,13 +535,35 @@ const EventsDisplay = memo(
     type,
     lable,
     loading,
+    reload,
   }: {
     eventList: eventItem[];
     type: EventTypeText;
     lable: EventListType;
     loading: boolean;
+    reload: () => void;
   }) => {
-    return (
+    return loading ? (
+      <View
+        style={{
+          // flexDirection: 'row',
+          paddingVertical: 21,
+          alignItems: 'center',
+          // borderWidth: 1,
+          flex: 1,
+          // flexDirection: 'row',
+          gap: 10,
+        }}>
+        <ActivityIndicator
+          color="#fff"
+          style={{alignSelf: 'center'}}
+          size={'small'}
+        />
+        <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+          Getting Events ...
+        </Text>
+      </View>
+    ) : eventList.length > 0 ? (
       <Animated.ScrollView
         entering={FadeInLeft}
         exiting={FadeOutLeft}
@@ -557,49 +579,32 @@ const EventsDisplay = memo(
         // LinearTransition
         // layout={SequencedTransition}
       >
-        {loading ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-            }}>
-            <ActivityIndicator
-              color="#fff"
-              style={{alignSelf: 'center'}}
-              size={'small'}
-            />
-            <Text variant={'BodyRegular'} style={{color: '#fff'}}>
-              Getting Events ...
-            </Text>
-          </View>
-        ) : eventList.length > 0 ? (
-          eventList?.map((item, index) => (
-            <EventView
-              key={index}
-              data={item}
-              // prev={type === 'Previous'}
-              // invited={lable === 'invited'}
-              prev={false}
-              invited={lable !== 'your'}
-            />
-          ))
-        ) : (
-          <Animated.View
-            style={{
-              paddingVertical: 12,
-              alignItems: 'center',
-            }}>
-            <Text
-              // entering={FadeInRight}
-              // exiting={FadeOutLeft}
-              style={{color: '#fff'}}
-              variant={'SubTitleTwo'}>
-              No Events to display!
-            </Text>
-          </Animated.View>
-        )}
+        {eventList?.map((item, index) => (
+          <EventView
+            key={index}
+            data={item}
+            invited={lable !== 'your'}
+            reload={reload}
+          />
+        ))}
       </Animated.ScrollView>
+    ) : (
+      <Animated.View
+        style={{
+          paddingVertical: 21,
+          alignItems: 'center',
+          // borderWidth: 1,
+          flex: 1,
+          // flexDirection: 'row',
+        }}>
+        <Text
+          // entering={FadeInRight}
+          // exiting={FadeOutLeft}
+          style={{color: '#fff'}}
+          variant={'SubTitleTwo'}>
+          No {type} Events to display!
+        </Text>
+      </Animated.View>
     );
   },
 );
@@ -607,12 +612,12 @@ const EventsDisplay = memo(
 const EventView = memo(
   ({
     data,
-    prev,
     invited,
+    reload,
   }: {
     data: eventItem;
-    prev: boolean;
     invited: boolean;
+    reload: () => void;
   }) => {
     const navigation = useNavigation<MainStackNavigation>();
     return (
@@ -622,15 +627,16 @@ const EventView = memo(
           navigation.navigate('EventDetails', {
             id: data.evt_id,
             invited: invited,
+            onGoBack: invited ? () => reload() : undefined,
           });
         }}>
-        {prev && (
+        {/* {prev && (
           <Text
             style={{color: '#F9BC52', marginBottom: 4}}
             variant={'BodyBold'}>
-            {`{data.eventStatus}`}
+            {`${data.eventStatus}`}
           </Text>
-        )}
+        )} */}
         {/*  */}
         <ImageCompo uri={data.pic} size={width * 0.6} />
         <Animated.View

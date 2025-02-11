@@ -24,7 +24,7 @@ import {postData} from '../../api';
 import Urls from '../../api/urls';
 import {ErrorFormat} from '../Onboarding/authType';
 import {FlashList} from '@shopify/flash-list';
-import ImageIcon from '../../components/ImageIcon';
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const {width, height} = Dimensions.get('screen');
@@ -202,7 +202,7 @@ export default function ({
         </AnimatedPressable>
       );
     },
-    [selectedItems, handleSelectItem],
+    [selectedItems, handleSelectItem,staticData],
   );
 
   const memoizedData = useMemo(() => contacts, [contacts]);

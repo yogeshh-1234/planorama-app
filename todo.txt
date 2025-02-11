@@ -27,12 +27,16 @@ add haptic feedback
 ----------------------------
 
 
-done:
-removed send button
-fixed nextline bug in whatsapp msg
-added delete guest option for an event
-added profile name and pic update option
-into page crash on logout bug fixed 
-image viewer
-contacts view change
-homescreen invited view
+
+
+bug fix:
+- Settings page 
+- RSVP update for invited events bug fix
+- Navigation to host or guest event
+
+changes:
+- Invite button working for contacts screen
+- Registration image upload: removed compulsory requirement
+- Added delete functionality for contacts
+- Added empty contact check
+

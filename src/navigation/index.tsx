@@ -56,11 +56,17 @@ export type RootStackParamList = {
     onGoBack?: () => void;
   };
   EventConfirmDetails: confirmEvent;
-  EventDetails: {id: number; invited?: boolean};
+  EventDetails: {id: number; invited?: boolean; onGoBack?: () => void};
   ProfileScreen: profileType;
-  ContactsScreen: {eventID: number; fromGuest?: boolean; onGoBack?: () => void};
+  ContactsScreen: {
+    eventID: number;
+    fromGuest?: boolean;
+    onGoBack?: () => void;
+    eventName?: string;
+    eventPic?: string;
+  };
   ImportContacts: {onGoBack?: () => void};
-  AddNewContact: undefined;
+  AddNewContact: {onGoBack?: () => void};
   EventSettingsScreen: {eventID?: number};
   EventGuest: {eventID: number; eventName: string; eventPic: string};
   SendMsgScreen: {

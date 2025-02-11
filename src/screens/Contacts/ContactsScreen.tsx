@@ -47,7 +47,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Tooltip} from 'react-native-paper';
 import TextInput from '../../components/TextInput';
-import { debounce } from 'lodash';
+import {debounce} from 'lodash';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -211,7 +211,9 @@ const ContactsCompo = memo(() => {
           .filter(
             (item, index) =>
               formattedContacts.findIndex(itm => itm.number === item.number) ===
-              index,
+                index &&
+              item.number.length > 5 &&
+              item.name.length > 0,
           )
           .sort((a, b) => a.name.localeCompare(b.name));
         setContacts(newformattedContacts);
@@ -339,7 +341,7 @@ const ContactsCompo = memo(() => {
   // Memoize the filtered contacts list
   const filteredContacts = useMemo(() => {
     return contacts.filter(item =>
-      item.name.toLowerCase().includes(value.toLowerCase())
+      item.name.toLowerCase().includes(value.toLowerCase()),
     );
   }, [contacts, value]);
 
@@ -350,9 +352,7 @@ const ContactsCompo = memo(() => {
         ...itm,
         id,
       }))
-      .filter(item =>
-        item.name.toLowerCase().includes(value.toLowerCase())
-      );
+      .filter(item => item.name.toLowerCase().includes(value.toLowerCase()));
   }, [selectedItems, value]);
 
   return (

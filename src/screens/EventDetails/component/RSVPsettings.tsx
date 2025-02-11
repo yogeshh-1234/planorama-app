@@ -28,7 +28,7 @@ export default memo(
       const updatedData = {...settingsData, [key]: value};
       onDataChange(updatedData); // Notify parent of the change
     };
-
+    // console.log('settingsData render', settingsData);
     return (
       <View
         style={{
@@ -103,7 +103,7 @@ export default memo(
             txtTwo={`applicable only if open invitte is On
 RSVP will responses will no longer be accepted once "Going" (and +1s) limit is reached.`}
             dropdown={true}
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={6}
           />
           <TogleRow
@@ -117,14 +117,14 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_approval === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={7}
           />
           <TogleRow
             txtOne="Allow plus ones"
             txtTwo=""
             dropdown={true}
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={8}
           />
           <TogleRow
@@ -138,7 +138,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.activity_timeline === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={9}
           />
           <TogleRow
@@ -152,7 +152,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_status_share === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={10}
           />
           <TogleRow
@@ -166,7 +166,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_posts === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={11}
           />
           <TogleRow
@@ -180,7 +180,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_upload === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={settingsData.open_event !== 'Y'}
+            disabled={!(settingsData.open_event === 'Y')}
             id={12}
           />
         </ScrollView>
@@ -219,45 +219,47 @@ const TogleRow = memo(
     };
     return (
       <Animated.View
-        entering={FadeInLeft.delay(50 * (id-1))}
-        exiting={FadeOutLeft}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 20,
-          opacity: disabled ? 0.5 : 1,
-        }}>
+        entering={FadeInLeft.delay(50 * (id - 1))}
+        exiting={FadeOutLeft}>
         <View
           style={{
-            flex: 1,
-            gap: 5,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 20,
+            opacity: disabled ? 0.5 : 1,
           }}>
-          <Text
-            variant={'BodyRegular'}
+          <View
             style={{
-              color: '#fff',
+              flex: 1,
+              gap: 5,
             }}>
-            {txtOne}
-          </Text>
-          {txtTwo.length > 0 && (
             <Text
-              variant={'DetailRegular'}
+              variant={'BodyRegular'}
               style={{
                 color: '#fff',
               }}>
-              {txtTwo}
+              {txtOne}
             </Text>
-          )}
-        </View>
-        <View>
-          {isSwitch && (
-            <Switch
-              value={isOn}
-              onPress={disabled ? null : handlePress}
-              style={{}}
-            />
-          )}
-          {dropdown && <DropdownCompo />}
+            {txtTwo.length > 0 && (
+              <Text
+                variant={'DetailRegular'}
+                style={{
+                  color: '#fff',
+                }}>
+                {txtTwo}
+              </Text>
+            )}
+          </View>
+          <View>
+            {isSwitch && (
+              <Switch
+                value={isOn}
+                onPress={disabled ? null : handlePress}
+                style={{}}
+              />
+            )}
+            {dropdown && <DropdownCompo />}
+          </View>
         </View>
       </Animated.View>
     );

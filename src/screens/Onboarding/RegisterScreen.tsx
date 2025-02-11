@@ -114,9 +114,9 @@ export default function () {
       mobile = tempNum;
     }
     //
-    if (imageUri.base64 === null || imageUri.base64 === undefined) {
-      return;
-    }
+    // if (imageUri.base64 === null || imageUri.base64 === undefined) {
+    //   return;
+    // }
 
     let country_code = '';
     let tempCode = storage.getString('country.code');
@@ -246,7 +246,9 @@ export default function () {
         lable="CONTINUE"
         onPress={registerFn}
         disabled={
-          !(imageUri?.base64.length > 0 && name.length > 0)
+          !(
+            // imageUri?.base64.length > 0 &&
+             name.length > 0)
         }
         loading={loading}
       />

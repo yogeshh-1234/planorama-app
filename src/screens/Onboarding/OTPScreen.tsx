@@ -209,7 +209,7 @@ export default function ({onPress}: {onPress: () => void}) {
           />
           <Text
             variant={'DetailRegular'}
-            style={{color: '#fff', textDecorationLine: 'underline'}}>
+            style={{color: '#fff', textDecorationLine: 'underline',flex:1}}>
             I agree to T&C Lorem ipsum dolor sit amet, sdasd consectetur
             adipiscing elit, sed do
           </Text>

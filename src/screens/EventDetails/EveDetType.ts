@@ -29,6 +29,7 @@ export interface EventDetailsType {
     pic: string;
   }[];
   rsvp_guest_id?: number;
+  rsvp_guest_type: 'G' | 'H'; //H - host, G - guest
 }
 
 export interface ErrorFormat {

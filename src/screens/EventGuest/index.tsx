@@ -111,10 +111,10 @@ export default function () {
   const addGuest = () => {
     navigation.navigate('ContactsScreen', {
       eventID: params.eventID,
+      onGoBack: () => callAPI(),
       fromGuest: true,
-      onGoBack: () => {
-        callAPI();
-      },
+      eventName: params.eventName,
+      eventPic: params.eventPic,
     });
   };
 

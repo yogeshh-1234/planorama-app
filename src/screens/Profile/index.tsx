@@ -400,7 +400,13 @@ const ProfileCompo = memo(() => {
     const pic = storage.getString('user.pic');
     const number = storage.getString('display.number');
     setName(name ? name : '');
-    setPic(pic ? pic : '');
+    setPic(
+      pic
+        ? pic
+        : `https://avatar.iran.liara.run/username?username=${
+            (name ? name : '').replaceAll(' ', '+')
+          }`,
+    );
     setNum(number ? number : '');
   }, []);
 

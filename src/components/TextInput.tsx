@@ -46,7 +46,7 @@ export default ({
         return (
           <Pressable onPress={onRightButt}>
             <CloseSVG
-              fill={'#fff'}
+              fill={'#ffffff80'}
               width={iconsize * 1.8}
               height={iconsize * 1.8}
             />

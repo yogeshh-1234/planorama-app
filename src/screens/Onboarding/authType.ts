@@ -9,7 +9,7 @@ export interface registerFormType {
   mode: string;
   mobile: string;
   name: string;
-  pic: string;
+  pic: string|undefined;
   country_code: string;
 }
 

@@ -154,7 +154,7 @@ export default function () {
     } else if (popupModal.buttOne === '' && popupModal.buttTwo === 'RETRY') {
       setPopupModal({...popupModal, state: false});
     } else if (popupModal.buttOne === 'BACK' && popupModal.buttTwo === 'SAVE') {
-      setPopupModal({...popupModal, state: false});
+      navigation.goBack();
     }
   }, [popupModal.state]);
 

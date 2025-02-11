@@ -48,8 +48,9 @@ export interface importGuestForm {
   mode: string;
   token: string;
   id: string;
-  event_id: number;
-  guests_ids: string;
+  event_id?: number;
+  guests_ids?: string;
+  contacts_ids?:string
 }
 
 export interface rsvpSubmitForm {

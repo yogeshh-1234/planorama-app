@@ -83,6 +83,7 @@ export default function () {
     event_disc: '',
     rsvp: null,
     host_list: [],
+    rsvp_guest_type: 'H', //H - host, G - guest
   });
 
   const [galleryData, setGalleyData] = useState<string[]>([]);
@@ -196,7 +197,8 @@ export default function () {
       <HeaderCompo onBack={onBack} />
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: params.invited === true ? 250 : 100,
+          paddingBottom: eventData.rsvp_guest_type === 'G' ? 250 : 100,
+          // rsvp_guest_type:'H' //H - host, G - guest
           paddingHorizontal: width * 0.05,
         }}
         refreshControl={
@@ -236,21 +238,21 @@ export default function () {
             event_id={params.id}
             eventName={eventData.name}
             eventPic={eventData.cover_img}
-            disable={params.invited === true}
+            disable={eventData.rsvp_guest_type==='G'}
           />
         )}
-        {!loading && !(params.invited === true) && (
+        {!loading && !(eventData.rsvp_guest_type==='G') && (
           <RSVPCompo value={eventData.rsvp} />
         )}
       </ScrollView>
-      {params.invited === true && (
+      {eventData.rsvp_guest_type==='G'&& (
         <SelectRSVP
           value={eventData.rsvp}
           rsvpGuestId={eventData.rsvp_guest_id}
           eventID={params.id}
         />
       )}
-      {!loading && !(params.invited === true) && (
+      {!loading && !(eventData.rsvp_guest_type==='G') && (
         <BottomBar
           eventID={params.id}
           eventData={eventData}
@@ -276,6 +278,7 @@ const SelectRSVP = memo(
     rsvpGuestId: number | undefined;
     eventID: number;
   }) => {
+    const {params} = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
     const [RSVPval, setRSVPval] = useState<RSVPtype>(value);
     const [tempRSVPval, setTempRSVPval] = useState<RSVPtype>(null);
     const [loading, setLoading] = useState(false);
@@ -295,10 +298,11 @@ const SelectRSVP = memo(
           id,
           event_id: eventID,
           guest_id: rsvpGuestId,
-          rsvp: 'Y',
+          rsvp: val,
         };
         setTempRSVPval(val);
         setLoading(true);
+        // console.log('formData', formData);
         eventMutation.mutate(formData);
       }
     };
@@ -311,9 +315,14 @@ const SelectRSVP = memo(
       mutationFn: (formData: EventGuestsForm) =>
         postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
       onSuccess: ({data, StatusCode}) => {
+        // console.log('data', data);
         setTempRSVPval(null);
         if (StatusCode === 200) {
           setRSVPval(tempRSVPval);
+          if (params.onGoBack) {
+            // console.log('params.onGoBack');
+            params.onGoBack();
+          }
         } else {
           ToastAndroid.showWithGravity(
             `Something went wrong, please try again! ${StatusCode} `,
@@ -345,10 +354,10 @@ const SelectRSVP = memo(
           left: 0,
           right: 0,
           backgroundColor: '#3A2537A1',
-          paddingHorizontal: 20
+          paddingHorizontal: 20,
         }}>
         <RSVPCompo
-          value={RSVPval||value}
+          value={RSVPval || value}
           onChange={
             loading
               ? null

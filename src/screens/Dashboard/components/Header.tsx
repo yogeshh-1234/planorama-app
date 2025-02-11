@@ -68,14 +68,24 @@ export default function ({
         }}
         onPress={() => {
           ToastAndroid.showWithGravity(
-            "Coming Soon",
+            'Coming Soon',
             ToastAndroid.SHORT,
             ToastAndroid.CENTER,
           );
         }}>
         <NotiSVG width={30} height={30} />
       </Pressable>
-      <ImageCompo uri={pic} onPress={onPress} />
+      <ImageCompo
+        uri={
+          pic
+            ? pic
+            : `https://avatar.iran.liara.run/username?username=${name.replaceAll(
+                ' ',
+                '+',
+              )}`
+        }
+        onPress={onPress}
+      />
     </View>
   );
 }
@@ -104,7 +114,9 @@ const ImageCompo = memo(
         <Image
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
-          source={{uri}}
+          source={{
+            uri,
+          }}
           style={{
             width: '100%',
             height: '100%',

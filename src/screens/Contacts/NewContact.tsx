@@ -16,8 +16,8 @@ import {
 } from './contactsType';
 import {postData} from '../../api';
 import Urls from '../../api/urls';
-import {CommonActions, useNavigation} from '@react-navigation/native';
-import {MainStackNavigation} from '../../navigation';
+import {CommonActions, RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import {MainStackNavigation, RootStackParamList} from '../../navigation';
 import PopupCompo from '../../components/PopupCompo';
 import LoadingCompo from '../../components/LoadingCompo';
 import { CountryPicker } from 'react-native-country-codes-picker';
@@ -97,6 +97,8 @@ const PopupModal = {
 const GAPONE = 20;
 const GAPTWO = 10;
 const NewContactForm = memo(() => {
+   const {params} =
+        useRoute<RouteProp<RootStackParamList, 'AddNewContact'>>();
   const navigation = useNavigation<MainStackNavigation>();
   const [name, setName] = useState('');
   const [num, setNum] = useState('');
@@ -187,19 +189,9 @@ const NewContactForm = memo(() => {
     onSuccess: ({data, StatusCode}) => {
       if (StatusCode === 200) {
         //
-
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [
-              {name: 'HomeScreen'},
-              {
-                name: 'ContactsScreen',
-                params: {eventID: -1},
-              },
-            ],
-          }),
-        );
+        if (params.onGoBack) params.onGoBack();
+        navigation.goBack();
+    
       } else {
         setLoading({
           status: false,

@@ -57,7 +57,7 @@ export default memo(
         onBackdropPress={onDismiss}
         onBackButtonPress={onDismiss}>
         <View style={styles.box}>
-          {isVisible && (
+          {isVisible && title && (
             <Text
               variant={'SubTitleTwo'}
               style={styles.title}
@@ -66,8 +66,8 @@ export default memo(
               {title}
             </Text>
           )}
-          <View style={styles.divider} />
-          {isVisible && (
+          {title && <View style={styles.divider} />}
+          {isVisible && disc && (
             <Text
               variant={'BodyRegular'}
               style={styles.disc}
@@ -76,7 +76,7 @@ export default memo(
               {disc}
             </Text>
           )}
-          <View style={styles.divider} />
+          {disc && <View style={styles.divider} />}
           <View style={styles.buttRow}>
             {buttOne !== '' && (
               <Pressable
