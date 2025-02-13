@@ -252,7 +252,7 @@ export default function () {
       popupModal.buttTwo === 'RETRY'
     ) {
       saveGallery(eventID);
-    } 
+    }
     // else {
     //   setPopupModal({...popupModal, state: false});
     // }
@@ -1341,8 +1341,9 @@ const DateTimeCompo = memo(
               variant={'BodyBold'}
               style={{color: defTime.length > 0 ? '#fff' : '#ffffff80'}}>
               {defDate.length > 0
-                ? moment(date).format('DD/MM/YYYY')
-                : 'DD/MM/YYYY'}
+                ? defDate
+                : // moment(date).format('DD/MM/YYYY')
+                  'DD/MM/YYYY'}
             </Text>
           </Pressable>
           <Pressable
@@ -1359,14 +1360,26 @@ const DateTimeCompo = memo(
             <Text
               variant={'BodyBold'}
               style={{color: defTime.length > 0 ? '#fff' : '#ffffff80'}}>
-              {defTime.length > 0 ? moment(time).format('hh:mm a') : '00:00'}
+              {defTime.length > 0
+                ? defTime
+                : // moment(time).format('hh:mm a')
+                  '00:00'}
             </Text>
           </Pressable>
         </View>
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
           mode={dtType}
-          date={dtType === 'date' ? date : time}
+          date={
+            dtType === 'date'
+              ? // date:time
+                defDate.length > 0
+                ? moment(defDate, 'DD/MM/YYYY').toDate()
+                : date
+              : defTime.length > 0
+              ? moment(defTime, 'hh:mm a').toDate()
+              : time
+          }
           onConfirm={handleConfirm}
           onCancel={hideDatePicker}
         />

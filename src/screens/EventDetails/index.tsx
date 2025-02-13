@@ -52,6 +52,7 @@ import {
 import {ActivityIndicator} from 'react-native-paper';
 import Button from '../../components/Button';
 import HeaderCompo from '../../components/HeaderCompo';
+import CommentSection from './CommentSection';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const PopupModal = {
@@ -238,21 +239,27 @@ export default function () {
             event_id={params.id}
             eventName={eventData.name}
             eventPic={eventData.cover_img}
-            disable={eventData.rsvp_guest_type==='G'}
+            disable={eventData.rsvp_guest_type === 'G'}
           />
         )}
-        {!loading && !(eventData.rsvp_guest_type==='G') && (
+        {!loading && !(eventData.rsvp_guest_type === 'G') && (
           <RSVPCompo value={eventData.rsvp} />
         )}
+        {!loading && (
+          <CommentSection
+            eventID={params.id}
+            guestId={eventData.rsvp_guest_id}
+          />
+        )}
       </ScrollView>
-      {eventData.rsvp_guest_type==='G'&& (
+      {eventData.rsvp_guest_type === 'G' && (
         <SelectRSVP
           value={eventData.rsvp}
           rsvpGuestId={eventData.rsvp_guest_id}
           eventID={params.id}
         />
       )}
-      {!loading && !(eventData.rsvp_guest_type==='G') && (
+      {!loading && !(eventData.rsvp_guest_type === 'G') && (
         <BottomBar
           eventID={params.id}
           eventData={eventData}
@@ -584,6 +591,7 @@ const GuestListCompo = memo(
     const [loading, setLoading] = useState(false);
     const [eventGuest, setEventGuest] = useState<guestItemType[]>([]);
     const [error, setError] = useState('');
+    const [going, setGoing] = useState(0);
     useEffect(() => {
       callAPI();
     }, []);
@@ -617,9 +625,14 @@ const GuestListCompo = memo(
       mutationFn: (formData: EventGuestsForm) =>
         postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
       onSuccess: ({data, StatusCode}) => {
-        StatusCode === 200
-          ? setEventGuest(data.guest_list)
-          : setError(`Something went wrong, please try again! ${StatusCode} `);
+        // console.log(data);
+        if (StatusCode === 200) {
+          setEventGuest(data.guest_list);
+
+          setGoing(data.rsvp_cnt.Y);
+        } else {
+          setError(`Something went wrong, please try again! ${StatusCode} `);
+        }
         setLoading(false);
       },
       onError: error =>
@@ -655,7 +668,7 @@ const GuestListCompo = memo(
           </Text>
           {!loading && !(error.length > 0) && (
             <Text variant={'DetailRegular'} style={{color: '#fff'}}>
-              {eventGuest.length} Going
+              {going} Going
             </Text>
           )}
         </Pressable>

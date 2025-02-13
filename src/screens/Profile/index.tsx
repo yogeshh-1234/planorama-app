@@ -444,7 +444,7 @@ const ProfileCompo = memo(() => {
         if (picBASE64 && picBASE64.length > 0) {
           // call profile api
           // and clear base64
-          getProfileData();
+          // getProfileData();
         }
         // storage.set('user.pic', data.pic);
       } else {

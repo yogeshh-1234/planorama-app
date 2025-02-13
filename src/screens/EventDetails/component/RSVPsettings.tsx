@@ -138,7 +138,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.activity_timeline === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={!(settingsData.open_event === 'Y')}
+            // disabled={!(settingsData.open_event === 'Y')}
             id={9}
           />
           <TogleRow
@@ -152,7 +152,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_status_share === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={!(settingsData.open_event === 'Y')}
+            // disabled={!(settingsData.open_event === 'Y')}
             id={10}
           />
           <TogleRow
@@ -166,7 +166,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_posts === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={!(settingsData.open_event === 'Y')}
+            // disabled={!(settingsData.open_event === 'Y')}
             id={11}
           />
           <TogleRow
@@ -180,7 +180,7 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
                 settingsData.guest_upload === 'Y' ? 'N' : 'Y',
               )
             }
-            disabled={!(settingsData.open_event === 'Y')}
+            // disabled={!(settingsData.open_event === 'Y')}
             id={12}
           />
         </ScrollView>

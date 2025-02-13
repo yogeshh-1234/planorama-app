@@ -6,7 +6,7 @@ import notifee, {
   AndroidStyle,
   EventDetail,
 } from '@notifee/react-native';
-import {navigate} from './NavigationService';
+import {navigate, navigateReset} from './NavigationService';
 import {storage} from './storage';
 
 async function createNotificationChannel() {
@@ -48,13 +48,6 @@ const generalNotifications = async (remoteMessage: any) => {
         id: 'default',
       },
       autoCancel: true,
-
-      // actions: [
-      //   {
-      //     title: 'View Details',
-      //     pressAction: {id: 'ViewRequest'},
-      //   },
-      // ],
     },
   });
   //
@@ -84,29 +77,46 @@ export function setupMessageListener() {
 
 export function setupNotifeeEvents() {
   notifee.onForegroundEvent(({type, detail}) => {
-    // if(detail.notification?.data?.type==="new_inv_event"){
     NavigateOnPress(type, detail);
-    // }
   });
 
   // Handle notification click when app is in background or terminated
   notifee.onBackgroundEvent(async ({type, detail}) => {
-    // if(detail.notification?.data?.type==="new_inv_event"){
     NavigateOnPress(type, detail);
-    // }
   });
 
   const NavigateOnPress = (type: EventType, detail: EventDetail) => {
-    const chatDetails = {
-      id: parseInt(`${detail.notification?.data?.event_id}`),
-      invited:
-        detail.notification?.data?.type === 'new_inv_event' ? true : false,
-    };
+    // console.log('type, detail', type, detail);
+    // console.log('EventType', EventType.PRESS, type, EventType.ACTION_PRESS);
+    // got noti
+    // EventType 1 3 2
 
-    switch (type) {
-      case EventType.PRESS:
-        navigate('EventDetails', chatDetails);
-        break;
+    // presses noti
+    // EventType 1 1 2
+
+    if (EventType.PRESS === type || EventType.ACTION_PRESS === type) {
+      // on notification view message press
+
+      // console.log('press event');
+
+      if (`${detail.notification?.data?.event_id}`?.length > 0) {
+        const chatDetails = {
+          id: parseInt(`${detail.notification?.data?.event_id}`),
+          invited:
+            detail.notification?.data?.type === 'new_inv_event' ? true : false,
+        };
+        // console.log('EventDetails', chatDetails);
+        navigateReset(
+          [
+            {name: 'HomeScreen'},
+            {
+              name: 'EventDetails',
+              params: chatDetails,
+            },
+          ],
+          1,
+        );
+      }
     }
   };
 }

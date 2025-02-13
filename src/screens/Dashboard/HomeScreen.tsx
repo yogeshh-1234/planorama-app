@@ -6,8 +6,10 @@ import {
   RefreshControl,
   ScrollView,
   StatusBar,
+  StyleSheet,
   TextInput,
   View,
+  ViewStyle,
 } from 'react-native';
 import {BGline} from '../../assets/SVG/VectorSVG';
 import Header from './components/Header';
@@ -588,7 +590,30 @@ const EventsDisplay = memo(
           />
         ))}
       </Animated.ScrollView>
-    ) : (
+    ) : 
+    // lable === 'your' ? (
+      // <View
+      //   style={{
+      //     backgroundColor: '#C5B1C3',
+      //     borderRadius: 10,
+      //     borderWidth: 1,
+      //     borderColor: '#fff',
+      //     borderStyle: 'dashed',
+      //     width: width * 0.6,
+      //     height: width * 0.6,
+      //   }}></View>
+//       <View style={[{ height: 2, overflow: 'hidden' }]}>
+//   <View style={[{
+//      height: 4, 
+//      borderWidth: 1, borderColor: '#ddd', borderStyle: 'dashed' ,
+
+
+//       // width: width * 0.6,
+//       //     height: width * 0.6,
+//   }]}></View>
+// </View>
+    // ) :
+     (
       <Animated.View
         style={{
           paddingVertical: 21,
@@ -937,3 +962,6 @@ const ImageCompo = memo(({uri, size}: {uri: string | null; size: number}) => {
     </Animated.View>
   );
 });
+
+
+

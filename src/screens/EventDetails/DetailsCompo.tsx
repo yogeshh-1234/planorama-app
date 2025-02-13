@@ -210,7 +210,7 @@ export default function ({
   );
 }
 
-const ImageCompo = memo(
+export const ImageCompo = memo(
   ({uri, ImgSize, delay}: {uri: string; ImgSize: number; delay: number}) => {
     const [showImg, setShowImg] = useState(false);
     const toggleImg = () => setShowImg(pre => !pre);
@@ -258,7 +258,7 @@ const ImageCompo = memo(
     );
   },
 );
-const HostedByCompo = memo(
+export const HostedByCompo = memo(
   ({
     hostList,
   }: {

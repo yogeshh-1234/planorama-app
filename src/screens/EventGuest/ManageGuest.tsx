@@ -128,6 +128,7 @@ export default function ({
     onError: error =>
       errorPopUp(error?.StatusCode, error?.error?.description, 'BACK'),
   });
+
   const errorPopUp = (code: number, desc: string | null, buttTxt: string) => {
     setLoading({
       status: false,
@@ -143,7 +144,9 @@ export default function ({
       buttTwo: 'OKAY',
     });
   };
+
   useEffect(() => {
+    // console.log('useEffect uodate')
     let GuestTypeArr: filterArrType = {
       all: [],
       going: [],
@@ -321,18 +324,20 @@ export default function ({
           paddingHorizontal,
           flex: 1,
         }}>
-        <ContsctsList
-          staticData={false}
-          selectedItems={selectedItems}
-          setSelectedItems={(val: any) => setSelectedItems(val)}
-          contacts={guestListArr.filter(item =>
-            item.name.toLowerCase().includes(value.toLowerCase()),
-          )}
-          fromGuest={true}
-          eventID={eventID}
-          onReload={onReload}
-          onDelete={onDelete}
-        />
+        { (
+          <ContsctsList
+            staticData={false}
+            selectedItems={selectedItems}
+            setSelectedItems={(val: any) => setSelectedItems(val)}
+            contacts={guestListArr.filter(item =>
+              item.name.toLowerCase().includes(value.toLowerCase()),
+            )}
+            fromGuest={true}
+            eventID={eventID}
+            onReload={onReload}
+            onDelete={onDelete}
+          />
+        )}
       </View>
       <View style={{alignSelf: 'center', paddingBottom: 12}}>
         {status ? (

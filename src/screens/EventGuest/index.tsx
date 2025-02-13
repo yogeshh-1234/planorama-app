@@ -181,7 +181,7 @@ export default function () {
         </View>
         {eventGuest.length > 0 ? (
           <ManageGuest
-            eventGuest={eventGuest}
+            eventGuest={loading ? [] : eventGuest}
             eventID={params.eventID}
             onReload={callAPI}
             eventName={params.eventName}
