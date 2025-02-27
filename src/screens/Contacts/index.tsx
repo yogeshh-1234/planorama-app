@@ -75,7 +75,7 @@ export default function () {
   const navigation = useNavigation<MainStackNavigation>();
 
   const [loading, setLoading] = useState(false);
-
+  // console.log('params', params);
   return (
     <View
       style={{
@@ -98,7 +98,7 @@ export default function () {
           right: 0,
         }}
       />
-      <HeaderCompo />
+      <HeaderCompo title={params.eventName} />
       <View
         style={{
           // paddingTop: 30,
@@ -106,16 +106,43 @@ export default function () {
           gap: 18,
           flex: 1,
         }}>
-        <Text
-          variant={'TitleTwo'}
+        <Animated.View
           style={{
-            color: '#fff',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
           entering={FadeIn}
           exiting={FadeOut}>
-          Contacts
-        </Text>
-        <Animated.View
+          <Text
+            variant={'TitleTwo'}
+            style={{
+              color: '#fff',
+            }}
+            entering={FadeIn}
+            exiting={FadeOut}>
+            Contacts
+          </Text>
+          <Button
+            onPress={() => {
+              navigation.navigate('ImportContacts', {
+                onGoBack: () => {
+                  setLoading(pre => !pre);
+                },
+              });
+            }}
+            lable="Address book"
+            buttonStyles={{
+              width: width * 0.42,
+              backgroundColor: 'transparent',
+              borderColor: '#EDEDED',
+              borderWidth: 1,
+              paddingVertical: 12,
+            }}
+            variant="BodyRegular"
+          />
+        </Animated.View>
+        {/* <Animated.View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -153,7 +180,7 @@ export default function () {
             }}
             variant="BodyRegular"
           />
-        </Animated.View>
+        </Animated.View> */}
 
         {/* <View>
           <FiltersTab />
@@ -478,7 +505,7 @@ const ContactList = memo(
                 <RemoveContacts
                   selectedItems={selectedItems}
                   onReload={() => {
-                    setEdit(false)
+                    setEdit(false);
                     setSelectedItems({});
                     callAPI();
                   }}
@@ -567,7 +594,7 @@ const ContactList = memo(
               paddingVertical: 12,
             }}>
             <Button
-              lable="SAVE LIST"
+              lable="ADD TO EVENT"
               textStyles={{
                 color: '#2D2D2D',
               }}
@@ -578,7 +605,7 @@ const ContactList = memo(
               }}
               onPress={addContactsToEvent}
             />
-            <InviteButton selectedItems={selectedItems} />
+            {/* <InviteButton selectedItems={selectedItems} /> */}
           </View>
         )}
         {/* search */}

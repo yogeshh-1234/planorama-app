@@ -85,6 +85,10 @@ export default function () {
     rsvp: null,
     host_list: [],
     rsvp_guest_type: 'H', //H - host, G - guest
+    open_event: '',
+    rsvp_url: '',
+    is_host: false,
+    is_guest: false,
   });
 
   const [galleryData, setGalleyData] = useState<string[]>([]);
@@ -183,6 +187,15 @@ export default function () {
   const onBack = () => {
     navigation.goBack();
   };
+
+  const invitedEvent =
+    (eventData.open_event === 'Y' || eventData.open_event === 'N') &&
+    eventData.is_guest &&
+    !eventData.is_host;
+
+  const addOnList =
+    eventData.open_event === 'Y' && !eventData.is_guest && !eventData.is_host;
+
   return (
     <View
       style={{
@@ -198,7 +211,7 @@ export default function () {
       <HeaderCompo onBack={onBack} />
       <ScrollView
         contentContainerStyle={{
-          paddingBottom: eventData.rsvp_guest_type === 'G' ? 250 : 100,
+          paddingBottom: invitedEvent ? 250 : 100,
           // rsvp_guest_type:'H' //H - host, G - guest
           paddingHorizontal: width * 0.05,
         }}
@@ -232,34 +245,52 @@ export default function () {
             hostList={eventData.host_list}
             gallery={galleryData}
             galleryLoading={galleryLoading}
+            isAddOnList={addOnList}
           />
         )}
-        {!loading && (
-          <GuestListCompo
-            event_id={params.id}
-            eventName={eventData.name}
-            eventPic={eventData.cover_img}
-            disable={eventData.rsvp_guest_type === 'G'}
-          />
-        )}
-        {!loading && !(eventData.rsvp_guest_type === 'G') && (
-          <RSVPCompo value={eventData.rsvp} />
-        )}
-        {!loading && (
-          <CommentSection
-            eventID={params.id}
-            guestId={eventData.rsvp_guest_id}
-          />
-        )}
+        <View
+          style={{
+            opacity: addOnList ? 0.4 : 1,
+          }}>
+          {!loading && (
+            <GuestListCompo
+              event_id={params.id}
+              eventName={eventData.name}
+              eventPic={eventData.cover_img}
+              disable={invitedEvent}
+            />
+          )}
+          {!loading && !invitedEvent && <RSVPCompo value={eventData.rsvp} />}
+          {!loading && (
+            <CommentSection
+              eventID={params.id}
+              guestId={eventData.rsvp_guest_id ? eventData.rsvp_guest_id : 0}
+            />
+          )}
+          {addOnList && (
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                backgroundColor: 'transparent',
+              }}
+            />
+          )}
+        </View>
       </ScrollView>
-      {eventData.rsvp_guest_type === 'G' && (
+      {invitedEvent && (
         <SelectRSVP
           value={eventData.rsvp}
           rsvpGuestId={eventData.rsvp_guest_id}
           eventID={params.id}
+          eventName={eventData.name}
         />
       )}
-      {!loading && !(eventData.rsvp_guest_type === 'G') && (
+      {addOnList && <AddOnList eventID={params.id} reloadAPI={mainFn} />}
+      {!loading && !invitedEvent && !addOnList && (
         <BottomBar
           eventID={params.id}
           eventData={eventData}
@@ -280,12 +311,17 @@ const SelectRSVP = memo(
     value,
     rsvpGuestId,
     eventID,
+    eventName,
   }: {
     value: RSVPtype;
     rsvpGuestId: number | undefined;
     eventID: number;
+    eventName: string;
   }) => {
     const {params} = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
+
+    const navigation = useNavigation<MainStackNavigation>();
+
     const [RSVPval, setRSVPval] = useState<RSVPtype>(value);
     const [tempRSVPval, setTempRSVPval] = useState<RSVPtype>(null);
     const [loading, setLoading] = useState(false);
@@ -305,7 +341,14 @@ const SelectRSVP = memo(
           id,
           event_id: eventID,
           guest_id: rsvpGuestId,
-          rsvp: val,
+          rsvp:
+            val === 'Y'
+              ? 'R~Y'
+              : val === 'M'
+              ? 'R~M'
+              : val === 'N'
+              ? 'R~N'
+              : '',
         };
         setTempRSVPval(val);
         setLoading(true);
@@ -330,6 +373,13 @@ const SelectRSVP = memo(
             // console.log('params.onGoBack');
             params.onGoBack();
           }
+          navigation.navigate('SuccessScreen', {
+            type: 'rsvp',
+            textOne: `You have successfully sent your response to the event `,
+            textTwo: eventName,
+            textThree: '',
+            eventID: eventID,
+          });
         } else {
           ToastAndroid.showWithGravity(
             `Something went wrong, please try again! ${StatusCode} `,
@@ -628,8 +678,8 @@ const GuestListCompo = memo(
         // console.log(data);
         if (StatusCode === 200) {
           setEventGuest(data.guest_list);
-
-          setGoing(data.rsvp_cnt.Y);
+          // console.log('check', data);
+          setGoing(data.rsvp_cnt['R~Y']);
         } else {
           setError(`Something went wrong, please try again! ${StatusCode} `);
         }
@@ -644,34 +694,33 @@ const GuestListCompo = memo(
     });
 
     return (
-      <View
+      <Pressable
         style={{
           flexDirection: 'row',
           // alignItems: 'center',
           paddingVertical: 8,
           gap: 12,
-        }}>
-        <Pressable
-          style={{gap: 4}}
-          onPress={
-            disable
-              ? null
-              : () =>
-                  navigation.navigate('EventGuest', {
-                    eventID: event_id,
-                    eventName: eventName,
-                    eventPic: eventPic,
-                  })
-          }>
+        }}
+        onPress={
+          disable
+            ? null
+            : () =>
+                navigation.navigate('EventGuest', {
+                  eventID: event_id,
+                  eventName: eventName,
+                  eventPic: eventPic,
+                })
+        }>
+        <View style={{gap: 4}}>
           <Text variant={'SubTitleTwo'} style={{color: '#EDEDED'}}>
             Guest List
           </Text>
           {!loading && !(error.length > 0) && (
             <Text variant={'DetailRegular'} style={{color: '#fff'}}>
-              {going} Going
+              {eventGuest.length} Invited | {going} Going
             </Text>
           )}
-        </Pressable>
+        </View>
         <View
           style={{
             flex: 1,
@@ -711,7 +760,7 @@ const GuestListCompo = memo(
             />
           )}
         </View>
-      </View>
+      </Pressable>
     );
   },
 );
@@ -809,6 +858,83 @@ const MemberImg = ({
         />
       )}
     </View>
+  );
+};
+
+const AddOnList = ({
+  eventID,
+  reloadAPI,
+}: {
+  eventID: number;
+  reloadAPI: () => void;
+}) => {
+  const [loading, setLoading] = useState(false);
+
+  const changeRVP = () => {
+    const token = storage.getString('user.token');
+    const id = storage.getString('user.id');
+    if (
+      token !== null &&
+      token !== undefined &&
+      id !== null &&
+      id !== undefined
+    ) {
+      const formData = {
+        mode: 'ADD_GUEST_SELF',
+        token,
+        id,
+        event_id: eventID,
+      };
+      setLoading(true);
+      // console.log('formData', formData);
+      mutation.mutate(formData);
+    }
+  };
+  const mutation = useMutation<
+    GuestEventResponse,
+    ErrorFormat,
+    EventGuestsForm
+  >({
+    mutationFn: (formData: EventGuestsForm) =>
+      postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
+    onSuccess: ({data, StatusCode}) => {
+      // console.log(data);
+      if (StatusCode === 200) {
+        reloadAPI();
+      } else {
+        ToastAndroid.showWithGravity(
+          `Something went wrong, please try again! ${StatusCode} `,
+          ToastAndroid.SHORT,
+          ToastAndroid.CENTER,
+        );
+      }
+
+      setLoading(false);
+    },
+    onError: error => {
+      ToastAndroid.showWithGravity(
+        error?.error?.description
+          ? `${error?.error?.description} ${error?.StatusCode}`
+          : `Something went wrong, please try again! ${error?.StatusCode}`,
+        ToastAndroid.SHORT,
+        ToastAndroid.CENTER,
+      );
+      setLoading(false);
+    },
+  });
+
+  return (
+    <Button
+      lable="Get on the list"
+      onPress={changeRVP}
+      buttonStyles={{
+        backgroundColor: '#F9BC52',
+        alignSelf: 'center',
+        marginBottom: 24,
+      }}
+      loading={loading}
+      disabled={loading}
+    />
   );
 };
 

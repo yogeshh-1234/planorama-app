@@ -61,7 +61,7 @@ const PopupModal = {
   buttTwo: '',
 };
 export default function () {
-  const {params} = useRoute<RouteProp<RootStackParamList, 'ProfileScreen'>>();
+  
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(false);
   const [credits, setCredits] = useState<null | number>(null);
@@ -217,10 +217,10 @@ export default function () {
             loadingMain={loading}
             title={
               loading
-                ? 'Checking whatsapp connection'
+                ? 'Checking WhatsApp connection'
                 : status
-                ? 'Disconnect whatsapp'
-                : 'Connect your whatsApp'
+                ? 'Disconnect WhatsApp'
+                : 'Connect your WhatsApp'
             }
             onPressTab={status ? dissconnectWAPrompt : undefined}
           />
@@ -365,7 +365,7 @@ const ItemCompo = ({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#C5B1C33D',
+        backgroundColor:type==='connect'?'#2FAB68A1': '#C5B1C33D',
         borderRadius: 5,
         paddingHorizontal: 12,
         paddingVertical: 18,

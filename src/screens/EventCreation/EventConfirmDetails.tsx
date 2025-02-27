@@ -45,11 +45,7 @@ export default function () {
           colorHex={params.colorHex}
           date={params.date}
           time={params.time}
-          location={
-            params.location.length > 0
-              ? params.location
-              : params.link
-          }
+          location={params.location.length > 0 ? params.location : params.link}
           isLink={params.location.length > 0 ? false : true}
           description={params.description}
           rsvp={params.rsvp}
@@ -89,14 +85,8 @@ export default function () {
           onPress={() => {
             navigation.dispatch(
               CommonActions.reset({
-                index: 1,
-                routes: [
-                  {name: 'HomeScreen'},
-                  {
-                    name: 'EventDetails',
-                    params: {id: params.id},
-                  },
-                ],
+                index: 0,
+                routes: [{name: 'HomeScreen'}],
               }),
             );
           }}>
@@ -105,7 +95,7 @@ export default function () {
             style={{
               color: '#fff',
             }}>
-            SAVE EVENT
+            DASHBOARD
           </Text>
         </Pressable>
       </View>

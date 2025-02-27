@@ -46,6 +46,7 @@ const generalNotifications = async (remoteMessage: any) => {
       showTimestamp: true,
       pressAction: {
         id: 'default',
+        launchActivity: 'default'
       },
       autoCancel: true,
     },

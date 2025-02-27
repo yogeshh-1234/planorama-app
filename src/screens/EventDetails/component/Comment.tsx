@@ -26,7 +26,7 @@ const Comment: React.FC<CommentProps> = ({comment}) => {
           paddingLeft: 50,
           // borderWidth: 1,
           // borderColor: 'red',
-          gap: 8,
+          gap: 4,
         }}>
         {comment.image && (
           // <Image source={{uri: comment.image}} style={styles.commentImage} />
@@ -54,12 +54,12 @@ const Comment: React.FC<CommentProps> = ({comment}) => {
 
 const styles = StyleSheet.create({
   commentContainer: {
-    marginTop: 10,
+    marginTop: 14,
     // padding: 10,
     // borderWidth: 1,
     // borderColor: '#ccc',
     // borderRadius: 5,
-    gap: 8,
+    gap: 2,
   },
   commentText: {
     color: '#EDEDED',

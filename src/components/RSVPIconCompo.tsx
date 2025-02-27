@@ -26,6 +26,23 @@ export default ({
           }}
         />
       );
+
+
+      case "R~Y":
+        return <ThumbsUpSVG width={size} height={size} fill={fill} />;
+      case "R~M":
+        return <QuesSVG width={size} height={size} fill={fill} />;
+      case "R~N":
+        return (
+          <ThumbsUpSVG
+            width={size}
+            height={size}
+            fill={fill}
+            style={{
+              transform: [{rotate: '180deg'}],
+            }}
+          />
+        );
     default:
       return (
        <></>

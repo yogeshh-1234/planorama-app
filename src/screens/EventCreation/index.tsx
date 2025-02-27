@@ -1488,17 +1488,11 @@ const HostedByCompo = memo(() => {
   useEffect(() => {
     const tempName = storage.getString('user.name');
     const tempPic = storage.getString('user.pic');
-    if (
-      tempName !== null &&
-      tempName !== undefined &&
-      tempPic !== null &&
-      tempPic !== undefined
-    ) {
-      setProfileData({
-        pic: tempPic,
-        name: tempName,
-      });
-    }
+
+    setProfileData({
+      pic: tempPic ? tempPic : '',
+      name: tempName ? tempName : '',
+    });
   }, []);
 
   return (
@@ -1521,10 +1515,15 @@ const HostedByCompo = memo(() => {
           borderRadius: 10,
           backgroundColor: '#C5B1C33D',
         }}>
-        {data.pic.length > 0 && (
+        {/* {data.pic.length > 0 && ( */}
           <Image
             source={{
-              uri: data.pic,
+              uri: data.pic
+                ? data.pic
+                : `https://avatar.iran.liara.run/username?username=${data.name.replaceAll(
+                    ' ',
+                    '+',
+                  )}`,
             }}
             style={{
               width: 21,
@@ -1532,7 +1531,7 @@ const HostedByCompo = memo(() => {
               borderRadius: 100,
             }}
           />
-        )}
+        {/* )} */}
         <Text variant={'BodyBold'} style={{color: '#fff'}}>
           {data.name}
         </Text>

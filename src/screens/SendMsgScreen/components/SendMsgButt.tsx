@@ -80,7 +80,7 @@ export default function ({
           file_base64: base64,
           file_name: imageName ? imageName : '',
         };
-        
+
         setLoading(true);
         mutation.mutate(formData);
       } catch (error) {
@@ -96,10 +96,10 @@ export default function ({
       StatusCode === 200
         ? navigation.navigate('SuccessScreen', {
             type: 'invite',
-            count: count,
-            title: 'string',
+            textOne: `You have sent requests to ${count} people to your event`,
+            textTwo: eventName,
+            textThree: '',
             eventID: event_id,
-            eventName,
           })
         : errorPopUp(StatusCode, null);
       setLoading(false);

@@ -155,39 +155,7 @@ const MainContainer = () => {
 
   const [popupModal, setPopupModal] = useState(PopupModal);
 
-  const sndMsgMutation = useMutation<msgSendResponce, getMsgError, msgFormType>(
-    {
-      mutationFn: (formData: msgFormType) =>
-        postData<msgFormType, msgSendResponce>(Urls.WHATSAPP, formData),
-      onSuccess: ({StatusCode}) => {
-        StatusCode === 200
-          ? navigation.navigate('SuccessScreen', {
-              type: 'invite',
-              count: guestListArray.length,
-              title: 'string',
-              eventID: params.eventID,
-              eventName: params.eventName,
-            })
-          : errorPopUp(StatusCode, null);
-        setLoading(false);
-      },
-      onError: error =>
-        errorPopUp(error?.StatusCode, error?.error?.description),
-    },
-  );
 
-  const errorPopUp = (code: number, desc: string | null) => {
-    setLoading(false);
-    setPopupModal({
-      state: true,
-      title: `Oops! Something went wrong.${code ? ` [${code}]` : ''}`,
-      disc: desc
-        ? desc
-        : "We couldn't complete your request, please try again!",
-      buttOne: '',
-      buttTwo: 'OKAY',
-    });
-  };
   const onDismiss = () => setPopupModal({...popupModal, state: false});
 
   // functions
@@ -432,7 +400,7 @@ const EventLink = memo(({link}: {link: string}) => {
           borderRadius: 10,
         }}>
         <Text
-          style={{color: '#fff', marginLeft: 14}}
+          style={{color: '#fff', marginLeft: 14,flex:1}}
           variant={'BodyRegular'}
           numberOfLines={1}>
           {link}

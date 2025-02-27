@@ -25,8 +25,17 @@ add haptic feedback
 
 
 ----------------------------
-
+rsvp_guest_type 
+H - host
+G - guest
 
 
 
 Changelogs
+event details fixed going list
+dashboard add event box
+remove empty guest view
+added rsvp link settings
+set event to calender
+
+

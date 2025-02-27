@@ -5,12 +5,22 @@ export interface EventGuestsForm {
   event_id: number;
 }
 
+export interface GuestEventResponseData {
+  guest_list: guestItemType[];
+    rsvp_cnt: {
+      [key: string]: number;
+    };
+    INVITE_RSVP_DD_ARR: Array<{
+      id: string;
+      name: string;
+    }>;
+}
+
 export interface GuestEventResponse {
-  data: {
-    guest_list: guestItemType[];
-  };
+  data: GuestEventResponseData
   StatusCode: number;
 }
+
 export interface guestItemType {
   id: number;
   name: string;
@@ -22,6 +32,8 @@ export interface guestItemType {
     id: number;
     by_cust_id: number;
   };
+  rsvp_status: '';
+  rsvp_invited: '';
 }
 
 export interface ErrorFormat {

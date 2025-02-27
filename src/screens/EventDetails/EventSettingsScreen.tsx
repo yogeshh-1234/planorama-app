@@ -79,8 +79,9 @@ export default function () {
         setSettingsData(toSetData);
       } else {
         setSettingsData({
-          id: 3,
+          id: 0,
           accept_rsvp: 'Y',
+          rsvp_url: null,
           accept_maybe: 'Y',
           rsvp_button_style: 0,
           show_count_guests: 'Y',
@@ -123,6 +124,7 @@ export default function () {
     mutationFn: (formData: EventDetailsForm) =>
       postData<EventDetailsForm, RSVPResponce>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
+      // console.log('data', data);
       StatusCode === 200
         ? setSettingsData(data)
         : errorPopUp(StatusCode, null, 'BACK');
@@ -199,6 +201,7 @@ export default function () {
             id,
             event_id: params?.eventID,
           };
+          // console.log('check', formData)
           setLoading({status: true, text: 'Setting RSVP Settings!'});
           mutationSend.mutate(formData);
         }
@@ -368,7 +371,7 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
-    paddingBottom:12,
+    paddingBottom: 12,
     paddingHorizontal,
     // borderWidth:1
   },

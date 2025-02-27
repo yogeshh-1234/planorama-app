@@ -48,6 +48,10 @@ import Animated, {
 import {Tooltip} from 'react-native-paper';
 import TextInput from '../../components/TextInput';
 import {debounce} from 'lodash';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { getCountry } from "react-native-localize";
+
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -132,6 +136,32 @@ export default function () {
 
 export type contactListItem = contactType;
 
+
+// // Get the device's default country code
+// const getDefaultCountryCode = () => {
+//   const region = getCountry();
+//   return region || 'IN'; // Fallback to 'US' if region is unavailable
+// };
+
+// // Clean the phone number
+// const cleanPhoneNumber = (phoneNumber) => {
+//   return phoneNumber.replace(/[^\d+]/g, '');
+// };
+
+// // Normalize the phone number
+// const normalizePhoneNumber = (phoneNumber, defaultCountryCode = getDefaultCountryCode()) => {
+//   const cleanedNumber = cleanPhoneNumber(phoneNumber);
+//   const phone = parsePhoneNumberFromString(cleanedNumber, defaultCountryCode);
+
+//   if (phone && phone.isValid()) {
+//     return phone.format('E.164');
+//   } else {
+//     console.warn('Invalid phone number:', phoneNumber);
+//     return null;
+//   }
+// };
+
+
 export type ItemType = Record<string, {name: string; number: string}>;
 const ContactsCompo = memo(() => {
   const {params} = useRoute<RouteProp<RootStackParamList, 'ImportContacts'>>();
@@ -142,9 +172,7 @@ const ContactsCompo = memo(() => {
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<ItemType>({}); // Object to store selected items
-
-  //
-
+ 
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
@@ -161,8 +189,6 @@ const ContactsCompo = memo(() => {
       hideSubscription.remove();
     };
   }, []);
-
-  //
 
   // getting the data
   useEffect(() => {
@@ -200,7 +226,7 @@ const ContactsCompo = memo(() => {
               {
                 id: `${contact.recordID}${itm.number}`,
                 name: contact.displayName,
-                number: itm.number.replace(/[+\s]+/g, ''),
+                number: itm.number.replace(/[+\s*#]+/g, ''),
                 pic: null,
               },
             ];
@@ -212,10 +238,21 @@ const ContactsCompo = memo(() => {
             (item, index) =>
               formattedContacts.findIndex(itm => itm.number === item.number) ===
                 index &&
-              item.number.length > 5 &&
+              item.number.length > 6 &&
+              item.number.length < 16 &&
               item.name.length > 0,
           )
           .sort((a, b) => a.name.localeCompare(b.name));
+          // newformattedContacts.map((itm)=>{
+          //   const normalizedNumber = normalizePhoneNumber(itm.number);
+          //   if (normalizedNumber) {
+          //    console.log('success',normalizedNumber,itm.name)
+              
+          //   } else {
+          //     console.error('Fail',normalizedNumber,itm.name);
+          //   }
+          // })
+
         setContacts(newformattedContacts);
         setLoading({
           status: false,
@@ -446,25 +483,16 @@ const ContactsCompo = memo(() => {
         </View>
         {contacts.length > 0 && (
           <>
-            {viewAll ? (
+            
               <ContsctsList
-                key="all"
-                staticData={false}
+                key={viewAll?"all":"selected"}
+                staticData={viewAll?false:true}
                 selectedItems={selectedItems}
                 setSelectedItems={(val: any) => setSelectedItems(val)}
-                contacts={filteredContacts}
+                contacts={viewAll?filteredContacts:selectedContacts}
                 delay={0}
               />
-            ) : (
-              <ContsctsList
-                key="selected"
-                staticData={true}
-                selectedItems={selectedItems}
-                setSelectedItems={(val: any) => setSelectedItems(val)}
-                contacts={selectedContacts}
-                delay={0}
-              />
-            )}
+           
           </>
         )}
       </View>

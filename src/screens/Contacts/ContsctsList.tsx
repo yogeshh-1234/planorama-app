@@ -38,6 +38,7 @@ export default function ({
   eventID,
   onReload,
   onDelete,
+  rsvpArray,
 }: {
   staticData: boolean;
   selectedItems: ItemType;
@@ -48,6 +49,10 @@ export default function ({
   eventID?: number;
   onReload?: () => void;
   onDelete?: () => void;
+  rsvpArray?: Array<{
+    id: string;
+    name: string;
+  }>;
 }) {
   const [selectAll, setSelectAll] = useState(false);
 
@@ -197,12 +202,14 @@ export default function ({
               guest_id={
                 typeof item.id === 'number' ? item.id : parseInt(item.id)
               }
+              rsvpArray={rsvpArray ? rsvpArray : []}
+              onReload={onReload}
             />
           )}
         </AnimatedPressable>
       );
     },
-    [selectedItems, handleSelectItem,staticData],
+    [selectedItems, handleSelectItem, staticData, rsvpArray],
   );
 
   const memoizedData = useMemo(() => contacts, [contacts]);
@@ -314,10 +321,17 @@ const RSVPCompo = ({
   rsvp,
   event_id,
   guest_id,
+  rsvpArray,
+  onReload,
 }: {
   rsvp: string;
   event_id: number;
   guest_id: number;
+  rsvpArray: Array<{
+    id: string;
+    name: string;
+  }>;
+  onReload: () => void;
 }) => {
   const [visible, setVisible] = React.useState(false);
 
@@ -355,6 +369,7 @@ const RSVPCompo = ({
         guest_id,
         rsvp: rsvpVal,
       };
+      // console.log('formData', formData);
       setLoading(true);
       mutation.mutate(formData);
     }
@@ -368,7 +383,12 @@ const RSVPCompo = ({
     mutationFn: (formData: rsvpSubmitForm) =>
       postData<rsvpSubmitForm, importContactResponse>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
-      StatusCode === 200 ? setData() : errorPopUp(StatusCode, null);
+      if (StatusCode === 200) {
+        setData();
+        onReload();
+      } else {
+        errorPopUp(StatusCode, null);
+      }
       setLoading(false);
     },
     onError: error => errorPopUp(error?.StatusCode, error?.error?.description),
@@ -410,11 +430,25 @@ const RSVPCompo = ({
             borderWidth: 0.5,
             borderColor: '#fff',
           }}
-          anchor={<RSVPUI rsvp={rsvpState} onPress={openMenu} menu={true} />}>
-          <RSVPUI rsvp={'Y'} onPress={() => selectRSVP('Y')} />
-          <RSVPUI rsvp={'N'} onPress={() => selectRSVP('N')} />
-          <RSVPUI rsvp={'M'} onPress={() => selectRSVP('M')} />
-          <RSVPUI rsvp={''} onPress={() => selectRSVP('')} />
+          anchor={
+            <RSVPUI
+              rsvp={rsvpState}
+              onPress={openMenu}
+              menu={true}
+              title={rsvpArray?.find(item => item.id === rsvpState)?.name ?? ''}
+            />
+          }>
+          {rsvpArray.map((item, index) => {
+            return (
+              item.id !== 'ALL' && (
+                <RSVPUI
+                  rsvp={item.id}
+                  onPress={() => selectRSVP(item.id)}
+                  title={item.name}
+                />
+              )
+            );
+          })}
         </Menu>
       )}
     </>
@@ -423,14 +457,14 @@ const RSVPCompo = ({
 const RSVPUI = ({
   rsvp,
   menu = false,
+  title,
   onPress,
 }: {
   rsvp: string;
   menu?: boolean;
+  title: string;
   onPress: () => void;
 }) => {
-  const rsvpTitle =
-    rsvp === 'Y' ? 'Going' : rsvp === 'N' ? 'No' : rsvp === 'M' ? 'Maybe' : '';
   return (
     <AnimatedPressable
       entering={ZoomIn}
@@ -465,7 +499,7 @@ const RSVPUI = ({
       {rsvp !== '' && <RSVPIconCompo icon={rsvp} size={20} />}
 
       <Text variant={'DetailBold'} style={{color: '#fff'}}>
-        {rsvpTitle ? rsvpTitle : 'Select '}
+        {title ? title : 'Select '}
       </Text>
       {rsvp === '' && (
         <View

@@ -1,6 +1,7 @@
 import React, {memo, useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
   Linking,
@@ -31,6 +32,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import {storage} from '../../functions/storage';
 import ImageViewer from '../../components/ImageViewer';
+import RNCalendarEvents from 'react-native-calendar-events';
+import {Portal} from 'react-native-paper';
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
@@ -49,6 +53,7 @@ export default function ({
   gallery,
   galleryLoading = false,
   hostList,
+  isAddOnList = false,
 }: {
   title: string;
   fontId: string;
@@ -68,6 +73,7 @@ export default function ({
     name: string;
     pic: string;
   }[];
+  isAddOnList: boolean;
 }) {
   const fontName = useMemo(() => {
     let idx = fonts.findIndex(itm => itm.id === fontId);
@@ -77,6 +83,7 @@ export default function ({
       return 'PoppinsMedium';
     }
   }, [title]);
+
   return (
     <View style={styles.container}>
       <Text
@@ -101,17 +108,17 @@ export default function ({
             {date.length > 0 &&
               moment(date, 'DD/MM/YYYY').format('MMMM DD, YYYY')}
           </Text>
-          {date.length > 0 && (
-            <Animated.View
-              entering={ZoomIn.delay(400)}
-              exiting={ZoomOut}
-              style={{
-                backgroundColor: '#F9BC52',
-                borderRadius: 6,
-                padding: 6,
-              }}>
-              <CalenderSVG width={20} height={20} fill={'#fff'} />
-            </Animated.View>
+
+          {date.length > 0 && !isAddOnList && (
+            <CalenderButt
+              title={title}
+              date={moment(
+                `${date} ${time}`,
+                'DD/MM/YYYY hh:mm a',
+              ).toISOString()}
+              notes={description}
+              location={location}
+            />
           )}
         </View>
         <Animated.View
@@ -169,7 +176,10 @@ export default function ({
           {description}
         </Text>
       </View>
-      <View>
+      <View
+        style={{
+          opacity: isAddOnList ? 0.4 : 1,
+        }}>
         {galleryLoading ? (
           <View
             style={{
@@ -205,6 +215,18 @@ export default function ({
             </ScrollView>
           )
         )}
+        {isAddOnList && (
+          <View
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              backgroundColor: 'transparent',
+            }}
+          />
+        )}
       </View>
     </View>
   );
@@ -214,6 +236,8 @@ export const ImageCompo = memo(
   ({uri, ImgSize, delay}: {uri: string; ImgSize: number; delay: number}) => {
     const [showImg, setShowImg] = useState(false);
     const toggleImg = () => setShowImg(pre => !pre);
+
+    const [loading, setLoading] = useState(false);
     return (
       <Animated.View
         style={{
@@ -225,13 +249,15 @@ export const ImageCompo = memo(
         }}
         entering={FadeIn.delay(delay)}
         exiting={FadeOut}>
-        <ActivityIndicator
-          color={'#fff'}
-          size={'large'}
-          style={{
-            position: 'absolute',
-          }}
-        />
+        {loading && (
+          <ActivityIndicator
+            color={'#fff'}
+            size={'large'}
+            style={{
+              position: 'absolute',
+            }}
+          />
+        )}
         {uri.length > 0 && (
           <Pressable onPress={toggleImg}>
             <Image
@@ -241,6 +267,8 @@ export const ImageCompo = memo(
                 borderRadius: 10,
                 alignSelf: 'center',
               }}
+              onLoadStart={() => setLoading(true)}
+              onLoadEnd={() => setLoading(false)}
               source={{uri}}
             />
           </Pressable>
@@ -290,7 +318,7 @@ export const HostedByCompo = memo(
         });
       }
     }, []);
-    
+
     return (
       <Animated.View
         entering={FadeIn.delay(400)}
@@ -346,8 +374,129 @@ export const HostedByCompo = memo(
     );
   },
 );
+import Modal from 'react-native-modal';
+
+const CalenderButt = memo(
+  ({
+    title,
+    date,
+    notes,
+    location,
+  }: {
+    title: string;
+    date: string;
+    notes: string;
+    location: string;
+  }) => {
+    const [calendars, setCalendars] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+
+    const fetchCalendars = async () => {
+      try {
+        const status = await RNCalendarEvents.requestPermissions();
+        if (status !== 'authorized') {
+          Alert.alert(
+            'Permission denied',
+            'Calendar access is required to create events.',
+          );
+          return;
+        }
+
+        const calendars = await RNCalendarEvents.findCalendars();
+        // console.log(calendars);
+        setCalendars(calendars.filter(itm => itm.isPrimary));
+        setShowModal(true);
+      } catch (error) {
+        console.error('Error fetching calendars:', error);
+        Alert.alert('Error', 'Failed to fetch calendars.');
+      }
+    };
+
+    const createEvent = async calendarId => {
+      try {
+        const eventDetails = {
+          title,
+          // startDate: '2025-02-15T14:30:00.000Z',
+          startDate: date,
+          endDate: date,
+          notes: 'This is a test event created from React Native.',
+          location: '123 Main St, City, Country',
+          calendarId: calendarId,
+        };
+
+        const eventId = await RNCalendarEvents.saveEvent(
+          eventDetails.title,
+          eventDetails,
+        );
+        Alert.alert('Event created', `Event ID: ${eventId}`);
+        setShowModal(false);
+      } catch (error) {
+        console.error('Error creating event:', error);
+        Alert.alert('Error', 'Failed to create the event.');
+      }
+    };
+
+    return (
+      <>
+        <AnimatedPressable
+          onPress={fetchCalendars}
+          entering={ZoomIn.delay(400)}
+          exiting={ZoomOut}
+          style={{
+            backgroundColor: '#F9BC52',
+            borderRadius: 6,
+            padding: 6,
+          }}>
+          <CalenderSVG width={20} height={20} fill={'#fff'} />
+        </AnimatedPressable>
+        <Modal
+          isVisible={showModal}
+          onBackdropPress={() => setShowModal(false)}>
+          <View style={styles.popup}>
+            <Text
+              style={{color: '#fff', alignSelf: 'center', marginBottom: 4}}
+              variant={'BodyRegular'}>
+              Select Account
+            </Text>
+            <ScrollView style={{maxHeight: height * 0.5}}>
+              {calendars.map(calendar => (
+                <Pressable
+                  key={calendar.id}
+                  onPress={() => createEvent(calendar.id)}
+                  style={styles.calendarItem}>
+                  <Text style={styles.calendarText}>{calendar.title}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </Modal>
+      </>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
+  popup: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{translateX: -150}, {translateY: -150}],
+    width: 300,
+    maxHeight: 300,
+    backgroundColor: '#75486F',
+    borderRadius: 10,
+    padding: 20,
+    zIndex: 1000,
+  },
+  calendarItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#cccccc80',
+  },
+  calendarText: {
+    fontSize: 16,
+    color: '#fff',
+  },
   container: {
     gap: 21,
     // paddingVertical: 21,

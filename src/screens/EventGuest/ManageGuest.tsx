@@ -1,9 +1,9 @@
 import React, {memo, useCallback, useEffect, useState} from 'react';
 import {Dimensions, Pressable, ScrollView, View} from 'react-native';
 import TextInput from '../../components/TextInput';
-import {guestItemType} from './EventGuestType';
+import {GuestEventResponseData, guestItemType} from './EventGuestType';
 import Text from '../../components/Text';
-import {SendSVG} from '../../assets/SVG/IconsSVG';
+import {SendSVG, WASVG} from '../../assets/SVG/IconsSVG';
 import {MotiView, useAnimationState} from 'moti';
 import ContsctsList from '../Contacts/ContsctsList';
 import {ItemType} from '../Contacts/ContactsScreen';
@@ -45,30 +45,24 @@ type filterArrType = {
   no: guestItemType[];
 };
 export default function ({
-  eventGuest,
   eventID,
   onReload,
   eventName,
   eventPic,
+  allGuestData,
 }: {
-  eventGuest: guestItemType[];
   eventID: number;
   onReload: () => void;
   eventName: string;
   eventPic: string;
+  allGuestData: GuestEventResponseData;
 }) {
+  // console.log('allGuestData', allGuestData);
   const navigation = useNavigation<MainStackNavigation>();
 
   const [value, setValue] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<filterType>('');
+  const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
   const [selectedItems, setSelectedItems] = useState<ItemType>({}); // Object to store selected items
-
-  const [guestType, setGuestType] = useState<filterArrType>({
-    all: [],
-    going: [],
-    maybe: [],
-    no: [],
-  });
 
   const [loading, setLoading] = useState({
     status: false,
@@ -144,28 +138,6 @@ export default function ({
       buttTwo: 'OKAY',
     });
   };
-
-  useEffect(() => {
-    // console.log('useEffect uodate')
-    let GuestTypeArr: filterArrType = {
-      all: [],
-      going: [],
-      maybe: [],
-      no: [],
-    };
-    eventGuest.map(itm => {
-      if (itm.rsvp === 'Y') {
-        GuestTypeArr.going = [...GuestTypeArr.going, itm];
-      } else if (itm.rsvp === 'N') {
-        GuestTypeArr.no = [...GuestTypeArr.no, itm];
-      } else if (itm.rsvp === 'M') {
-        GuestTypeArr.maybe = [...GuestTypeArr.maybe, itm];
-      }
-      GuestTypeArr.all = [...GuestTypeArr.all, itm];
-    });
-
-    setGuestType(GuestTypeArr);
-  }, [eventGuest]);
 
   const onSendMsg = () => {
     let guestList: guestListType[] = [];
@@ -263,17 +235,6 @@ export default function ({
     },
   });
 
-  const guestListArr =
-    selectedFilter === ''
-      ? guestType.all
-      : selectedFilter === 'Y'
-      ? guestType.going
-      : selectedFilter === 'N'
-      ? guestType.no
-      : selectedFilter === 'M'
-      ? guestType.maybe
-      : [];
-
   return (
     <View
       style={{
@@ -311,12 +272,8 @@ export default function ({
         <FilterRow
           selectedFilter={selectedFilter}
           setSelectedFilter={setSelectedFilter}
-          guestListArr={{
-            all: guestType.all.length,
-            go: guestType.going.length,
-            no: guestType.no.length,
-            maybe: guestType.maybe.length,
-          }}
+          guestCount={allGuestData.rsvp_cnt}
+          guestCountNames={allGuestData.INVITE_RSVP_DD_ARR}
         />
       </View>
       <View
@@ -324,20 +281,23 @@ export default function ({
           paddingHorizontal,
           flex: 1,
         }}>
-        { (
-          <ContsctsList
-            staticData={false}
-            selectedItems={selectedItems}
-            setSelectedItems={(val: any) => setSelectedItems(val)}
-            contacts={guestListArr.filter(item =>
-              item.name.toLowerCase().includes(value.toLowerCase()),
-            )}
-            fromGuest={true}
-            eventID={eventID}
-            onReload={onReload}
-            onDelete={onDelete}
-          />
-        )}
+        <ContsctsList
+          staticData={false}
+          selectedItems={selectedItems}
+          setSelectedItems={(val: any) => setSelectedItems(val)}
+          contacts={allGuestData.guest_list.filter(item =>
+            selectedFilter === 'ALL'
+              ? true
+              : item.rsvp === selectedFilter &&
+                item.name.toLowerCase().includes(value.toLowerCase()),
+          )}
+          fromGuest={true}
+          eventID={eventID}
+          onReload={onReload}
+          onDelete={onDelete}
+          rsvpArray={allGuestData.INVITE_RSVP_DD_ARR}
+        />
+   
       </View>
       <View style={{alignSelf: 'center', paddingBottom: 12}}>
         {status ? (
@@ -360,17 +320,19 @@ export default function ({
           />
         ) : (
           <Button
-            lable="Whatsapp not connected"
+            lable="Connect Your WhatsApp"
             variant="SubTitleTwo"
             textStyles={{
-              color: '#2D2D2D',
+              color: '#fff',
             }}
             buttonStyles={{
-              backgroundColor: '#F9BC5280',
+              backgroundColor: '#2FAB68',
             }}
-            onPress={() => {}}
+            onPress={() => {
+              navigation.navigate('ProfileScreen');
+            }}
             small={true}
-            disabled={true}
+            icon={() => <WASVG width={20} height={20} fill={'#fff'} />}
           />
         )}
       </View>
@@ -392,11 +354,18 @@ const FilterRow = memo(
   ({
     selectedFilter,
     setSelectedFilter,
-    guestListArr,
+    guestCount,
+    guestCountNames,
   }: {
-    selectedFilter: filterType;
-    setSelectedFilter: (val: filterType) => void;
-    guestListArr: {all: number; go: number; no: number; maybe: number};
+    selectedFilter: string;
+    setSelectedFilter: (val: string) => void;
+    guestCount: {
+      [key: string]: number;
+    };
+    guestCountNames: Array<{
+      id: string;
+      name: string;
+    }>;
   }) => {
     return (
       <ScrollView
@@ -406,7 +375,22 @@ const FilterRow = memo(
           gap: paddingHorizontal / 2,
         }}
         showsHorizontalScrollIndicator={false}>
-        <FilterItem
+        {guestCountNames.map((itm, idx) => {
+          return (
+            (guestCount[itm.id] > 0 || guestCount[itm.id] === 'ALL') && (
+              <FilterItem
+                title={itm.name}
+                count={guestCount[itm.id]}
+                icon={itm.id}
+                selected={selectedFilter === itm.id}
+                onPress={() => {
+                  setSelectedFilter(itm.id);
+                }}
+              />
+            )
+          );
+        })}
+        {/* <FilterItem
           title="All"
           count={guestListArr.all}
           icon=""
@@ -441,7 +425,7 @@ const FilterRow = memo(
           onPress={() => {
             setSelectedFilter('N');
           }}
-        />
+        /> */}
       </ScrollView>
     );
   },

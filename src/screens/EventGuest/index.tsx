@@ -10,6 +10,7 @@ import {
   ErrorFormat,
   EventGuestsForm,
   GuestEventResponse,
+  GuestEventResponseData,
   guestItemType,
 } from './EventGuestType';
 import {storage} from '../../functions/storage';
@@ -50,8 +51,16 @@ export default function () {
 
   const [eventGuest, setEventGuest] = useState<guestItemType[]>([]);
 
+  const [allGuestData, setAllGuestData] = useState<GuestEventResponseData>({
+    guest_list: [],
+    rsvp_cnt: {},
+    INVITE_RSVP_DD_ARR: [],
+  });
+
   useEffect(() => {
     callAPI();
+
+   
   }, []);
 
   //
@@ -83,9 +92,17 @@ export default function () {
     mutationFn: (formData: EventGuestsForm) =>
       postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
-      StatusCode === 200
-        ? setEventGuest(data.guest_list)
-        : errorPopUp(StatusCode, null);
+      if (StatusCode === 200) {
+        // console.log('API call');
+        setAllGuestData(data);
+        setEventGuest(data.guest_list);
+        if (!(data.guest_list.length > 0)) {
+          addGuest();
+        }
+      } else {
+        errorPopUp(StatusCode, null);
+      }
+
       setLoading(false);
     },
     onError: error => errorPopUp(error?.StatusCode, error?.error?.description),
@@ -181,11 +198,11 @@ export default function () {
         </View>
         {eventGuest.length > 0 ? (
           <ManageGuest
-            eventGuest={loading ? [] : eventGuest}
             eventID={params.eventID}
             onReload={callAPI}
             eventName={params.eventName}
             eventPic={params.eventPic}
+            allGuestData={allGuestData}
           />
         ) : (
           <Pressable

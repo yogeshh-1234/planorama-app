@@ -10,10 +10,12 @@ export default memo(
     showSave = false,
     onSave,
     onBack,
+    title
   }: {
     showSave?: boolean;
     onSave?: () => void;
     onBack?: () => void;
+    title?:string
   }) => {
     const navigation = useNavigation<MainStackNavigation>();
     return (
@@ -25,7 +27,7 @@ export default memo(
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-        <Pressable
+       {!title? <Pressable
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -48,8 +50,9 @@ export default memo(
           <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
             Back
           </Text>
-        </Pressable>
-
+        </Pressable>:<View/>}
+        {title&&<Text variant={'SubTitleTwo'} style={{color: '#fff'}}>{title}</Text> }
+<View/>
         {showSave && (
           <Pressable
             style={{

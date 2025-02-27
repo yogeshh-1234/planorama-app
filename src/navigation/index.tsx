@@ -57,7 +57,7 @@ export type RootStackParamList = {
   };
   EventConfirmDetails: confirmEvent;
   EventDetails: {id: number; invited?: boolean; onGoBack?: () => void};
-  ProfileScreen: profileType;
+  ProfileScreen: undefined;
   ContactsScreen: {
     eventID: number;
     fromGuest?: boolean;
@@ -87,10 +87,10 @@ export type RootStackParamList = {
   };
   SuccessScreen: {
     type: string;
-    count?: number;
-    title: string;
+    textOne:string;
+    textTwo:string;
+    textThree:string;
     eventID: number;
-    eventName: string;
   };
 };
 

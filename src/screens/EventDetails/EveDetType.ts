@@ -30,6 +30,11 @@ export interface EventDetailsType {
   }[];
   rsvp_guest_id?: number;
   rsvp_guest_type: 'G' | 'H'; //H - host, G - guest
+
+  open_event: string;
+  rsvp_url: string;
+  is_host: boolean;
+  is_guest: boolean;
 }
 
 export interface ErrorFormat {
@@ -61,6 +66,7 @@ export interface RSVPResponce {
 
 export interface RSVPResponceData {
   id: number;
+  rsvp_url: string | null;
   accept_rsvp: 'Y' | 'N';
   accept_maybe: 'Y' | 'N';
   rsvp_button_style: number;

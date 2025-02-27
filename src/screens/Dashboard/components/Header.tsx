@@ -30,13 +30,7 @@ export default function ({
   const navigation = useNavigation<MainStackNavigation>();
 
   const onPress = () =>
-    navigation.navigate('ProfileScreen', {
-      country_code,
-      id,
-      name,
-      number,
-      pic,
-    });
+    navigation.navigate('ProfileScreen');
 
   const onContacts = () => navigation.navigate('ContactsScreen', {eventID: -1});
   return (

@@ -1,5 +1,12 @@
 import React, {memo, useEffect, useRef, useState} from 'react';
-import {Dimensions, Image, Pressable, StatusBar, View} from 'react-native';
+import {
+  Dimensions,
+  Image,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {BGline} from '../../assets/SVG/VectorSVG';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
@@ -18,6 +25,133 @@ const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 export default function () {
   const {params} = useRoute<RouteProp<RootStackParamList, 'SuccessScreen'>>();
   const navigation = useNavigation<MainStackNavigation>();
+  const TextBlock = () => {
+    switch (params.type) {
+      case 'invite':
+        return (
+          <View style={styles.textBlock}>
+            <Text variant={'TitleTwo'} style={styles.whiteText}>
+              Invite sent
+            </Text>
+            <Text variant={'BodyRegular'} style={styles.whiteText}>
+              {params.textOne}
+            </Text>
+            <Text variant={'SubTitleOne'} style={styles.yellowText}>
+              {params.textTwo}
+            </Text>
+          </View>
+        );
+
+      case 'rsvp':
+        return (
+          <View style={styles.textBlock}>
+            <Text variant={'TitleTwo'} style={styles.whiteText}>
+              RSVP sent successfully
+            </Text>
+            <Text variant={'BodyRegular'} style={styles.whiteText}>
+              {params.textOne}
+            </Text>
+            <Text variant={'SubTitleOne'} style={styles.yellowText}>
+              {params.textTwo}
+            </Text>
+          </View>
+        );
+
+      default:
+        return <View />;
+    }
+  };
+
+  const onViewEvent = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          {name: 'HomeScreen'},
+          {
+            name: 'EventDetails',
+            params: {id: params.eventID},
+          },
+        ],
+      }),
+    );
+  };
+
+  const onDash = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'HomeScreen'}],
+      }),
+    );
+  };
+  const goBack = () => {
+    navigation.goBack();
+  };
+
+  const ButtonsBlock = () => {
+    switch (params.type) {
+      case 'invite':
+        return (
+          <View>
+            <Button
+              lable="VIEW EVENT"
+              onPress={onViewEvent}
+              buttonStyles={{
+                backgroundColor: '#fff',
+              }}
+              textStyles={{
+                color: '#2D2D2D',
+              }}
+              icon={() => <EyeSVG width={26} height={26} />}
+            />
+            <Button
+              lable="GO TO DASHBOARD"
+              onPress={onDash}
+              buttonStyles={{
+                backgroundColor: 'transparent',
+              }}
+              textStyles={{
+                color: '#fff',
+              }}
+              variant="SubTitleOne"
+            />
+          </View>
+        );
+
+      case 'rsvp':
+        return (
+          <View>
+            <Button
+              lable="VIEW EVENT"
+              onPress={goBack}
+              buttonStyles={{
+                backgroundColor: '#fff',
+              }}
+              textStyles={{
+                color: '#2D2D2D',
+              }}
+              icon={() => <EyeSVG width={26} height={26} />}
+            />
+            <Button
+              lable="GO TO DASHBOARD"
+              onPress={onDash}
+              buttonStyles={{
+                backgroundColor: 'transparent',
+              }}
+              textStyles={{
+                color: '#fff',
+              }}
+              variant="SubTitleOne"
+            />
+          </View>
+        );
+
+      default:
+        return <View />;
+    }
+  };
+
   return (
     <View
       style={{
@@ -74,73 +208,27 @@ export default function () {
             }}
             resizeMode="contain"
           />
-          <View
-            style={{
-              alignItems: 'center',
-              paddingHorizontal: 40,
-              gap: height * 0.02,
-            }}>
-            <Text
-              variant={'TitleTwo'}
-              style={{color: '#fff', textAlign: 'center'}}>
-              Invite sent
-            </Text>
-            <Text
-              variant={'BodyRegular'}
-              style={{color: '#fff', textAlign: 'center'}}>
-              You have sent requests to {params.count} people to your event
-            </Text>
-            <Text
-              variant={'SubTitleOne'}
-              style={{color: '#F9BC52', textAlign: 'center'}}>
-              {params.eventName}
-            </Text>
-          </View>
 
-          <Button
-            lable="VIEW EVENT"
-            onPress={() => {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 1,
-                  routes: [
-                    {name: 'HomeScreen'},
-                    {
-                      name: 'EventDetails',
-                      params: {id: params.eventID},
-                    },
-                  ],
-                }),
-              );
-            }}
-            buttonStyles={{
-              backgroundColor: '#fff',
-            }}
-            textStyles={{
-              color: '#2D2D2D',
-            }}
-            icon={() => <EyeSVG width={26} height={26} />}
-          />
-          <Button
-            lable="GO TO DASHBOARD"
-            onPress={() => {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{name: 'HomeScreen'}],
-                }),
-              );
-            }}
-            buttonStyles={{
-              backgroundColor: 'transparent',
-            }}
-            textStyles={{
-              color: '#fff',
-            }}
-            variant="SubTitleOne"
-          />
+          <TextBlock />
+          <ButtonsBlock />
         </View>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  textBlock: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    gap: height * 0.02,
+  },
+  whiteText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  yellowText: {
+    color: '#F9BC52',
+    textAlign: 'center',
+  },
+});
