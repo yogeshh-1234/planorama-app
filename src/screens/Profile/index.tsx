@@ -525,7 +525,7 @@ const ProfileCompo = memo(() => {
             alignItems: 'center',
             gap: 8,
           }}>
-          <Text variant={'TitleOne'} style={{color: '#fff'}}>
+          <Text variant={'TitleOne'} style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
             {name}
           </Text>
           <Pressable

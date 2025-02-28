@@ -131,37 +131,49 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function DeepLinkHandler() {
   const navigation = useNavigation<MainStackNavigation>();
   const [loading, setLoading] = useState(false);
-  React.useEffect(() => {
-    const handleDeepLink = (event: {url: string}) => {
-      setLoading(true);
-      fetch(`${event.url}&a=Y`)
-        .then(response => response.json())
-        .then(data => {
-          setLoading(false);
-          if (data.event_id) {
-            navigation.navigate('EventDetails', {
-              id: data.event_id,
-              invited: false,
-            });
-          } else {
-            ToastAndroid.showWithGravity(
-              `Event Not Found!`,
-              ToastAndroid.SHORT,
-              ToastAndroid.CENTER,
-            );
-          }
-        })
-        .catch(error => {
-          setLoading(false);
+
+  const handleDeepLink = (url: string) => {
+    setLoading(true);
+    fetch(`${url}&a=Y`)
+      .then(response => response.json())
+      .then(data => {
+        setLoading(false);
+        if (data.event_id) {
+          navigation.navigate('EventDetails', {
+            id: data.event_id,
+            invited: false,
+          });
+        } else {
           ToastAndroid.showWithGravity(
-            `Error fetching event details:', ${error}`,
+            `Event Not Found!`,
             ToastAndroid.SHORT,
             ToastAndroid.CENTER,
           );
-        });
+        }
+      })
+      .catch(error => {
+        setLoading(false);
+        ToastAndroid.showWithGravity(
+          `Error fetching event details:', ${error}`,
+          ToastAndroid.SHORT,
+          ToastAndroid.CENTER,
+        );
+      });
+  };
+
+  useEffect(() => {
+    const handleInitialURL = async () => {
+      const initialURL = await Linking.getInitialURL();
+      if (initialURL) {
+        handleDeepLink(initialURL);
+      }
     };
 
-    const subscription = Linking.addEventListener('url', handleDeepLink);
+    handleInitialURL();
+
+    const subscription = Linking.addEventListener('url', event => {
+      handleDeepLink(event.url);
+    });
 
     return () => {
       subscription.remove();

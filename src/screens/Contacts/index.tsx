@@ -1,4 +1,4 @@
-import React, {memo, useCallback, useEffect, useState} from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -11,7 +11,7 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
-import {BGline} from '../../assets/SVG/VectorSVG';
+import { BGline } from '../../assets/SVG/VectorSVG';
 import HeaderCompo from '../../components/HeaderCompo';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
@@ -23,8 +23,8 @@ import {
   ShareSVG,
 } from '../../assets/SVG/IconsSVG';
 import TextInput from '../../components/TextInput';
-import {storage} from '../../functions/storage';
-import {useMutation} from '@tanstack/react-query';
+import { storage } from '../../functions/storage';
+import { useMutation } from '@tanstack/react-query';
 import {
   cantactViewResponse,
   contactType,
@@ -34,7 +34,7 @@ import {
   importGuestForm,
 } from './contactsType';
 import Urls from '../../api/urls';
-import {postData} from '../../api';
+import { postData } from '../../api';
 import PopupCompo from '../../components/PopupCompo';
 import LoadingCompo from '../../components/LoadingCompo';
 import {
@@ -49,7 +49,7 @@ import {
   useRoute,
 } from '@react-navigation/native';
 import ContsctsList from './ContsctsList';
-import {ItemType} from './ContactsScreen';
+import { ItemType } from './ContactsScreen';
 import LottieView from 'lottie-react-native';
 import Animated, {
   FadeIn,
@@ -66,11 +66,11 @@ import {
   profileError,
 } from '../Profile/ProfileTypes';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
 export default function () {
-  const {params} = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
+  const { params } = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
 
   const navigation = useNavigation<MainStackNavigation>();
 
@@ -257,7 +257,7 @@ const ContactList = memo(
     eventID: number;
     fromGuest: boolean | undefined;
   }) => {
-    const {params} =
+    const { params } =
       useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
 
     const navigation = useNavigation<MainStackNavigation>();
@@ -308,7 +308,7 @@ const ContactList = memo(
     >({
       mutationFn: (formData: contactViewForm) =>
         postData<contactViewForm, cantactViewResponse>(Urls.PROFILE, formData),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({ data, StatusCode }) => {
         if (StatusCode === 200) {
           setContacts(
             data.contact_list.map(itm => ({
@@ -321,9 +321,8 @@ const ContactList = memo(
         } else {
           setPopupModal({
             state: true,
-            title: `Oops! Something went wrong.${
-              StatusCode ? ` [${StatusCode}]` : ''
-            }`,
+            title: `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
+              }`,
             disc: "We couldn't complete your request, please try again!",
             buttOne: 'BACK',
             buttTwo: 'RETRY',
@@ -342,9 +341,8 @@ const ContactList = memo(
 
         setPopupModal({
           state: true,
-          title: `Oops! Something went wrong.${
-            error?.StatusCode ? ` [${error.StatusCode}]` : ''
-          }`,
+          title: `Oops! Something went wrong.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
+            }`,
           disc: error?.error?.description
             ? error.error.description
             : "We couldn't complete your request, please try again!",
@@ -360,21 +358,21 @@ const ContactList = memo(
 
     const buttOnePress = useCallback(() => {
       if (popupModal.buttOne === 'BACK') {
-        setPopupModal({...popupModal, state: false});
+        setPopupModal({ ...popupModal, state: false });
       }
     }, [popupModal.state]);
 
     const buttTwoPress = useCallback(() => {
       if (popupModal.buttTwo === 'RETRY') {
-        setPopupModal({...popupModal, state: false});
+        setPopupModal({ ...popupModal, state: false });
         callAPI();
       }
     }, [popupModal.state]);
 
     const filteredData = contacts.filter(
       item =>
-        item.name.toLowerCase().includes(value.trim().toLowerCase()) ||
-        item.number.includes(value.trim()),
+        `${item?.name}`.toLowerCase().includes(value.trim().toLowerCase()) ||
+        `${item?.number}`.includes(value.trim()),
     );
 
     // upload contacts
@@ -412,7 +410,7 @@ const ContactList = memo(
     >({
       mutationFn: (formData: importGuestForm) =>
         postData<importGuestForm, importContactResponse>(Urls.EVENT, formData),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({ data, StatusCode }) => {
         if (StatusCode === 200) {
           //
           ToastAndroid.showWithGravity(
@@ -434,9 +432,8 @@ const ContactList = memo(
           });
           setPopupModal({
             state: true,
-            title: `Oops! Something went wrong.${
-              StatusCode ? ` [${StatusCode}]` : ''
-            }`,
+            title: `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
+              }`,
             disc: "We couldn't complete your request, please try again!",
             buttOne: 'BACK',
             buttTwo: 'RETRY',
@@ -451,9 +448,8 @@ const ContactList = memo(
 
         setPopupModal({
           state: true,
-          title: `Oops! Something went wrong.${
-            error?.StatusCode ? ` [${error.StatusCode}]` : ''
-          }`,
+          title: `Oops! Something went wrong.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
+            }`,
           disc: error?.error?.description
             ? error.error.description
             : "We couldn't complete your request, please try again!",
@@ -478,7 +474,7 @@ const ContactList = memo(
               alignItems: 'center',
               gap: 6,
             }}>
-            <Animated.View style={{flex: 1}}>
+            <Animated.View style={{ flex: 1 }}>
               <TextInput
                 iconName="search"
                 onRightButt={() => setValue('')}
@@ -557,13 +553,13 @@ const ContactList = memo(
             }}>
             <LottieView
               source={require('../../assets/lottie/loading.lottie')}
-              style={{width: '100%', height: '100%'}}
+              style={{ width: '100%', height: '100%' }}
               autoPlay
               loop
             />
             <Text
               variant={'BodyRegular'}
-              style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
+              style={{ color: '#fff', alignSelf: 'center', textAlign: 'center' }}>
               {loading.text}
             </Text>
           </View>
@@ -601,7 +597,7 @@ const ContactList = memo(
               buttonStyles={{
                 backgroundColor: '#F9BC52',
                 borderRadius: 10,
-                width: width * 0.42,
+                // width: width * 0.42,
               }}
               onPress={addContactsToEvent}
             />
@@ -625,10 +621,10 @@ const ContactList = memo(
   },
 );
 
-const InviteButton = memo(({selectedItems}: {selectedItems: ItemType}) => {
+const InviteButton = memo(({ selectedItems }: { selectedItems: ItemType }) => {
   const navigation = useNavigation<MainStackNavigation>();
 
-  const {params} = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
+  const { params } = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
   const [loading, setLoading] = useState(false);
 
   const checkInvite = () => {
@@ -652,16 +648,16 @@ const InviteButton = memo(({selectedItems}: {selectedItems: ItemType}) => {
   >({
     mutationFn: (formData: connectionForm) =>
       postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
-    onSuccess: ({data: {status}, StatusCode}) => {
+    onSuccess: ({ data: { status }, StatusCode }) => {
       // console.log(status);
       StatusCode === 200
         ? status
           ? onSendMsg()
           : ToastAndroid.showWithGravity(
-              `Whatsapp not connected!`,
-              ToastAndroid.SHORT,
-              ToastAndroid.CENTER,
-            )
+            `Whatsapp not connected!`,
+            ToastAndroid.SHORT,
+            ToastAndroid.CENTER,
+          )
         : errorPopUp(StatusCode, null);
       setLoading(false);
     },
@@ -670,8 +666,7 @@ const InviteButton = memo(({selectedItems}: {selectedItems: ItemType}) => {
   const errorPopUp = (code: number, desc: string | null) => {
     setLoading(false);
     ToastAndroid.showWithGravity(
-      `${desc ? desc : "We couldn't complete your request, please try again!"}${
-        code ? ` [${code}]` : ''
+      `${desc ? desc : "We couldn't complete your request, please try again!"}${code ? ` [${code}]` : ''
       }`,
       ToastAndroid.SHORT,
       ToastAndroid.CENTER,
@@ -767,14 +762,13 @@ const RemoveContacts = memo(
           Urls.PROFILE,
           formData,
         ),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({ data, StatusCode }) => {
         if (StatusCode === 200) {
           //
           onReload();
         } else {
           ToastAndroid.showWithGravity(
-            `Oops! Something went wrong.${
-              StatusCode ? ` [${StatusCode}]` : ''
+            `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
             }`,
             ToastAndroid.SHORT,
             ToastAndroid.CENTER,
@@ -810,7 +804,7 @@ const RemoveContacts = memo(
         disabled={loading}
         onPress={removeContacts}>
         {loading && <ActivityIndicator color={'#fff'} />}
-        <Text style={{color: '#fff'}} variant={'BodyRegular'}>
+        <Text style={{ color: '#fff' }} variant={'BodyRegular'}>
           Remove
         </Text>
       </AnimatedPressable>

@@ -54,13 +54,17 @@ export default function () {
   const [allGuestData, setAllGuestData] = useState<GuestEventResponseData>({
     guest_list: [],
     rsvp_cnt: {},
+    event: {
+      open_event: '',
+      max_capacity: 0,
+      guest_approval: '',
+      additional_guests: 0,
+    },
     INVITE_RSVP_DD_ARR: [],
   });
 
   useEffect(() => {
     callAPI();
-
-   
   }, []);
 
   //
@@ -93,7 +97,8 @@ export default function () {
       postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
       if (StatusCode === 200) {
-        // console.log('API call');
+        // console.log(data.INVITE_RSVP_DD_ARR)
+  
         setAllGuestData(data);
         setEventGuest(data.guest_list);
         if (!(data.guest_list.length > 0)) {
@@ -205,33 +210,7 @@ export default function () {
             allGuestData={allGuestData}
           />
         ) : (
-          <Pressable
-            style={{
-              flex: 1,
-              marginHorizontal: width * 0.05,
-              marginVertical: height * 0.02,
-              gap: height * 0.01,
-              borderRadius: 10,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            android_ripple={{color: `#C5B1C31A`, borderless: false}}
-            onPress={addGuest}>
-            <Text
-              variant={'TitleOne'}
-              style={{
-                color: '#fff',
-              }}>
-              +
-            </Text>
-            <Text
-              variant={'SubTitleOne'}
-              style={{
-                color: '#fff',
-              }}>
-              Add guests
-            </Text>
-          </Pressable>
+          <></>
         )}
       </View>
 

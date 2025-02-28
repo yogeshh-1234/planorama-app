@@ -31,11 +31,34 @@ G - guest
 
 
 
+
+
+Bug Fix:
+- Creating a new event screen shows blank host name (for new user registration)
+
+UI Changes:
+- Custom date time UI
+
+App changes
+- Remove dash upcoming & pre if nothing present (API changes needed)
+- Profile add checkout b2b offerings, onclick will open website 
+- Event creation preview change 'save event' butt to 'dashboard' butt
+
+
+Image edit and delete 
+Check image size
+
+whatsapp not connected on guest page: whatn user navigates to profiles, connects and comes back, page needs to refresh
+
+
+
+
+
+
 Changelogs
-event details fixed going list
-dashboard add event box
-remove empty guest view
-added rsvp link settings
-set event to calender
-
-
+link open on app closed 
+contact list search error
+contact list add to event button
+guest rsvp change
+location google api
+Set max capacity: count 

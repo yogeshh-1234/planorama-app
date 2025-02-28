@@ -35,11 +35,11 @@ apiClient.interceptors.response.use(
       });
     } else if (error.response) {
       // Server responded with a status other than 2xx
-      // console.error('Error Response:', error.response.data);
+      console.error('Error Response:', error.response.data);
       return Promise.reject(error.response.data);
     } else if (error.request) {
       // Request was made but no response received
-      // console.error('No Response:', error.request);
+      console.error('No Response:', error.request);
       return Promise.reject(
         error?.message
           ? error
@@ -49,7 +49,7 @@ apiClient.interceptors.response.use(
       );
     } else {
       // Something else happened while setting up the request
-      // console.error('Error', error.message);
+      console.error('Error', error.message);
       return Promise.reject({ error: error.message });
     }
   },

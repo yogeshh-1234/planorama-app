@@ -7,17 +7,23 @@ export interface EventGuestsForm {
 
 export interface GuestEventResponseData {
   guest_list: guestItemType[];
-    rsvp_cnt: {
-      [key: string]: number;
-    };
-    INVITE_RSVP_DD_ARR: Array<{
-      id: string;
-      name: string;
-    }>;
+  rsvp_cnt: {
+    [key: string]: number;
+  };
+  event: {
+    open_event: 'Y' | 'N'|'';
+    max_capacity: number;
+    guest_approval: 'Y' | 'N'|'';
+    additional_guests: number;
+  };
+  INVITE_RSVP_DD_ARR: Array<{
+    id: string;
+    name: string;
+  }>;
 }
 
 export interface GuestEventResponse {
-  data: GuestEventResponseData
+  data: GuestEventResponseData;
   StatusCode: number;
 }
 

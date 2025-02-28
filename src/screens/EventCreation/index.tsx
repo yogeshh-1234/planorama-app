@@ -56,6 +56,7 @@ import HeaderCompo from '../../components/HeaderCompo';
 import {MotiView, useAnimationState} from 'moti';
 import CustomCheckBox from '../../components/CheckBox';
 import RSVPIconCompo from '../../components/RSVPIconCompo';
+import LocationSearch from './components/LocationSearch';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -641,6 +642,7 @@ export default function () {
       )}
       {!loading.status && (
         <ScrollView
+        keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             // paddingTop: height * 0.03,
             paddingBottom: height * 0.04,
@@ -721,7 +723,7 @@ export default function () {
               }}
             />
 
-            <LocationCompo
+            <LocationSearch
               locationData={locationData}
               updateLocation={(val, isOn) => {
                 setLocationData({
@@ -1388,96 +1390,6 @@ const DateTimeCompo = memo(
   },
 );
 
-const LocationCompo = memo(
-  ({
-    locationData,
-    updateLocation,
-  }: {
-    locationData: {location: string; isOnline: boolean};
-    updateLocation: (val: string, isOn: boolean) => void;
-  }) => {
-    const [value, setValue] = useState(locationData.location);
-    const [online, setOnline] = useState(locationData.isOnline);
-    return (
-      <Animated.View
-        style={{
-          gap: GapTwo,
-        }}
-        entering={FadeIn.delay(700)}
-        exiting={FadeOut}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-          <Text variant={'BodyRegular'} style={[styles.color_W]}>
-            {online ? 'Link URL' : 'Location'}
-          </Text>
-          <Pressable
-            onPress={() => {
-              setOnline(pre => {
-                updateLocation(value, !pre);
-                return !pre;
-              });
-            }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-            }}>
-            <CustomCheckBox
-              checked={online}
-              height={20}
-              width={20}
-              checkMarkColor={'#fff'}
-              checkedBorderColor={'#fff'}
-              unCheckedBorderColor={'#fff'}
-              checkedBackgroundColor={'#fff'}
-              unCheckedBackgroundColor={'#fff'}
-              duration={300}
-            />
-            <Text variant={'BodyRegular'} style={styles.color_W}>
-              Online
-            </Text>
-          </Pressable>
-        </View>
-        <TextInput
-          value={value}
-          onChangeText={text => {
-            setValue(text);
-            updateLocation(text, online);
-          }}
-          textInputProps={{
-            placeholder: online ? 'Add Web URL' : 'Eg: Panjim',
-            placeholderTextColor: '#ffffff80',
-          }}
-          textInputStyle={{
-            fontSize: 14,
-            lineHeight: 21,
-            color: '#fff',
-          }}
-          iconName="loc"
-        />
-        {/* <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-          }}>
-          <Switch
-            color="#fff"
-            value={online}
-            onChange={() => setOnline(pre => !pre)}
-          />
-          <Text variant={'BodyRegular'} style={styles.color_W}>
-            Online
-          </Text>
-        </View> */}
-      </Animated.View>
-    );
-  },
-);
 
 const HostedByCompo = memo(() => {
   const [data, setProfileData] = useState({

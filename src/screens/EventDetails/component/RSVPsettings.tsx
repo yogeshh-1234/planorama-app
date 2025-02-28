@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useState } from 'react';
-import { Dimensions, ScrollView, View } from 'react-native';
+import { Dimensions, ScrollView, View, TextInput as Input } from 'react-native';
 import Animated, {
   FadeInLeft,
   FadeOut,
@@ -70,13 +70,8 @@ export default memo(
             <RowTitle title={'RSVP'} />
             <LinkBox
               txtOne={'Update RVSP link'}
-              value={settingsData.rsvp_url ? settingsData.rsvp_url : ""}
-              onChangeText={(val) =>
-                handleChange(
-                  'rsvp_url',
-                  val
-                )
-              }
+              value={settingsData.rsvp_url ? settingsData.rsvp_url : ''}
+              onChangeText={val => handleChange('rsvp_url', val)}
             />
             <TogleRow
               txtOne="Accept RSVPs"
@@ -134,7 +129,9 @@ export default memo(
               txtOne={'Set max capacity'}
               txtTwo={`applicable only if open invitte is On
 RSVP will responses will no longer be accepted once "Going" (and +1s) limit is reached.`}
-              dropdown={true}
+              input={true}
+              switchStatus={settingsData.max_capacity}
+              onSwitchChange={text => handleChange('max_capacity', text)}
               disabled={!(settingsData.open_event === 'Y')}
               id={6}
             />
@@ -248,16 +245,18 @@ const TogleRow = memo(
     disabled = false,
     id,
     itTitle = false,
+    input = false,
   }: {
     txtOne: string;
     txtTwo: string;
     isSwitch?: boolean;
     dropdown?: boolean;
-    switchStatus?: boolean;
-    onSwitchChange?: () => void;
+    switchStatus?: boolean | number | string;
+    onSwitchChange?: (text?: string) => void;
     disabled?: boolean;
     id: number;
     itTitle?: boolean;
+    input?: boolean;
   }) => {
     const isOn = useSharedValue(switchStatus);
 
@@ -312,12 +311,51 @@ const TogleRow = memo(
               />
             )}
             {dropdown && <DropdownCompo />}
+            {input && (
+              <InputBox
+                value={switchStatus.toString()}
+                onChangeText={onSwitchChange ? onSwitchChange : () => { }}
+              />
+            )}
           </View>
         </View>
       </Animated.View>
     );
   },
 );
+
+const InputBox = memo(
+  ({ value, onChangeText }: { value: string, onChangeText: (txt: string) => void }) => {
+    return (
+      <View style={{
+        backgroundColor: '#C5B1C33D',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+      }}>
+        <Input
+          defaultValue={value}
+          style={{
+            // minWidth: width * 0.1
+            // flex:1
+            fontFamily: 'PoppinsBold',
+            fontWeight: '700',
+            letterSpacing: 0,
+            fontSize: 20,
+            lineHeight: 37.5,
+            color: '#fff',
+          }}
+          maxLength={3}
+          onChangeText={text => {
+            const numericValue = text.replace(/[^0-9]/g, '');
+            onChangeText(numericValue);
+          }}
+          keyboardType={'number-pad'}
+        />
+      </View>
+    );
+  },
+);
+
 const DropdownCompo = memo(() => {
   return (
     <SelectDropdown
@@ -400,25 +438,25 @@ const LinkBox = memo(
         <Text
           variant={'BodyRegular'}
           style={{
-        color: '#fff',
+            color: '#fff',
           }}>
           {txtOne}
         </Text>
         <TextInput
           textInputStyle={{
-        fontFamily: 'PoppinsMedium',
-        fontWeight: '500',
-        letterSpacing: 0,
-        fontSize: 14,
-        lineHeight: 18.2,
-        color: '#fff',
+            fontFamily: 'PoppinsMedium',
+            fontWeight: '500',
+            letterSpacing: 0,
+            fontSize: 14,
+            lineHeight: 18.2,
+            color: '#fff',
           }}
           value={value}
-          onChangeText={(text) => {
-        const urlPattern = /^[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*$/;
-        if (urlPattern.test(text)) {
-          onChangeText(text);
-        }
+          onChangeText={text => {
+            const urlPattern = /^[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*$/;
+            if (urlPattern.test(text)) {
+              onChangeText(text);
+            }
           }}
         />
       </View>

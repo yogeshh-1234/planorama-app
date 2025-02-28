@@ -27,8 +27,7 @@ import {
   importContactResponse,
   importGuestForm,
 } from '../Contacts/contactsType';
-const {width, height} = Dimensions.get('screen');
-type filterType = '' | 'Y' | 'N' | 'M';
+const {width} = Dimensions.get('screen');
 const paddingHorizontal = width * 0.05;
 
 const PopupModal = {
@@ -37,12 +36,6 @@ const PopupModal = {
   disc: '',
   buttOne: '',
   buttTwo: '',
-};
-type filterArrType = {
-  all: guestItemType[];
-  going: guestItemType[];
-  maybe: guestItemType[];
-  no: guestItemType[];
 };
 export default function ({
   eventID,
@@ -113,17 +106,17 @@ export default function ({
     onSuccess: ({data: {status}, StatusCode}) => {
       StatusCode === 200
         ? setStatus(status)
-        : errorPopUp(StatusCode, null, 'BACK');
+        : errorPopUp(StatusCode, null);
       setLoading({
         status: false,
         text: '',
       });
     },
     onError: error =>
-      errorPopUp(error?.StatusCode, error?.error?.description, 'BACK'),
+      errorPopUp(error?.StatusCode, error?.error?.description),
   });
 
-  const errorPopUp = (code: number, desc: string | null, buttTxt: string) => {
+  const errorPopUp = (code: number, desc: string | null) => {
     setLoading({
       status: false,
       text: '',
@@ -141,7 +134,7 @@ export default function ({
 
   const onSendMsg = () => {
     let guestList: guestListType[] = [];
-    Object.keys(selectedItems).forEach(function (key, index) {
+    Object.keys(selectedItems).forEach(function (key) {
       guestList = [
         ...guestList,
         {
@@ -194,7 +187,7 @@ export default function ({
   >({
     mutationFn: (formData: importGuestForm) =>
       postData<importGuestForm, importContactResponse>(Urls.EVENT, formData),
-    onSuccess: ({data, StatusCode}) => {
+    onSuccess: ({StatusCode}) => {
       if (StatusCode === 200) {
         //
         setSelectedItems({});
@@ -375,7 +368,7 @@ const FilterRow = memo(
           gap: paddingHorizontal / 2,
         }}
         showsHorizontalScrollIndicator={false}>
-        {guestCountNames.map((itm, idx) => {
+        {guestCountNames.map((itm) => {
           return (
             (guestCount[itm.id] > 0 || guestCount[itm.id] === 'ALL') && (
               <FilterItem
@@ -390,42 +383,7 @@ const FilterRow = memo(
             )
           );
         })}
-        {/* <FilterItem
-          title="All"
-          count={guestListArr.all}
-          icon=""
-          selected={selectedFilter === ''}
-          onPress={() => {
-            setSelectedFilter('');
-          }}
-        />
-        <FilterItem
-          title="Going"
-          count={guestListArr.go}
-          icon="Y"
-          selected={selectedFilter === 'Y'}
-          onPress={() => {
-            setSelectedFilter('Y');
-          }}
-        />
-        <FilterItem
-          title="May be"
-          count={guestListArr.maybe}
-          icon="M"
-          selected={selectedFilter === 'M'}
-          onPress={() => {
-            setSelectedFilter('M');
-          }}
-        />
-        <FilterItem
-          title="No"
-          count={guestListArr.no}
-          icon="N"
-          selected={selectedFilter === 'N'}
-          onPress={() => {
-            setSelectedFilter('N');
-          }}
-        /> */}
+    
       </ScrollView>
     );
   },

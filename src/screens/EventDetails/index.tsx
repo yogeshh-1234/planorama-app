@@ -85,6 +85,7 @@ export default function () {
     rsvp: null,
     host_list: [],
     rsvp_guest_type: 'H', //H - host, G - guest
+    rsvp_guest_approved: 'Y',
     open_event: '',
     rsvp_url: '',
     is_host: false,
@@ -196,6 +197,8 @@ export default function () {
   const addOnList =
     eventData.open_event === 'Y' && !eventData.is_guest && !eventData.is_host;
 
+  // console.log(eventData);
+
   return (
     <View
       style={{
@@ -260,7 +263,10 @@ export default function () {
               disable={invitedEvent}
             />
           )}
-          {!loading && !invitedEvent && <RSVPCompo value={eventData.rsvp} />}
+
+          {!loading && !invitedEvent && !addOnList && (
+            <RSVPCompo value={eventData.rsvp} />
+          )}
           {!loading && (
             <CommentSection
               eventID={params.id}
@@ -281,29 +287,74 @@ export default function () {
           )}
         </View>
       </ScrollView>
-      {invitedEvent && (
+
+      {/* "rsvp_guest_approved": "N", */}
+      {
+       ( eventData.open_event==="Y"&&
+      eventData.rsvp_guest_approved==="N")
+      ?
+      <WaitingBanner/>:
+      
+      invitedEvent ? (
         <SelectRSVP
           value={eventData.rsvp}
           rsvpGuestId={eventData.rsvp_guest_id}
           eventID={params.id}
           eventName={eventData.name}
+          open_event={eventData.open_event === 'Y'}
         />
-      )}
-      {addOnList && <AddOnList eventID={params.id} reloadAPI={mainFn} />}
-      {!loading && !invitedEvent && !addOnList && (
-        <BottomBar
+      ):<></>
+      
+      }
+
+      {/* {invitedEvent && (
+        <SelectRSVP
+          value={eventData.rsvp}
+          rsvpGuestId={eventData.rsvp_guest_id}
           eventID={params.id}
-          eventData={eventData}
-          galleryData={galleryData}
-          disable={galleryLoading}
-          reloadAPI={mainFn}
+          eventName={eventData.name}
+          open_event={eventData.open_event === 'Y'}
         />
-      )}
+      )} */}
+      {addOnList && <AddOnList eventID={params.id} reloadAPI={mainFn} />}
+      {!loading &&
+        !invitedEvent &&
+        !addOnList &&
+        eventData.is_host && (
+          <BottomBar
+            eventID={params.id}
+            eventData={eventData}
+            galleryData={galleryData}
+            disable={galleryLoading}
+            reloadAPI={mainFn}
+          />
+        )}
       {loading && <LoadingCompo text={'Getting event details'} />}
     </View>
   );
 }
-
+const WaitingBanner  = ()=>{
+  return <View
+  style={{
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#3A2537A1',
+    paddingHorizontal: 20,
+    marginBottom:24
+  }}>
+  <Button
+  lable='Pending Approval'
+  disabled={true}
+  
+  onPress={()=>{}}
+  buttonStyles={{
+    backgroundColor:"#4F4F4F"
+  }}
+  />
+</View>
+}
 type RSVPtype = 'Y' | 'N' | 'M' | null;
 
 const SelectRSVP = memo(
@@ -312,11 +363,13 @@ const SelectRSVP = memo(
     rsvpGuestId,
     eventID,
     eventName,
+    open_event,
   }: {
     value: RSVPtype;
     rsvpGuestId: number | undefined;
     eventID: number;
     eventName: string;
+    open_event: boolean;
   }) => {
     const {params} = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
 
@@ -422,6 +475,7 @@ const SelectRSVP = memo(
                   changeRVP(val);
                 }
           }
+          open_event={open_event}
         />
         {loading && <LoadingCompo text="Changing RSVP..." />}
       </View>
@@ -572,12 +626,15 @@ const RSVPCompo = memo(
   ({
     value,
     onChange,
+    open_event,
   }: {
     value: 'Y' | 'N' | 'M' | null;
     onChange?: ((val: RSVPtype) => void) | null;
+    open_event: boolean;
   }) => {
     return (
       <View style={styles.rsvpRow}>
+        {open_event && <View style={{flex: 0.25}} />}
         <Pressable
           onPress={() => onChange && onChange('Y')}
           style={{
@@ -589,17 +646,21 @@ const RSVPCompo = memo(
             Going
           </Text>
         </Pressable>
-        <Pressable
-          onPress={() => onChange && onChange('M')}
-          style={{
-            ...styles.rsvpCompo,
-            borderColor: value === 'M' ? '#FFF' : '#C5B1C33D',
-          }}>
-          <QuesSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
-          <Text variant={'BodyRegular'} style={[styles.color_W, {}]}>
-            May be
-          </Text>
-        </Pressable>
+        {open_event ? (
+          <View style={{flex: 0.5}} />
+        ) : (
+          <Pressable
+            onPress={() => onChange && onChange('M')}
+            style={{
+              ...styles.rsvpCompo,
+              borderColor: value === 'M' ? '#FFF' : '#C5B1C33D',
+            }}>
+            <QuesSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
+            <Text variant={'BodyRegular'} style={[styles.color_W, {}]}>
+              May be
+            </Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={() => onChange && onChange('N')}
           style={{
@@ -618,6 +679,7 @@ const RSVPCompo = memo(
             No
           </Text>
         </Pressable>
+        {open_event && <View style={{flex: 0.25}} />}
       </View>
     );
   },
@@ -753,10 +815,10 @@ const GuestListCompo = memo(
               </Pressable>
             </View>
           )}
-          {eventGuest.length > 0 && (
+          {eventGuest.filter(itm=>itm.rsvp===`R~Y`).length > 0 && (
             <ImagesCompo
-              guest={eventGuest.slice(0, ImgCount)}
-              count={eventGuest.length}
+              guest={eventGuest.filter(itm=>itm.rsvp===`R~Y`).slice(0, ImgCount)}
+              count={eventGuest.filter(itm=>itm.rsvp===`R~Y`).length}
             />
           )}
         </View>

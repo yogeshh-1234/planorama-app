@@ -203,7 +203,7 @@ export default function ({
                 typeof item.id === 'number' ? item.id : parseInt(item.id)
               }
               rsvpArray={rsvpArray ? rsvpArray : []}
-              onReload={onReload}
+              onReload={onReload ? onReload : () => {}}
             />
           )}
         </AnimatedPressable>
