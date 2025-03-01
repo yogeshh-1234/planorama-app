@@ -1,8 +1,8 @@
-import {useNavigation} from '@react-navigation/native';
-import {memo} from 'react';
-import {MainStackNavigation} from '../navigation';
-import {Pressable, View} from 'react-native';
-import {DownSVG} from '../assets/SVG/IconsSVG';
+import { useNavigation } from '@react-navigation/native';
+import { memo } from 'react';
+import { MainStackNavigation } from '../navigation';
+import { Pressable, View } from 'react-native';
+import { DownSVG } from '../assets/SVG/IconsSVG';
 import Text from './Text';
 
 export default memo(
@@ -10,12 +10,16 @@ export default memo(
     showSave = false,
     onSave,
     onBack,
-    title
+    title,
+    showShare,
+    onShare
   }: {
     showSave?: boolean;
     onSave?: () => void;
     onBack?: () => void;
-    title?:string
+    title?: string
+    showShare?: boolean
+    onShare?: () => void
   }) => {
     const navigation = useNavigation<MainStackNavigation>();
     return (
@@ -27,7 +31,7 @@ export default memo(
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-       {!title? <Pressable
+        {!title ? <Pressable
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -44,15 +48,15 @@ export default memo(
             width={12}
             height={12}
             style={{
-              transform: [{rotate: '90deg'}],
+              transform: [{ rotate: '90deg' }],
             }}
           />
-          <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
+          <Text variant={'SubTitleTwo'} style={{ color: '#fff' }}>
             Back
           </Text>
-        </Pressable>:<View/>}
-        {title&&<Text variant={'SubTitleTwo'} style={{color: '#fff'}}>{title}</Text> }
-<View/>
+        </Pressable> : <View />}
+        {title && <Text variant={'SubTitleTwo'} style={{ color: '#fff' }}>{title}</Text>}
+        <View />
         {showSave && (
           <Pressable
             style={{
@@ -61,8 +65,21 @@ export default memo(
               gap: 6,
             }}
             onPress={onSave}>
-            <Text variant={'SubTitleTwo'} style={{color: '#F9BC52'}}>
+            <Text variant={'SubTitleTwo'} style={{ color: '#F9BC52' }}>
               Save
+            </Text>
+          </Pressable>
+        )}
+        {showShare && (
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
+            onPress={onShare}>
+            <Text variant={'SubTitleTwo'} style={{ color: '#F9BC52' }}>
+              Share
             </Text>
           </Pressable>
         )}

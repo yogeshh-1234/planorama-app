@@ -1301,14 +1301,16 @@ const DateTimeCompo = memo(
 
     const handleConfirm = (date: Date) => {
       if (dtType === 'date') {
+        hideDatePicker();
         setDate(date);
         onDateChange(moment(date).format('DD/MM/YYYY'));
       }
       if (dtType === 'time') {
+        hideDatePicker();
         setTime(date);
         onTimeChange(moment(time).format('hh:mm a'));
       }
-      hideDatePicker();
+     
     };
 
     return (

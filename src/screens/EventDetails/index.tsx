@@ -1,20 +1,22 @@
-import React, {memo, useEffect, useState} from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {
+  Clipboard,
   Dimensions,
   Image,
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   StatusBar,
   StyleSheet,
   ToastAndroid,
   Vibration,
   View,
 } from 'react-native';
-import {storage} from '../../functions/storage';
-import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
-import {MainStackNavigation, RootStackParamList} from '../../navigation';
-import {useMutation} from '@tanstack/react-query';
+import { storage } from '../../functions/storage';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { MainStackNavigation, RootStackParamList } from '../../navigation';
+import { useMutation } from '@tanstack/react-query';
 import {
   ErrorFormat,
   EventDetailsForm,
@@ -23,12 +25,13 @@ import {
   EventResponse,
   galleryType,
 } from './EveDetType';
-import {postData} from '../../api';
+import { postData } from '../../api';
 import Urls from '../../api/urls';
 import DetailsCompo from './DetailsCompo';
 import LoadingCompo from '../../components/LoadingCompo';
 import LinearGradient from 'react-native-linear-gradient';
 import {
+  CopySVG,
   EditSVG,
   MenuDotsSVG,
   QuesSVG,
@@ -37,7 +40,7 @@ import {
   UsersSVG,
 } from '../../assets/SVG/IconsSVG';
 import Text from '../../components/Text';
-import {MotiView, useAnimationState} from 'moti';
+import { MotiView, useAnimationState } from 'moti';
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -49,12 +52,12 @@ import {
   GuestEventResponse,
   guestItemType,
 } from '../EventGuest/EventGuestType';
-import {ActivityIndicator} from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import Button from '../../components/Button';
 import HeaderCompo from '../../components/HeaderCompo';
 import CommentSection from './CommentSection';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 const PopupModal = {
   state: false,
   title: '',
@@ -67,7 +70,7 @@ export default function () {
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [popupModal, setPopupModal] = useState(PopupModal);
 
-  const {params} = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
+  const { params } = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
 
   const [eventData, setEventData] = useState<EventDetailsType>({
     id: -1,
@@ -108,7 +111,7 @@ export default function () {
   };
 
   //
-  const callAPI = (data: {mode: string}) => {
+  const callAPI = (data: { mode: string }) => {
     const token = storage.getString('user.token');
     const id = storage.getString('user.id');
     if (
@@ -142,7 +145,7 @@ export default function () {
   >({
     mutationFn: (formData: EventDetailsForm) =>
       postData<EventDetailsForm, EventResponse>(Urls.EVENT, formData),
-    onSuccess: ({data, StatusCode}) => {
+    onSuccess: ({ data, StatusCode }) => {
       // console.log('data', data);
       StatusCode === 200 ? setEventData(data) : errorPopUp(StatusCode, null);
       setLoading(false);
@@ -160,7 +163,7 @@ export default function () {
   >({
     mutationFn: (formData: EventDetailsForm) =>
       postData<EventDetailsForm, EventGalleryResponse>(Urls.EVENT, formData),
-    onSuccess: ({data, StatusCode}) => {
+    onSuccess: ({ data, StatusCode }) => {
       StatusCode === 200
         ? setGalleyData(data.gallery?.map(itm => itm.pic))
         : errorPopUp(StatusCode, null);
@@ -211,7 +214,45 @@ export default function () {
         translucent
         barStyle={'light-content'}
       />
-      <HeaderCompo onBack={onBack} />
+      <HeaderCompo
+        onBack={onBack}
+        showShare={
+          eventData.rsvp_url && eventData.rsvp_url.length > 1 ? true : false
+        }
+        onShare={async () => {
+          Clipboard.setString(eventData.rsvp_url);
+          try {
+            const result = await Share.share({
+              message: eventData.rsvp_url,
+              //                `${requestType}:
+              // ${userName} made ${itm.TYPE.toLowerCase()} request at ${requestTime}${requestFrom}${requestTo}${requestFromTime}${requestToTime}
+
+              // Status: Request ${requestStatus}
+
+              // ${itm.TYPE === "FLIGHT" ?`Flight Details :
+              // ${itm.FROM_DATA?.FROM} to ${itm.TO_DATA?.TO}
+              // ${itm?.CONFIRMED?.doc?.length > 0 ? `Ticket: ${itm.CONFIRMED.doc}` : ""}`:''}`,
+              title: 'Share Event', // Optional for Android
+              // url: 'https://example.com', // Optional for iOS
+            });
+
+            if (result.action === Share.sharedAction) {
+              if (result.activityType) {
+                // Shared with activity type of result.activityType
+                // console.log("Shared with", result.activityType);
+              } else {
+                // Shared
+                // console.log("Shared successfully");
+              }
+            } else if (result.action === Share.dismissedAction) {
+              // Dismissed
+              // console.log("Share dismissed");
+            }
+          } catch (error) {
+            // Alert.alert(error.message);
+          }
+        }}
+      />
       <ScrollView
         contentContainerStyle={{
           paddingBottom: invitedEvent ? 250 : 100,
@@ -263,6 +304,40 @@ export default function () {
               disable={invitedEvent}
             />
           )}
+          {eventData.rsvp_url && eventData.rsvp_url.length > 1 &&
+       
+      
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#C5B1C33D',
+                borderRadius: 10,
+                paddingVertical: 2,
+                marginTop: 18,
+              }}>
+              <Text
+                variant={'BodyRegular'}
+                style={{
+                  color: '#F9BC52',
+                  textDecorationLine: 'underline',
+                  flex: 1,
+                  marginLeft: 14,
+                }}>
+                {eventData.rsvp_url}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  Clipboard.setString(eventData.rsvp_url);
+                }}
+                style={{
+                  padding: 14,
+                }}>
+                <CopySVG />
+              </Pressable>
+            </View>}
+          {/* eventData.rsvp_url */}
 
           {!loading && !invitedEvent && !addOnList && (
             <RSVPCompo value={eventData.rsvp} />
@@ -289,13 +364,13 @@ export default function () {
       </ScrollView>
 
       {/* "rsvp_guest_approved": "N", */}
-      {
-       ( eventData.open_event==="Y"&&
-      eventData.rsvp_guest_approved==="N")
-      ?
-      <WaitingBanner/>:
-      
-      invitedEvent ? (
+      {eventData.open_event === 'Y' && eventData.rsvp_guest_approved === 'N' ? (
+        eventData.is_host ? (
+          <></>
+        ) : (
+          <WaitingBanner />
+        )
+      ) : invitedEvent ? (
         <SelectRSVP
           value={eventData.rsvp}
           rsvpGuestId={eventData.rsvp_guest_id}
@@ -303,9 +378,9 @@ export default function () {
           eventName={eventData.name}
           open_event={eventData.open_event === 'Y'}
         />
-      ):<></>
-      
-      }
+      ) : (
+        <></>
+      )}
 
       {/* {invitedEvent && (
         <SelectRSVP
@@ -317,44 +392,42 @@ export default function () {
         />
       )} */}
       {addOnList && <AddOnList eventID={params.id} reloadAPI={mainFn} />}
-      {!loading &&
-        !invitedEvent &&
-        !addOnList &&
-        eventData.is_host && (
-          <BottomBar
-            eventID={params.id}
-            eventData={eventData}
-            galleryData={galleryData}
-            disable={galleryLoading}
-            reloadAPI={mainFn}
-          />
-        )}
+      {!loading && !invitedEvent && !addOnList && eventData.is_host && (
+        <BottomBar
+          eventID={params.id}
+          eventData={eventData}
+          galleryData={galleryData}
+          disable={galleryLoading}
+          reloadAPI={mainFn}
+        />
+      )}
       {loading && <LoadingCompo text={'Getting event details'} />}
     </View>
   );
 }
-const WaitingBanner  = ()=>{
-  return <View
-  style={{
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#3A2537A1',
-    paddingHorizontal: 20,
-    marginBottom:24
-  }}>
-  <Button
-  lable='Pending Approval'
-  disabled={true}
-  
-  onPress={()=>{}}
-  buttonStyles={{
-    backgroundColor:"#4F4F4F"
-  }}
-  />
-</View>
-}
+const WaitingBanner = () => {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#3A2537A1',
+        paddingHorizontal: 20,
+        marginBottom: 24,
+      }}>
+      <Button
+        lable="Pending Approval"
+        disabled={true}
+        onPress={() => { }}
+        buttonStyles={{
+          backgroundColor: '#4F4F4F',
+        }}
+      />
+    </View>
+  );
+};
 type RSVPtype = 'Y' | 'N' | 'M' | null;
 
 const SelectRSVP = memo(
@@ -371,7 +444,7 @@ const SelectRSVP = memo(
     eventName: string;
     open_event: boolean;
   }) => {
-    const {params} = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
+    const { params } = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
 
     const navigation = useNavigation<MainStackNavigation>();
 
@@ -398,10 +471,10 @@ const SelectRSVP = memo(
             val === 'Y'
               ? 'R~Y'
               : val === 'M'
-              ? 'R~M'
-              : val === 'N'
-              ? 'R~N'
-              : '',
+                ? 'R~M'
+                : val === 'N'
+                  ? 'R~N'
+                  : '',
         };
         setTempRSVPval(val);
         setLoading(true);
@@ -417,7 +490,7 @@ const SelectRSVP = memo(
     >({
       mutationFn: (formData: EventGuestsForm) =>
         postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({ data, StatusCode }) => {
         // console.log('data', data);
         setTempRSVPval(null);
         if (StatusCode === 200) {
@@ -472,8 +545,8 @@ const SelectRSVP = memo(
             loading
               ? null
               : val => {
-                  changeRVP(val);
-                }
+                changeRVP(val);
+              }
           }
           open_event={open_event}
         />
@@ -595,7 +668,7 @@ const ButtonPress = ({
     to: {
       scale: 1,
     },
-    pressd: {scale: 0.95},
+    pressd: { scale: 0.95 },
   });
   return (
     <Pressable
@@ -613,7 +686,7 @@ const ButtonPress = ({
         exiting={FadeOutDown}
         state={buttState}>
         {ICON()}
-        <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+        <Text variant={'DetailRegular'} style={{ color: '#fff' }}>
           {lable}
         </Text>
       </MotiView>
@@ -634,7 +707,7 @@ const RSVPCompo = memo(
   }) => {
     return (
       <View style={styles.rsvpRow}>
-        {open_event && <View style={{flex: 0.25}} />}
+        {open_event && <View style={{ flex: 0.25 }} />}
         <Pressable
           onPress={() => onChange && onChange('Y')}
           style={{
@@ -647,7 +720,7 @@ const RSVPCompo = memo(
           </Text>
         </Pressable>
         {open_event ? (
-          <View style={{flex: 0.5}} />
+          <View style={{ flex: 0.5 }} />
         ) : (
           <Pressable
             onPress={() => onChange && onChange('M')}
@@ -672,14 +745,14 @@ const RSVPCompo = memo(
             height={IconSize}
             fill={'#C5B1C3'}
             style={{
-              transform: [{scaleY: -1}],
+              transform: [{ scaleY: -1 }],
             }}
           />
           <Text variant={'BodyRegular'} style={[styles.color_W]}>
             No
           </Text>
         </Pressable>
-        {open_event && <View style={{flex: 0.25}} />}
+        {open_event && <View style={{ flex: 0.25 }} />}
       </View>
     );
   },
@@ -736,7 +809,7 @@ const GuestListCompo = memo(
     >({
       mutationFn: (formData: EventGuestsForm) =>
         postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({ data, StatusCode }) => {
         // console.log(data);
         if (StatusCode === 200) {
           setEventGuest(data.guest_list);
@@ -767,18 +840,18 @@ const GuestListCompo = memo(
           disable
             ? null
             : () =>
-                navigation.navigate('EventGuest', {
-                  eventID: event_id,
-                  eventName: eventName,
-                  eventPic: eventPic,
-                })
+              navigation.navigate('EventGuest', {
+                eventID: event_id,
+                eventName: eventName,
+                eventPic: eventPic,
+              })
         }>
-        <View style={{gap: 4}}>
-          <Text variant={'SubTitleTwo'} style={{color: '#EDEDED'}}>
+        <View style={{ gap: 4 }}>
+          <Text variant={'SubTitleTwo'} style={{ color: '#EDEDED' }}>
             Guest List
           </Text>
           {!loading && !(error.length > 0) && (
-            <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+            <Text variant={'DetailRegular'} style={{ color: '#fff' }}>
               {eventGuest.length} Invited | {going} Going
             </Text>
           )}
@@ -794,7 +867,7 @@ const GuestListCompo = memo(
                 alignItems: 'flex-end',
                 gap: 8,
               }}>
-              <Text variant={'BodyBold'} style={{color: 'red'}}>
+              <Text variant={'BodyBold'} style={{ color: 'red' }}>
                 {error}
               </Text>
               <Pressable
@@ -809,16 +882,18 @@ const GuestListCompo = memo(
                   setError('');
                   callAPI();
                 }}>
-                <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+                <Text variant={'BodyRegular'} style={{ color: '#fff' }}>
                   Retry
                 </Text>
               </Pressable>
             </View>
           )}
-          {eventGuest.filter(itm=>itm.rsvp===`R~Y`).length > 0 && (
+          {eventGuest.filter(itm => itm.rsvp === `R~Y`).length > 0 && (
             <ImagesCompo
-              guest={eventGuest.filter(itm=>itm.rsvp===`R~Y`).slice(0, ImgCount)}
-              count={eventGuest.filter(itm=>itm.rsvp===`R~Y`).length}
+              guest={eventGuest
+                .filter(itm => itm.rsvp === `R~Y`)
+                .slice(0, ImgCount)}
+              count={eventGuest.filter(itm => itm.rsvp === `R~Y`).length}
             />
           )}
         </View>
@@ -847,9 +922,9 @@ const ImagesCompo = ({
               item.pic
                 ? item.pic
                 : `https://avatar.iran.liara.run/username?username=${item.name.replaceAll(
-                    ' ',
-                    '+',
-                  )}`
+                  ' ',
+                  '+',
+                )}`
             }
             idx={idx}
             count={count}
@@ -872,7 +947,7 @@ const ImagesCompo = ({
                 justifyContent: 'center',
                 backgroundColor: '#ffffff80',
               }}>
-              <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+              <Text variant={'DetailRegular'} style={{ color: '#fff' }}>
                 +{count - ImgCount}
               </Text>
             </View>
@@ -902,7 +977,7 @@ const MemberImg = ({
         zIndex: idx * -100 + 500,
       }}>
       <Image
-        source={{uri: pic}}
+        source={{ uri: pic }}
         style={{
           borderRadius: 100,
           width: 40,
@@ -959,7 +1034,7 @@ const AddOnList = ({
   >({
     mutationFn: (formData: EventGuestsForm) =>
       postData<EventGuestsForm, GuestEventResponse>(Urls.EVENT, formData),
-    onSuccess: ({data, StatusCode}) => {
+    onSuccess: ({ data, StatusCode }) => {
       // console.log(data);
       if (StatusCode === 200) {
         reloadAPI();
