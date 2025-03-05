@@ -297,7 +297,7 @@ export default function () {
           )}
 
           {showRSVPCompo && <RSVPCompo value={eventData.rsvp} />}
-          {!loading && !addOnList && (
+          {!loading && !addOnList &&  !( eventData.open_event === 'Y' && eventData.rsvp_guest_approved === 'N' )   &&(
             <CommentSection
               isHost={eventData.is_host}
               eventID={params.id}
