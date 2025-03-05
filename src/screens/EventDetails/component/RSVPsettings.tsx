@@ -98,12 +98,12 @@ export default memo(
               }
               id={3}
             />
-            <TogleRow
+            {/* <TogleRow
               txtOne={'RSVP button style'}
               txtTwo={'Display emojis or icons on RSVP buttons'}
               dropdown={true}
               id={4}
-            />
+            /> */}
             <TogleRow
               txtOne="Show count of guests RSVP"
               txtTwo=""
@@ -117,12 +117,12 @@ export default memo(
               }
               id={5}
             />
-            <TogleRow
+            {/* <TogleRow
               txtOne="Allow plus ones"
               txtTwo=""
               dropdown={true}
               id={6}
-            />
+            /> */}
             <TogleRow
               txtOne={'Set max capacity'}
               txtTwo={`applicable only if open invitte is On

@@ -89,8 +89,8 @@ export default function () {
     host_list: [],
     rsvp_guest_type: 'H', //H - host, G - guest
     rsvp_guest_approved: 'Y',
-    accept_maybe: 'Y',
-    open_event: '',
+
+    event_config: { open_event: '', accept_maybe: 'Y', },
     rsvp_url: '',
     is_host: false,
     is_guest: false,
@@ -217,12 +217,12 @@ export default function () {
   };
 
   const invitedEvent =
-    (eventData.open_event === 'Y' || eventData.open_event === 'N') &&
+    (eventData.event_config.open_event === 'Y' || eventData.event_config.open_event === 'N') &&
     eventData.is_guest &&
     !eventData.is_host;
 
   const addOnList =
-    eventData.open_event === 'Y' && !eventData.is_guest && !eventData.is_host;
+    eventData.event_config.open_event === 'Y' && !eventData.is_guest && !eventData.is_host;
 
   const showRSVPCompo = !loading && !invitedEvent && !addOnList;
 
@@ -297,7 +297,7 @@ export default function () {
           )}
 
           {showRSVPCompo && <RSVPCompo value={eventData.rsvp} />}
-          {!loading && !addOnList &&  !( eventData.open_event === 'Y' && eventData.rsvp_guest_approved === 'N' )   &&(
+          {!loading && !addOnList && !(eventData.event_config.open_event === 'Y' && eventData.rsvp_guest_approved === 'N') && (
             <CommentSection
               isHost={eventData.is_host}
               eventID={params.id}
@@ -320,7 +320,7 @@ export default function () {
       </ScrollView>
 
       {/* "rsvp_guest_approved": "N", */}
-      {eventData.open_event === 'Y' && eventData.rsvp_guest_approved === 'N' ? (
+      {eventData.event_config.open_event === 'Y' && eventData.rsvp_guest_approved === 'N' ? (
         eventData.is_host ? (
           <></>
         ) : (
@@ -333,8 +333,8 @@ export default function () {
           eventID={params.id}
           eventName={eventData.name}
           hideMaybe={
-            eventData.open_event === 'Y' ||
-            (eventData.open_event === 'N' && eventData.accept_maybe === 'N')
+            eventData.event_config.open_event === 'Y' ||
+            (eventData.event_config.open_event === 'N' && eventData.event_config.accept_maybe === 'N')
           }
         />
       ) : (
