@@ -103,17 +103,16 @@ export default function ({
   >({
     mutationFn: (formData: connectionForm) =>
       postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
-    onSuccess: ({data: {status}, StatusCode}) => {
+    onSuccess: ({data, StatusCode}) => {
       StatusCode === 200
-        ? setStatus(status)
+        ? setStatus(data.status)
         : errorPopUp(StatusCode, null);
       setLoading({
         status: false,
         text: '',
       });
     },
-    onError: error =>
-      errorPopUp(error?.StatusCode, error?.error?.description),
+    onError: error => errorPopUp(error?.StatusCode, error?.error?.description),
   });
 
   const errorPopUp = (code: number, desc: string | null) => {
@@ -286,11 +285,15 @@ export default function ({
           )}
           fromGuest={true}
           eventID={eventID}
-          onReload={onReload}
+          onReload={() => {
+            if (!status) {
+              checkWhatsappStatus();
+            }
+            onReload();
+          }}
           onDelete={onDelete}
           rsvpArray={allGuestData.INVITE_RSVP_DD_ARR}
         />
-   
       </View>
       <View style={{alignSelf: 'center', paddingBottom: 12}}>
         {status ? (
@@ -368,7 +371,7 @@ const FilterRow = memo(
           gap: paddingHorizontal / 2,
         }}
         showsHorizontalScrollIndicator={false}>
-        {guestCountNames.map((itm) => {
+        {guestCountNames.map(itm => {
           return (
             (guestCount[itm.id] > 0 || guestCount[itm.id] === 'ALL') && (
               <FilterItem
@@ -383,7 +386,6 @@ const FilterRow = memo(
             )
           );
         })}
-    
       </ScrollView>
     );
   },

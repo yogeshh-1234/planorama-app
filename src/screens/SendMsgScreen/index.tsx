@@ -155,7 +155,6 @@ const MainContainer = () => {
 
   const [popupModal, setPopupModal] = useState(PopupModal);
 
-
   const onDismiss = () => setPopupModal({...popupModal, state: false});
 
   // functions
@@ -174,7 +173,7 @@ const MainContainer = () => {
         const formatted = convertToWhatsAppFormat(htmlContent);
         return {formatted, htmlContent};
       });
-      
+
     navigation.navigate('PreviewScreen', {
       eventID: params.eventID,
       guestsIds: guestListArray.map(itm => parseInt(itm.id)), // in array
@@ -304,7 +303,7 @@ const MsgCompo = memo(
             style={{
               backgroundColor: '#C5B1C33D',
               borderTopLeftRadius: 10,
-              borderTopRightRadius:10,
+              borderTopRightRadius: 10,
               height: 200,
             }}>
             <ScrollView
@@ -400,7 +399,7 @@ const EventLink = memo(({link}: {link: string}) => {
           borderRadius: 10,
         }}>
         <Text
-          style={{color: '#fff', marginLeft: 14,flex:1}}
+          style={{color: '#fff', marginLeft: 14, flex: 1}}
           variant={'BodyRegular'}
           numberOfLines={1}>
           {link}
@@ -509,7 +508,7 @@ const convertToWhatsAppFormat = (html: string): string => {
     '</br>': '', // Treat <br> as a line break
     '<br/>': '',
     '<br />': '', // Treat <br /> as a line break
-    '&nbsp;': ''
+    '&nbsp;': '',
   };
 
   // Remove inline styles like `style=""` from tags
@@ -546,7 +545,6 @@ const convertToWhatsAppFormat = (html: string): string => {
   return formattedText;
 };
 
-
 function convertWhatsappTextToHTML(text: string) {
   // Convert bold text (*bold*)
   text = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
@@ -566,8 +564,6 @@ function convertWhatsappTextToHTML(text: string) {
 
   return text;
 }
-
-
 
 const SelectNameCompo = ({
   onSelectedID,
@@ -591,34 +587,50 @@ const SelectNameCompo = ({
   const [selectedValue, setSelectedValue] = useState(null); // Selected value from dropdown
 
   return (
-    <DropDownPicker
-      open={open}
-      value={selectedValue}
-      items={dropdownItems}
-      setOpen={setOpen}
-      setValue={val => {
-        onSelectedID(val('').toString());
+    <Pressable
+      style={{
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#C5B1C380',
+        borderRadius:4
       }}
-      placeholder="Insert name"
-      placeholderStyle={{
-        color: '#fff',
-      }}
-      textStyle={{
-        color: '#fff',
-      }}
-      ArrowUpIconComponent={() => (
-        <DownSVG
-          width={16}
-          height={16}
-          style={{
-            transform: [{rotate: '180deg'}],
-          }}
-        />
-      )}
-      ArrowDownIconComponent={() => <DownSVG width={16} height={16} />}
-      style={styles.dropdown}
-      dropDownContainerStyle={styles.dropdownContainer}
-    />
+      onPress={() => {
+        onSelectedID('[guest-name]');
+      }}>
+      <Text style={{color: '#fff'}} variant={'BodyRegular'}>
+        [guest-name]
+      </Text>
+    </Pressable>
+    // <DropDownPicker
+    //   open={open}
+    //   value={selectedValue}
+    //   items={dropdownItems}
+    //   setOpen={setOpen}
+    //   setValue={val => {
+    //     onSelectedID(val('').toString());
+    //   }}
+    //   placeholder="Insert name"
+    //   placeholderStyle={{
+    //     color: '#fff',
+    //   }}
+    //   textStyle={{
+    //     color: '#fff',
+    //   }}
+    //   ArrowUpIconComponent={() => (
+    //     <DownSVG
+    //       width={16}
+    //       height={16}
+    //       style={{
+    //         transform: [{rotate: '180deg'}],
+    //       }}
+    //     />
+    //   )}
+    //   ArrowDownIconComponent={() => <DownSVG width={16} height={16} />}
+    //   style={styles.dropdown}
+    //   dropDownContainerStyle={styles.dropdownContainer}
+    // />
   );
 };
 

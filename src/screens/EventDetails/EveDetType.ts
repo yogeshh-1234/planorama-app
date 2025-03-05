@@ -23,6 +23,7 @@ export interface EventDetailsType {
   link: string;
   event_disc: string;
   rsvp: 'Y' | 'N' | 'M' | null;
+  accept_maybe: string;
   host_list: {
     event_assoc_id: string;
     name: string;
@@ -30,7 +31,7 @@ export interface EventDetailsType {
   }[];
   rsvp_guest_id?: number;
   rsvp_guest_type: 'G' | 'H'; //H - host, G - guest
-  "rsvp_guest_approved": "Y"|"N",
+  rsvp_guest_approved: 'Y' | 'N';
 
   open_event: string;
   rsvp_url: string;

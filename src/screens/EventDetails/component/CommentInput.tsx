@@ -1,15 +1,16 @@
-import React, {useState} from 'react';
-import {View, TextInput, Alert, Pressable, Image} from 'react-native';
-import {CommentInputProps} from '../commenttypes';
-import {HostedByCompo} from '../DetailsCompo';
+import React, { useState } from 'react';
+import { View, TextInput, Alert, Pressable, Image } from 'react-native';
+import { CommentInputProps } from '../commenttypes';
+import { HostedByCompo } from '../DetailsCompo';
 import Button from '../../../components/Button';
-import {ImgUploadSVG} from '../../../assets/SVG/IconsSVG';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import { ImgUploadSVG } from '../../../assets/SVG/IconsSVG';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import Text from '../../../components/Text';
 
 const CommentInput: React.FC<CommentInputProps> = ({
   onSubmit,
   isReply = false,
+  showImg
 }) => {
   const [text, setText] = useState<string>('');
   const [image, setImage] = useState<string | null>(null);
@@ -35,7 +36,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
         // console.log(response.assets[0].base64);
         setImage(
           `data:${response?.assets[0].type};base64,${response?.assets[0].base64}` ||
-            null,
+          null,
         );
       }
     });
@@ -46,14 +47,14 @@ const CommentInput: React.FC<CommentInputProps> = ({
       Alert.alert('Error', 'Please enter text or select an image');
       return;
     }
-    onSubmit({text, image});
+    onSubmit({ text, image });
     setText('');
     setImage(null);
   };
 
   return isReply ? (
-    <Pressable style={{paddingVertical: 4, marginLeft: 25}}>
-      <Text variant={'DetailRegular'} style={{color: '#EDEDED'}}>
+    <Pressable style={{ paddingVertical: 4, marginLeft: 25 }}>
+      <Text variant={'DetailRegular'} style={{ color: '#EDEDED' }}>
         Reply
       </Text>
     </Pressable>
@@ -92,7 +93,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
           onChangeText={setText}
           multiline
         />
-        <Pressable
+        {showImg && <Pressable
           style={{
             height: 45,
             width: 45,
@@ -104,14 +105,14 @@ const CommentInput: React.FC<CommentInputProps> = ({
           onPress={handleImagePicker}>
           {image ? (
             <Image
-              source={{uri: image}}
-              style={{width: '100%', height: '100%', borderRadius: 10}}
+              source={{ uri: image }}
+              style={{ width: '100%', height: '100%', borderRadius: 10 }}
               resizeMode="cover"
             />
           ) : (
             <ImgUploadSVG width={22} height={22} fill={'#212121'} />
           )}
-        </Pressable>
+        </Pressable>}
       </View>
       <Button
         lable="Post"

@@ -25,9 +25,11 @@ const PopupModal = {
 const CommentSection = ({
   eventID,
   guestId,
+  isHost
 }: {
   eventID: number;
   guestId: number;
+  isHost:boolean
 }) => {
   const [comments, setComments] = useState<CommentType[]>([]);
 
@@ -37,6 +39,8 @@ const CommentSection = ({
 
   const [allow, setAllow] = useState(false);
   const [showComments,setShowComments] = useState(false)
+
+  const [showImg,setShowImg] = useState(false)
 
   useEffect(() => {
     callAPI();
@@ -70,8 +74,9 @@ const CommentSection = ({
     onSuccess: ({data, StatusCode}) => {
       // settingsData.guest_posts === 'Y'
       // console.log('check data', data);
-      setAllow(data.guest_posts === 'Y' ? true : false);
+      setAllow((data.guest_posts === 'Y'||(isHost&&data.activity_timeline === 'Y')) ? true : false);
       setShowComments(data.activity_timeline === 'Y' ? true : false)
+      setShowImg(data.guest_upload==='Y'? true : false)
     },
     onError: error => {},
   });
@@ -257,7 +262,7 @@ const CommentSection = ({
       <Text variant={'SubTitleTwo'} style={{color: '#EDEDED'}}>
         Activity
       </Text>
-      {allow && <CommentInput onSubmit={handleAddComment} />}
+      {allow && <CommentInput onSubmit={handleAddComment} showImg={showImg||isHost} />}
       {loading && (
         <ActivityIndicator
           color={'#fff'}

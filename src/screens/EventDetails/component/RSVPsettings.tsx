@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Dimensions, ScrollView, View, TextInput as Input } from 'react-native';
 import Animated, {
   FadeInLeft,
@@ -25,11 +25,13 @@ export default memo(
     settingsData: RSVPResponceData;
     onDataChange: (updatedData: RSVPResponceData) => void;
   }) => {
-    const handleChange = (key: keyof RSVPResponceData, value: any) => {
-      const updatedData = { ...settingsData, [key]: value };
+    const handleChange = (updates: Partial<RSVPResponceData>) => {
+      // console.log('updates', updates);
+      const updatedData = { ...settingsData, ...updates };
+      // console.log('updatedData', updatedData);
       onDataChange(updatedData); // Notify parent of the change
     };
-    // console.log('settingsData render', settingsData);
+
     return (
       <View
         style={{
@@ -54,12 +56,11 @@ export default memo(
               isSwitch={true}
               switchStatus={settingsData.open_event === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'open_event',
-                  settingsData.open_event === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  open_event: settingsData.open_event === 'Y' ? 'N' : 'Y',
+                })
               }
-              id={5}
+              id={1}
             />
           </View>
           {/*  */}
@@ -71,7 +72,7 @@ export default memo(
             <LinkBox
               txtOne={'Update RVSP link'}
               value={settingsData.rsvp_url ? settingsData.rsvp_url : ''}
-              onChangeText={val => handleChange('rsvp_url', val)}
+              onChangeText={val => handleChange({ rsvp_url: val })}
             />
             <TogleRow
               txtOne="Accept RSVPs"
@@ -79,12 +80,11 @@ export default memo(
               isSwitch={true}
               switchStatus={settingsData.accept_rsvp === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'accept_rsvp',
-                  settingsData.accept_rsvp === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  accept_rsvp: settingsData.accept_rsvp === 'Y' ? 'N' : 'Y',
+                })
               }
-              id={1}
+              id={2}
             />
             <TogleRow
               txtOne='Allow guests to respond "Maybe"'
@@ -92,18 +92,17 @@ export default memo(
               isSwitch={true}
               switchStatus={settingsData.accept_maybe === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'accept_maybe',
-                  settingsData.accept_maybe === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  accept_maybe: settingsData.accept_maybe === 'Y' ? 'N' : 'Y',
+                })
               }
-              id={2}
+              id={3}
             />
             <TogleRow
               txtOne={'RSVP button style'}
               txtTwo={'Display emojis or icons on RSVP buttons'}
               dropdown={true}
-              id={3}
+              id={4}
             />
             <TogleRow
               txtOne="Show count of guests RSVP"
@@ -111,19 +110,18 @@ export default memo(
               isSwitch={true}
               switchStatus={settingsData.show_count_guests === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'show_count_guests',
-                  settingsData.show_count_guests === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  show_count_guests:
+                    settingsData.show_count_guests === 'Y' ? 'N' : 'Y',
+                })
               }
-              id={4}
+              id={5}
             />
             <TogleRow
               txtOne="Allow plus ones"
               txtTwo=""
               dropdown={true}
-              // disabled={!(settingsData.open_event === 'Y')}
-              id={8}
+              id={6}
             />
             <TogleRow
               txtOne={'Set max capacity'}
@@ -131,9 +129,11 @@ export default memo(
 RSVP will responses will no longer be accepted once "Going" (and +1s) limit is reached.`}
               input={true}
               switchStatus={settingsData.max_capacity}
-              onSwitchChange={text => handleChange('max_capacity', text)}
+              onSwitchChange={text =>
+                handleChange({ max_capacity: text ? parseInt(text) : 0 })
+              }
               disabled={!(settingsData.open_event === 'Y')}
-              id={6}
+              id={7}
             />
             <TogleRow
               txtOne="Guest approval required"
@@ -141,13 +141,13 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
               isSwitch={true}
               switchStatus={settingsData.guest_approval === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'guest_approval',
-                  settingsData.guest_approval === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  guest_approval:
+                    settingsData.guest_approval === 'Y' ? 'N' : 'Y',
+                })
               }
               disabled={!(settingsData.open_event === 'Y')}
-              id={7}
+              id={8}
             />
           </View>
 
@@ -160,17 +160,18 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
               txtTwo=""
               isSwitch={true}
               switchStatus={settingsData.activity_timeline === 'Y'}
-              onSwitchChange={() => {
+              onSwitchChange={async () => {
                 if (settingsData.activity_timeline === 'Y') {
-                  handleChange('activity_timeline', 'N');
-                  handleChange('guest_status_share', 'N');
-                  handleChange('guest_posts', 'N');
-                  handleChange('guest_upload', 'N');
+                  handleChange({
+                    activity_timeline: 'N',
+                    guest_status_share: 'N',
+                    guest_posts: 'N',
+                    guest_upload: 'N',
+                  });
                 } else {
-                  handleChange('activity_timeline', 'Y');
+                  handleChange({ activity_timeline: 'Y' });
                 }
               }}
-              // disabled={!(settingsData.open_event === 'Y')}
               id={9}
               itTitle={true}
             />
@@ -180,10 +181,10 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
               isSwitch={true}
               switchStatus={settingsData.guest_status_share === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'guest_status_share',
-                  settingsData.guest_status_share === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  guest_status_share:
+                    settingsData.guest_status_share === 'Y' ? 'N' : 'Y',
+                })
               }
               disabled={!(settingsData.activity_timeline === 'Y')}
               id={10}
@@ -194,10 +195,9 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
               isSwitch={true}
               switchStatus={settingsData.guest_posts === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'guest_posts',
-                  settingsData.guest_posts === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  guest_posts: settingsData.guest_posts === 'Y' ? 'N' : 'Y',
+                })
               }
               disabled={!(settingsData.activity_timeline === 'Y')}
               id={11}
@@ -208,10 +208,9 @@ RSVP will responses will no longer be accepted once "Going" (and +1s) limit is r
               isSwitch={true}
               switchStatus={settingsData.guest_upload === 'Y'}
               onSwitchChange={() =>
-                handleChange(
-                  'guest_upload',
-                  settingsData.guest_upload === 'Y' ? 'N' : 'Y',
-                )
+                handleChange({
+                  guest_upload: settingsData.guest_upload === 'Y' ? 'N' : 'Y',
+                })
               }
               disabled={!(settingsData.activity_timeline === 'Y')}
               id={12}
@@ -259,6 +258,10 @@ const TogleRow = memo(
     input?: boolean;
   }) => {
     const isOn = useSharedValue(switchStatus);
+
+    useEffect(() => {
+      isOn.value = switchStatus;
+    }, [switchStatus]);
 
     const handlePress = () => {
       isOn.value = !isOn.value;
@@ -325,15 +328,22 @@ const TogleRow = memo(
 );
 
 const InputBox = memo(
-  ({ value, onChangeText }: { value: string, onChangeText: (txt: string) => void }) => {
+  ({
+    value,
+    onChangeText,
+  }: {
+    value: string;
+    onChangeText: (txt: string) => void;
+  }) => {
     return (
-      <View style={{
-        backgroundColor: '#C5B1C33D',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-      }}>
+      <View
+        style={{
+          backgroundColor: '#C5B1C33D',
+          borderRadius: 10,
+          paddingHorizontal: 12,
+        }}>
         <Input
-          defaultValue={value}
+          defaultValue={value.toString() === '0' ? '' : value}
           style={{
             // minWidth: width * 0.1
             // flex:1
@@ -359,6 +369,7 @@ const InputBox = memo(
 const DropdownCompo = memo(() => {
   return (
     <SelectDropdown
+      disabled
       data={[
         { title: 'All', id: 1 },
         // {title: 'Not All', id: 2},

@@ -89,6 +89,7 @@ export default function () {
     host_list: [],
     rsvp_guest_type: 'H', //H - host, G - guest
     rsvp_guest_approved: 'Y',
+    accept_maybe: 'Y',
     open_event: '',
     rsvp_url: '',
     is_host: false,
@@ -192,6 +193,29 @@ export default function () {
     navigation.goBack();
   };
 
+  const onShare = async () => {
+    Clipboard.setString(eventData.rsvp_url);
+    try {
+      const result = await Share.share({
+        message: eventData.rsvp_url,
+        title: 'Share Event',
+        url: eventData.rsvp_url,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // console.log("Shared with", result.activityType);
+        } else {
+          // console.log("Shared successfully");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // console.log("Share dismissed");
+      }
+    } catch (error) {
+      // Alert.alert(error.message);
+    }
+  };
+
   const invitedEvent =
     (eventData.open_event === 'Y' || eventData.open_event === 'N') &&
     eventData.is_guest &&
@@ -200,7 +224,7 @@ export default function () {
   const addOnList =
     eventData.open_event === 'Y' && !eventData.is_guest && !eventData.is_host;
 
-  // console.log(eventData);
+  const showRSVPCompo = !loading && !invitedEvent && !addOnList;
 
   return (
     <View
@@ -219,44 +243,11 @@ export default function () {
         showShare={
           eventData.rsvp_url && eventData.rsvp_url.length > 1 ? true : false
         }
-        onShare={async () => {
-          Clipboard.setString(eventData.rsvp_url);
-          try {
-            const result = await Share.share({
-              message: eventData.rsvp_url,
-              //                `${requestType}:
-              // ${userName} made ${itm.TYPE.toLowerCase()} request at ${requestTime}${requestFrom}${requestTo}${requestFromTime}${requestToTime}
-
-              // Status: Request ${requestStatus}
-
-              // ${itm.TYPE === "FLIGHT" ?`Flight Details :
-              // ${itm.FROM_DATA?.FROM} to ${itm.TO_DATA?.TO}
-              // ${itm?.CONFIRMED?.doc?.length > 0 ? `Ticket: ${itm.CONFIRMED.doc}` : ""}`:''}`,
-              title: 'Share Event', // Optional for Android
-              // url: 'https://example.com', // Optional for iOS
-            });
-
-            if (result.action === Share.sharedAction) {
-              if (result.activityType) {
-                // Shared with activity type of result.activityType
-                // console.log("Shared with", result.activityType);
-              } else {
-                // Shared
-                // console.log("Shared successfully");
-              }
-            } else if (result.action === Share.dismissedAction) {
-              // Dismissed
-              // console.log("Share dismissed");
-            }
-          } catch (error) {
-            // Alert.alert(error.message);
-          }
-        }}
+        onShare={onShare}
       />
       <ScrollView
         contentContainerStyle={{
           paddingBottom: invitedEvent ? 250 : 100,
-          // rsvp_guest_type:'H' //H - host, G - guest
           paddingHorizontal: width * 0.05,
         }}
         refreshControl={
@@ -304,46 +295,11 @@ export default function () {
               disable={invitedEvent}
             />
           )}
-          {eventData.rsvp_url && eventData.rsvp_url.length > 1 &&
-       
-      
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: '#C5B1C33D',
-                borderRadius: 10,
-                paddingVertical: 2,
-                marginTop: 18,
-              }}>
-              <Text
-                variant={'BodyRegular'}
-                style={{
-                  color: '#F9BC52',
-                  textDecorationLine: 'underline',
-                  flex: 1,
-                  marginLeft: 14,
-                }}>
-                {eventData.rsvp_url}
-              </Text>
-              <Pressable
-                onPress={() => {
-                  Clipboard.setString(eventData.rsvp_url);
-                }}
-                style={{
-                  padding: 14,
-                }}>
-                <CopySVG />
-              </Pressable>
-            </View>}
-          {/* eventData.rsvp_url */}
 
-          {!loading && !invitedEvent && !addOnList && (
-            <RSVPCompo value={eventData.rsvp} />
-          )}
-          {!loading && (
+          {showRSVPCompo && <RSVPCompo value={eventData.rsvp} />}
+          {!loading && !addOnList && (
             <CommentSection
+              isHost={eventData.is_host}
               eventID={params.id}
               guestId={eventData.rsvp_guest_id ? eventData.rsvp_guest_id : 0}
             />
@@ -376,21 +332,15 @@ export default function () {
           rsvpGuestId={eventData.rsvp_guest_id}
           eventID={params.id}
           eventName={eventData.name}
-          open_event={eventData.open_event === 'Y'}
+          hideMaybe={
+            eventData.open_event === 'Y' ||
+            (eventData.open_event === 'N' && eventData.accept_maybe === 'N')
+          }
         />
       ) : (
         <></>
       )}
 
-      {/* {invitedEvent && (
-        <SelectRSVP
-          value={eventData.rsvp}
-          rsvpGuestId={eventData.rsvp_guest_id}
-          eventID={params.id}
-          eventName={eventData.name}
-          open_event={eventData.open_event === 'Y'}
-        />
-      )} */}
       {addOnList && <AddOnList eventID={params.id} reloadAPI={mainFn} />}
       {!loading && !invitedEvent && !addOnList && eventData.is_host && (
         <BottomBar
@@ -436,13 +386,13 @@ const SelectRSVP = memo(
     rsvpGuestId,
     eventID,
     eventName,
-    open_event,
+    hideMaybe = false,
   }: {
     value: RSVPtype;
     rsvpGuestId: number | undefined;
     eventID: number;
     eventName: string;
-    open_event: boolean;
+    hideMaybe?: boolean;
   }) => {
     const { params } = useRoute<RouteProp<RootStackParamList, 'EventDetails'>>();
 
@@ -548,7 +498,7 @@ const SelectRSVP = memo(
                 changeRVP(val);
               }
           }
-          open_event={open_event}
+          hideMaybe={hideMaybe}
         />
         {loading && <LoadingCompo text="Changing RSVP..." />}
       </View>
@@ -699,15 +649,15 @@ const RSVPCompo = memo(
   ({
     value,
     onChange,
-    open_event,
+    hideMaybe,
   }: {
     value: 'Y' | 'N' | 'M' | null;
     onChange?: ((val: RSVPtype) => void) | null;
-    open_event: boolean;
+    hideMaybe: boolean;
   }) => {
     return (
       <View style={styles.rsvpRow}>
-        {open_event && <View style={{ flex: 0.25 }} />}
+        {hideMaybe && <View style={{ flex: 0.25 }} />}
         <Pressable
           onPress={() => onChange && onChange('Y')}
           style={{
@@ -719,7 +669,7 @@ const RSVPCompo = memo(
             Going
           </Text>
         </Pressable>
-        {open_event ? (
+        {hideMaybe ? (
           <View style={{ flex: 0.5 }} />
         ) : (
           <Pressable
@@ -752,7 +702,7 @@ const RSVPCompo = memo(
             No
           </Text>
         </Pressable>
-        {open_event && <View style={{ flex: 0.25 }} />}
+        {hideMaybe && <View style={{ flex: 0.25 }} />}
       </View>
     );
   },
