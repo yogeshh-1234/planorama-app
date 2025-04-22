@@ -137,12 +137,12 @@ export default function () {
         index={index}
         //   setFinalList={setFinalList}
         handleNameChange={(text: string) => {
-          console.log('text', text, index);
+          // console.log('text', text, index);
           setFinalList(pre => {
             const updatedList = pre.map((item, i) =>
               i === index ? { ...item, name: text } : item,
             );
-            console.log(updatedList);
+            // console.log(updatedList);
             return updatedList;
           });
         }}
@@ -151,7 +151,7 @@ export default function () {
             const updatedList = pre.map((item, i) =>
               i === index ? { ...item, number: text } : item,
             );
-            console.log(updatedList);
+            // console.log(updatedList);
             return updatedList;
           });
 

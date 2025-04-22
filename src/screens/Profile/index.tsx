@@ -61,7 +61,6 @@ const PopupModal = {
   buttTwo: '',
 };
 export default function () {
-  
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(false);
   const [credits, setCredits] = useState<null | number>(null);
@@ -190,7 +189,7 @@ export default function () {
       />
 
       <HeaderCompo />
-      {status && !loading && <WhatsAppLogo loading={loading} />}
+      {/* {status && !loading && <WhatsAppLogo loading={loading} />} */}
       <ScrollView
         contentContainerStyle={{
           paddingTop: 50,
@@ -211,7 +210,9 @@ export default function () {
             }
             loading={loading}
           />
-          <ItemCompoContainer
+
+          {/* whatapp connect option */}
+          {/* <ItemCompoContainer
             type={'whatsapp'}
             onSuccess={checkWhatsappStatus}
             loadingMain={loading}
@@ -223,7 +224,7 @@ export default function () {
                 : 'Connect your WhatsApp'
             }
             onPressTab={status ? dissconnectWAPrompt : undefined}
-          />
+          /> */}
           <ItemCompoContainer type={'logout'} title={'Logout'} />
         </View>
       </ScrollView>
@@ -365,7 +366,7 @@ const ItemCompo = ({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor:type==='connect'?'#2FAB68A1': '#C5B1C33D',
+        backgroundColor: type === 'connect' ? '#2FAB68A1' : '#C5B1C33D',
         borderRadius: 5,
         paddingHorizontal: 12,
         paddingVertical: 18,
@@ -403,9 +404,10 @@ const ProfileCompo = memo(() => {
     setPic(
       pic
         ? pic
-        : `https://avatar.iran.liara.run/username?username=${
-            (name ? name : '').replaceAll(' ', '+')
-          }`,
+        : `https://avatar.iran.liara.run/username?username=${(name
+            ? name
+            : ''
+          ).replaceAll(' ', '+')}`,
     );
     setNum(number ? number : '');
   }, []);
@@ -525,7 +527,9 @@ const ProfileCompo = memo(() => {
             alignItems: 'center',
             gap: 8,
           }}>
-          <Text variant={'TitleOne'} style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
+          <Text
+            variant={'TitleOne'}
+            style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
             {name}
           </Text>
           <Pressable

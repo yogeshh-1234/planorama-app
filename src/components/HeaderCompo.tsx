@@ -39,6 +39,46 @@ export default memo(
               flexDirection: 'row',
               alignItems: 'center',
               gap: 6,
+              // borderWidth: 1,
+              paddingVertical: 4,
+              paddingHorizontal: 2,
+            }}
+            onPress={() => {
+              if (onBack) {
+                onBack();
+              } else {
+                navigation.goBack();
+              }
+            }}>
+            <DownSVG
+              width={12}
+              height={12}
+              style={{
+                transform: [{rotate: '90deg'}],
+              }}
+            />
+            <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
+              Back
+            </Text>
+          </Pressable>
+        ) : (
+          <View />
+        )}
+        {title && (
+          <Text
+            variant={'SubTitleTwo'}
+            style={{color: '#fff'}}
+            numberOfLines={1}>
+            {title}
+          </Text>
+        )}
+        <View />
+        {showSave ? (
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
             }}
             onPress={() => {
               if (onBack) {

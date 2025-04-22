@@ -213,14 +213,14 @@ export default function ({
             </Text>
           </View>
         ) : (
-          gallery.length > 0 && (
+          gallery?.length > 0 && (
             <ScrollView
               horizontal
               contentContainerStyle={{
                 gap: 10,
                 paddingVertical: 12,
               }}>
-              {gallery.map((itm, idx) => (
+              {gallery?.map((itm, idx) => (
                 // <GalleryImgCompo itm={itm} idx={idx} key={idx} />
                 <ImageCompo
                   uri={itm}

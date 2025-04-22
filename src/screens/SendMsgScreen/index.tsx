@@ -85,7 +85,7 @@ export default function () {
       />
       <HeaderCompo onBack={onBack} />
 
-      <WhatsAppCompo />
+      {/* <WhatsAppCompo /> */}
       <MainContainer />
     </View>
   );
@@ -594,7 +594,7 @@ const SelectNameCompo = ({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#C5B1C380',
-        borderRadius:4
+        borderRadius: 4,
       }}
       onPress={() => {
         onSelectedID('[guest-name]');

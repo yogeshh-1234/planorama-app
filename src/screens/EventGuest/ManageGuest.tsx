@@ -143,7 +143,13 @@ export default function ({
       ];
     });
 
-    navigation.navigate('SendMsgScreen', {
+    // navigation.navigate('SendMsgScreen', {
+    //   guestList,
+    //   eventID,
+    //   eventName,
+    //   eventPic,
+    // });
+    navigation.navigate('WhatsappTemplateScreen', {
       guestList,
       eventID,
       eventName,
@@ -285,18 +291,18 @@ export default function ({
           )}
           fromGuest={true}
           eventID={eventID}
-          onReload={() => {
-            if (!status) {
-              checkWhatsappStatus();
-            }
-            onReload();
-          }}
+          // onReload={() => {
+          //   if (!status) {
+          //     checkWhatsappStatus();
+          //   }
+          //   onReload();
+          // }}
           onDelete={onDelete}
           rsvpArray={allGuestData.INVITE_RSVP_DD_ARR}
         />
       </View>
       <View style={{alignSelf: 'center', paddingBottom: 12}}>
-        {status ? (
+        {/* {status ? (
           <Button
             lable="SEND MESSAGE"
             variant="SubTitleTwo"
@@ -330,7 +336,23 @@ export default function ({
             small={true}
             icon={() => <WASVG width={20} height={20} fill={'#fff'} />}
           />
-        )}
+        )} */}
+
+        <Button
+          lable="SEND MESSAGE"
+          variant="SubTitleTwo"
+          textStyles={{
+            color: '#2D2D2D',
+          }}
+          buttonStyles={{
+            backgroundColor:
+              Object.keys(selectedItems).length !== 0 ? '#F9BC52' : '#F9BC5280',
+          }}
+          icon={() => <SendSVG fill={'#2D2D2D'} width={20} height={20} />}
+          onPress={onSendMsg}
+          small={true}
+          disabled={Object.keys(selectedItems).length === 0}
+        />
       </View>
       <PopupCompo
         isVisible={popupModal.state}

@@ -70,10 +70,10 @@ export const postData = async <T, R>(endpoint: string, data: T): Promise<R> => {
   try {
     console.log('formData',data)
     const response: AxiosResponse<R> = await apiClient.post(`${endpoint}.php`,data);
-    // console.log('response.data',endpoint,response.data)
+    console.log('response.data',endpoint,response.data)
     return response.data;
   } catch (error) {
-    // console.log('postData Error:',endpoint,error)
+    console.log('postData Error:',endpoint,error)
     throw error;
   }
 };
