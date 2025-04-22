@@ -20,6 +20,7 @@ import {
   Vibration,
   View,
 } from 'react-native';
+<<<<<<< HEAD
 import {
   BottomSheetModal,
   BottomSheetView,
@@ -29,6 +30,17 @@ import {storage} from '../../functions/storage';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {MainStackNavigation, RootStackParamList} from '../../navigation';
 import {useMutation} from '@tanstack/react-query';
+=======
+import { storage } from '../../functions/storage';
+import {
+  RouteProp,
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from '@react-navigation/native';
+import { MainStackNavigation, RootStackParamList } from '../../navigation';
+import { useMutation } from '@tanstack/react-query';
+>>>>>>> 829fd19622690202258ddff0a703fb9e0514a453
 import {
   ErrorFormat,
   EventDetailsForm,
@@ -46,6 +58,7 @@ import {
   CopySVG,
   EditSVG,
   MenuDotsSVG,
+  PlusSVG,
   QuesSVG,
   SettingSVG,
   ThumbsUpSVG,
@@ -103,8 +116,27 @@ export default function () {
     host_list: [],
     rsvp_guest_type: 'H', //H - host, G - guest
     rsvp_guest_approved: 'Y',
+<<<<<<< HEAD
 
     event_config: {open_event: '', accept_maybe: 'Y'},
+=======
+    event_config: {
+      published: 'N',
+      rsvp_url: null,
+      accept_rsvp: 'N',
+      accept_maybe: 'N',
+      rsvp_button_style: 0,
+      show_count_guests: 'N',
+      open_event: 'N',
+      max_capacity: 0,
+      guest_approval: 'N',
+      additional_guests: 0,
+      activity_timeline: 'N',
+      guest_status_share: 'N',
+      guest_posts: 'N',
+      guest_upload: 'N',
+    },
+>>>>>>> 829fd19622690202258ddff0a703fb9e0514a453
     rsvp_url: '',
     is_host: false,
     is_guest: false,
@@ -113,8 +145,11 @@ export default function () {
   const [galleryData, setGalleyData] = useState<string[]>([]);
 
   useEffect(() => {
-    mainFn();
+    callAPI({
+      mode: 'VIEW_GALLERY',
+    });
   }, []);
+
   const mainFn = () => {
     callAPI({
       mode: 'VIEW_EVENT',
@@ -124,6 +159,14 @@ export default function () {
       mode: 'VIEW_GALLERY',
     });
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      callAPI({
+        mode: 'VIEW_EVENT',
+      });
+    }, []),
+  );
 
   //
   const callAPI = (data: {mode: string}) => {
@@ -160,8 +203,13 @@ export default function () {
   >({
     mutationFn: (formData: EventDetailsForm) =>
       postData<EventDetailsForm, EventResponse>(Urls.EVENT, formData),
+<<<<<<< HEAD
     onSuccess: ({data, StatusCode}) => {
       // console.log('data', data);
+=======
+    onSuccess: ({ data, StatusCode }) => {
+      console.log('data', data);
+>>>>>>> 829fd19622690202258ddff0a703fb9e0514a453
       StatusCode === 200 ? setEventData(data) : errorPopUp(StatusCode, null);
       setLoading(false);
     },
@@ -244,6 +292,7 @@ export default function () {
   const showRSVPCompo = !loading && !invitedEvent && !addOnList;
 
   return (
+<<<<<<< HEAD
     <GestureHandlerRootView style={{flex: 1}}>
       <View
         style={{
@@ -365,6 +414,56 @@ export default function () {
               eventData.event_config.open_event === 'Y' ||
               (eventData.event_config.open_event === 'N' &&
                 eventData.event_config.accept_maybe === 'N')
+=======
+    <View
+      style={{
+        backgroundColor: '#3A2537',
+        flex: 1,
+        paddingTop: StatusBar.currentHeight,
+      }}>
+      <StatusBar
+        backgroundColor={'transparent'}
+        translucent
+        barStyle={'light-content'}
+      />
+      <HeaderCompo
+        onBack={onBack}
+        showShare={
+          eventData.rsvp_url && eventData.rsvp_url.length > 1 ? true : false
+        }
+        onShare={onShare}
+        isDraft={loading ? false : eventData.event_config.published === 'N'}
+      />
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: invitedEvent ? 250 : 100,
+          paddingHorizontal: width * 0.05,
+        }}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={mainFn}
+            title="Pull to refresh"
+            colors={['#F2F2F2']}
+            progressBackgroundColor={'#0E0E0E'}
+            titleColor="grey"
+          />
+        }>
+        {!loading && (
+          <DetailsCompo
+            title={eventData.name}
+            link={eventData.rsvp_url}
+            fontId={eventData.font_id.toString()}
+            cover_img={eventData.cover_img}
+            bg_img={eventData.bg_img}
+            colorHex={eventData.color_hex}
+            date={eventData.date}
+            time={eventData.time}
+            location={
+              eventData.location.length > 0
+                ? eventData.location
+                : eventData.link
+>>>>>>> 829fd19622690202258ddff0a703fb9e0514a453
             }
           />
         ) : (
@@ -381,9 +480,89 @@ export default function () {
             reloadAPI={mainFn}
           />
         )}
+<<<<<<< HEAD
         {loading && <LoadingCompo text={'Getting event details'} />}
       </View>
     </GestureHandlerRootView>
+=======
+        <View
+          style={{
+            opacity: addOnList ? 0.4 : 1,
+          }}>
+          {!loading && (
+            <GuestListCompo
+              event_id={params.id}
+              eventName={eventData.name}
+              eventPic={eventData.cover_img}
+              disable={invitedEvent}
+            />
+          )}
+
+          {showRSVPCompo && <RSVPCompo value={eventData.rsvp} />}
+          {!loading &&
+            !addOnList &&
+            !(
+              eventData.event_config.open_event === 'Y' &&
+              eventData.rsvp_guest_approved === 'N'
+            ) && (
+              <CommentSection
+                isHost={eventData.is_host}
+                eventID={params.id}
+                guestId={eventData.rsvp_guest_id ? eventData.rsvp_guest_id : 0}
+              />
+            )}
+          {addOnList && (
+            <View
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                backgroundColor: 'transparent',
+              }}
+            />
+          )}
+        </View>
+      </ScrollView>
+
+      {/* "rsvp_guest_approved": "N", */}
+      {eventData.event_config.open_event === 'Y' &&
+        eventData.rsvp_guest_approved === 'N' ? (
+        eventData.is_host ? (
+          <></>
+        ) : (
+          <WaitingBanner />
+        )
+      ) : invitedEvent ? (
+        <SelectRSVP
+          value={eventData.rsvp}
+          rsvpGuestId={eventData.rsvp_guest_id}
+          eventID={params.id}
+          eventName={eventData.name}
+          hideMaybe={
+            eventData.event_config.open_event === 'Y' ||
+            (eventData.event_config.open_event === 'N' &&
+              eventData.event_config.accept_maybe === 'N')
+          }
+        />
+      ) : (
+        <></>
+      )}
+
+      {addOnList && <AddOnList eventID={params.id} reloadAPI={mainFn} />}
+      {!loading && !invitedEvent && !addOnList && eventData.is_host && (
+        <BottomBar
+          eventID={params.id}
+          eventData={eventData}
+          galleryData={galleryData}
+          disable={galleryLoading}
+          reloadAPI={mainFn}
+        />
+      )}
+      {loading && <LoadingCompo text={'Getting event details'} />}
+    </View>
+>>>>>>> 829fd19622690202258ddff0a703fb9e0514a453
   );
 }
 const WaitingBanner = () => {
@@ -562,7 +741,8 @@ const BottomBar = memo(
 
     const onSettings = () => {
       navigation.navigate('EventSettingsScreen', {
-        eventID,
+        eventData: eventData.event_config,
+        eventID: eventData.id
       });
     };
     const EditEvent = () => {
@@ -610,7 +790,7 @@ const BottomBar = memo(
             flexDirection: 'row',
           }}>
           <ButtonPress onPress={EditEvent} lable={'Edit'} icon={'edit'} />
-          <ButtonPress onPress={viewGuest} lable={'Guests'} icon={'guest'} />
+          <ButtonPress onPress={viewGuest} lable={'Invite'} icon={'Add'} />
           <ButtonPress
             onPress={onSettings}
             lable={'Settings'}
@@ -703,6 +883,8 @@ const ButtonPress = ({
         return <SettingSVG width={30} height={30} />;
       case 'more':
         return <MenuDotsSVG width={30} height={30} />;
+      case 'Add':
+        return <PlusSVG width={30} height={30} />;
 
       default:
         return <></>;
@@ -746,11 +928,11 @@ const RSVPCompo = memo(
   ({
     value,
     onChange,
-    hideMaybe,
+    hideMaybe = false,
   }: {
     value: 'Y' | 'N' | 'M' | null;
     onChange?: ((val: RSVPtype) => void) | null;
-    hideMaybe: boolean;
+    hideMaybe?: boolean;
   }) => {
     return (
       <View style={styles.rsvpRow}>
@@ -777,7 +959,7 @@ const RSVPCompo = memo(
             }}>
             <QuesSVG width={IconSize} height={IconSize} fill={'#C5B1C3'} />
             <Text variant={'BodyRegular'} style={[styles.color_W, {}]}>
-              May be
+              Maybe
             </Text>
           </Pressable>
         )}
@@ -824,6 +1006,7 @@ const GuestListCompo = memo(
     const [eventGuest, setEventGuest] = useState<guestItemType[]>([]);
     const [error, setError] = useState('');
     const [going, setGoing] = useState(0);
+    const [invited, setInvited] = useState(0);
     useEffect(() => {
       callAPI();
     }, []);
@@ -862,6 +1045,7 @@ const GuestListCompo = memo(
           setEventGuest(data.guest_list);
           console.log('check', data);
           setGoing(data.rsvp_cnt['R~Y']);
+          setInvited(data.rsvp_cnt['I~Y']);
         } else {
           setError(`Something went wrong, please try again! ${StatusCode} `);
         }
@@ -898,8 +1082,13 @@ const GuestListCompo = memo(
             Guest List
           </Text>
           {!loading && !(error.length > 0) && (
+<<<<<<< HEAD
             <Text variant={'DetailRegular'} style={{color: '#fff'}}>
               {eventGuest.length} Invited | {going} Going
+=======
+            <Text variant={'DetailRegular'} style={{ color: '#fff' }}>
+              {invited} Invited | {going} Going
+>>>>>>> 829fd19622690202258ddff0a703fb9e0514a453
             </Text>
           )}
         </View>
