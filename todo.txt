@@ -52,13 +52,93 @@ whatsapp not connected on guest page: whatn user navigates to profiles, connects
 
 
 
+* Check Double API CAlls
 
 
 
 Changelogs
-link open on app closed 
-contact list search error
-contact list add to event button
-guest rsvp change
-location google api
-Set max capacity: count 
+- OTP: Need back button incase WhatsApp number is wrong
+- OTP: Remove T&C check box & Replace text "By signing up, you agree to Terms of Use and Privacy Policy" 
+- Home Screen: Remove text below "Welcome, User!"
+- Home Screen: Change "Hosted Events" to "Hosting"
+- Home Screen: Live /draft right corner banner
+- eventDetails: Show location below time
+- eventDetails: Change "Guests" to "Invite" and add a "+" to the logo
+- eventDetails: Showing invited count when guests has not been invited but only added to list
+- eventDetails: Event details Refresh 
+- eventDetails: Event details show full rsvp url & onpress copy
+- eventDetails: On settings change update event details
+- event creation: Custom URL input 
+- event creation: Draft/live toggle option
+- event creation: change title date and time
+- event creation: On new event creation go to event details on save
+- event creation: Location text color fix
+- event Settings: removed save button & save popup
+- event Settings: Max capacity increase to 9999
+- event Settings: Questionnaire take out
+- RSVP success: added single button dashboard
+
+
+
+
+TODO:
+
+When trying to send msg show message event is off
+Connect whatsapp enter email text black
+Gallery delete button cross button top right
+Address book remove border from name
+Navigating from event details to address book, add people Direct to event, call both apis
+Adding from address list, navigate o new screen where can edit name number, and give instructions check phone number with country code
+Back button for all screens
+WhatsApp edit option guest name redesign 
+edit message screen remove link copy option
+message preview show name and link
+image upload crop options 
+Home screen refresh on changes
+event details page refresh on changes
+
+
+
+Planorama New TODO:
+
+Live /draft/ unpublished top right corner banner
+When trying to send msg show message event is off
+Event details show full url
+Event creation below title add event url edit option
+image upload crop options 
+Event creation change title date and time
+Event creation location text in black
+Connect whatsapp enter email text black
+Gallery delete button cross button top right
+On event creation go to event details 
+Max capacity increase to 9999
+Question take out
+Event details move location below time
+Address book remove border from name
+Navigating from event details to address book, add people Direct to event, call both apis
+Adding from address list, navigate o new screen where can edit name number, and give instructions check phone number with country code
+Back button for all screens
+WhatsApp edit option guest name redesign 
+edit message screen remove link copy option
+message preview show name and link
+rsvp on success remove 2 buttons keep single button view event
+event details check guest list number
+On settings change update event details
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -23,22 +23,23 @@ export interface EventDetailsType {
   link: string;
   event_disc: string;
   rsvp: 'Y' | 'N' | 'M' | null;
-  
-  host_list: {
-    event_assoc_id: string;
-    name: string;
-    pic: string;
-  }[];
+  host_list: host_list_Type[];
   rsvp_guest_id?: number;
   rsvp_guest_type: 'G' | 'H'; //H - host, G - guest
   rsvp_guest_approved: 'Y' | 'N';
 
-  event_config: { open_event: string,accept_maybe: string; },
+  event_config: RSVPResponceData;
   rsvp_url: string;
   is_host: boolean;
   is_guest: boolean;
 }
-
+export type host_list_Type = {
+  event_assoc_id: number;
+  cust_id: number;
+  host_type: string;
+  name: string;
+  pic: string;
+};
 export interface ErrorFormat {
   error: {
     description: string;
@@ -61,13 +62,8 @@ export interface galleryType {
   pic: string;
 }
 
-export interface RSVPResponce {
-  data: RSVPResponceData;
-  StatusCode: number;
-}
-
 export interface RSVPResponceData {
-  id: number;
+  published: 'Y' | 'N';
   rsvp_url: string | null;
   accept_rsvp: 'Y' | 'N';
   accept_maybe: 'Y' | 'N';

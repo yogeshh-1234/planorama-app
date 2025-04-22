@@ -14,6 +14,7 @@ import Animated, {
   FadeIn,
   FadeInRight,
   FadeOut,
+  useSharedValue,
   ZoomIn,
   ZoomOut,
 } from 'react-native-reanimated';
@@ -57,6 +58,8 @@ import {MotiView, useAnimationState} from 'moti';
 import CustomCheckBox from '../../components/CheckBox';
 import RSVPIconCompo from '../../components/RSVPIconCompo';
 import LocationSearch from './components/LocationSearch';
+import {fontResize} from '../../config/fonts';
+import Switch from '../../components/Switch';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
@@ -88,6 +91,10 @@ export default function () {
     image: '',
     repeat: false,
   });
+
+  const [custURL, setCustURL] = useState('');
+
+  const [eventLive, setEventLive] = useState(false);
 
   const [dateTime, setDateTime] = useState({
     date: '',
@@ -124,10 +131,21 @@ export default function () {
         fontID: params?.eventData?.font_id.toString(),
       });
 
+      setCustURL(
+        params?.eventData?.event_config?.rsvp_url
+          ? params?.eventData?.event_config?.rsvp_url
+          : '',
+      );
+
+      setEventLive(
+        params?.eventData?.event_config?.published === 'Y' ? true : false,
+      );
+
       setDateTime({
         date: params?.eventData?.date ? params?.eventData?.date : '',
         time: params?.eventData?.time ? params?.eventData?.time : '',
       });
+
       setLocationData({
         location:
           params?.eventData?.location.length > 0
@@ -347,6 +365,8 @@ export default function () {
         eventHostIds: '',
         eventDisc: disc,
         rsvp: rsvpStatus,
+        rsvp_url: custURL,
+        published: eventLive ? 'Y' : 'N',
       };
 
       setLoading({
@@ -596,8 +616,11 @@ export default function () {
           routes: [
             {name: 'HomeScreen'},
             {
-              name: 'EventConfirmDetails',
-              params: paramstoSend,
+              name: 'EventDetails',
+              params: {
+                id: eventID,
+                invited: false,
+              },
             },
           ],
         }),
@@ -642,7 +665,7 @@ export default function () {
       )}
       {!loading.status && (
         <ScrollView
-        keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             // paddingTop: height * 0.03,
             paddingBottom: height * 0.04,
@@ -678,6 +701,10 @@ export default function () {
                   fontID,
                 }));
               }}
+            />
+            <RSVPURLCompo
+              URLData={custURL}
+              onURLChange={val => setCustURL(val)}
             />
 
             <ImageCompo
@@ -746,6 +773,13 @@ export default function () {
               rsvpStatus={rsvpStatus}
               onPress={val => {
                 setRSVPStatus(val);
+              }}
+            />
+
+            <EventPublishedCompo
+              status={eventLive}
+              onChangeStatus={() => {
+                setEventLive(pre => !pre);
               }}
             />
 
@@ -1310,7 +1344,6 @@ const DateTimeCompo = memo(
         setTime(date);
         onTimeChange(moment(time).format('hh:mm a'));
       }
-     
     };
 
     return (
@@ -1320,56 +1353,66 @@ const DateTimeCompo = memo(
         }}
         entering={FadeIn.delay(600)}
         exiting={FadeOut}>
-        <Text variant={'BodyRegular'} style={[styles.color_W]}>
+        {/* <Text variant={'BodyRegular'} style={[styles.color_W]}>
           Date & Time of the event
-        </Text>
+        </Text> */}
         <View
           style={{
             flexDirection: 'row',
             gap: 20,
           }}>
-          <Pressable
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              paddingHorizontal: 12,
-              paddingVertical: 14,
-              backgroundColor: '#C5B1C33D',
-              flex: 1,
-              borderRadius: 10,
-            }}
-            onPress={openDate}>
-            <CalenderSVG width={18} height={18} color={'#fff'} />
-            <Text
-              variant={'BodyBold'}
-              style={{color: defTime.length > 0 ? '#fff' : '#ffffff80'}}>
-              {defDate.length > 0
-                ? defDate
-                : // moment(date).format('DD/MM/YYYY')
-                  'DD/MM/YYYY'}
+          <View style={{gap: GapTwo, flex: 1}}>
+            <Text variant={'BodyRegular'} style={[styles.color_W]}>
+              Date
             </Text>
-          </Pressable>
-          <Pressable
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              paddingHorizontal: 12,
-              paddingVertical: 14,
-              backgroundColor: '#C5B1C33D',
-              borderRadius: 10,
-            }}
-            onPress={openTime}>
-            <Text
-              variant={'BodyBold'}
-              style={{color: defTime.length > 0 ? '#fff' : '#ffffff80'}}>
-              {defTime.length > 0
-                ? defTime
-                : // moment(time).format('hh:mm a')
-                  '00:00'}
+            <Pressable
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 14,
+                backgroundColor: '#C5B1C33D',
+
+                borderRadius: 10,
+              }}
+              onPress={openDate}>
+              <CalenderSVG width={18} height={18} color={'#fff'} />
+              <Text
+                variant={'BodyBold'}
+                style={{color: defTime.length > 0 ? '#fff' : '#ffffff80'}}>
+                {defDate.length > 0
+                  ? defDate
+                  : // moment(date).format('DD/MM/YYYY')
+                    'DD/MM/YYYY'}
+              </Text>
+            </Pressable>
+          </View>
+          <View style={{gap: GapTwo}}>
+            <Text variant={'BodyRegular'} style={[styles.color_W]}>
+              Time
             </Text>
-          </Pressable>
+            <Pressable
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 14,
+                backgroundColor: '#C5B1C33D',
+                borderRadius: 10,
+              }}
+              onPress={openTime}>
+              <Text
+                variant={'BodyBold'}
+                style={{color: defTime.length > 0 ? '#fff' : '#ffffff80'}}>
+                {defTime.length > 0
+                  ? defTime
+                  : // moment(time).format('hh:mm a')
+                    '00:00'}
+              </Text>
+            </Pressable>
+          </View>
         </View>
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
@@ -1391,7 +1434,6 @@ const DateTimeCompo = memo(
     );
   },
 );
-
 
 const HostedByCompo = memo(() => {
   const [data, setProfileData] = useState({
@@ -1430,21 +1472,21 @@ const HostedByCompo = memo(() => {
           backgroundColor: '#C5B1C33D',
         }}>
         {/* {data.pic.length > 0 && ( */}
-          <Image
-            source={{
-              uri: data.pic
-                ? data.pic
-                : `https://avatar.iran.liara.run/username?username=${data.name.replaceAll(
-                    ' ',
-                    '+',
-                  )}`,
-            }}
-            style={{
-              width: 21,
-              height: 21,
-              borderRadius: 100,
-            }}
-          />
+        <Image
+          source={{
+            uri: data.pic
+              ? data.pic
+              : `https://avatar.iran.liara.run/username?username=${data.name.replaceAll(
+                  ' ',
+                  '+',
+                )}`,
+          }}
+          style={{
+            width: 21,
+            height: 21,
+            borderRadius: 100,
+          }}
+        />
         {/* )} */}
         <Text variant={'BodyBold'} style={{color: '#fff'}}>
           {data.name}
@@ -1716,7 +1758,7 @@ const RSVPCompo = memo(
             }}
             icon="M"
             selected={value === 'M'}
-            lable={'May be'}
+            lable={'Maybe'}
           />
           <RSVPcompoItem
             onPress={() => {
@@ -1785,6 +1827,112 @@ const RSVPcompoItem = ({
     </Pressable>
   );
 };
+
+const RSVPURLCompo = memo(
+  ({
+    URLData,
+    onURLChange,
+  }: {
+    URLData: string;
+    onURLChange: (val: string) => void;
+  }) => {
+    const [val, setVal] = useState('');
+    useEffect(() => {
+      setVal(URLData);
+    }, []);
+
+    return (
+      <Animated.View style={{}} entering={FadeIn.delay(180)} exiting={FadeOut}>
+        <Text variant={'BodyRegular'} style={[styles.color_W]}>
+          Custom URL
+        </Text>
+        <Text
+          variant={'DetailBold'}
+          style={[
+            styles.color_W,
+            {
+              textDecorationLine: 'underline',
+              marginTop: GapTwo * 0.5,
+              marginBottom: GapTwo / 2,
+            },
+          ]}>
+          https://stage-m.planorama.in/event/{val}
+        </Text>
+        <TextInput
+          value={val}
+          onChangeText={text => {
+            setVal(text);
+            onURLChange(text);
+          }}
+          textInputStyle={{
+            color: '#fff',
+            fontFamily: 'PoppinsMedium',
+            fontWeight: '500',
+            letterSpacing: 0,
+            fontSize: fontResize(14),
+            lineHeight: fontResize(18.2),
+          }}
+        />
+      </Animated.View>
+    );
+  },
+);
+
+const EventPublishedCompo = memo(
+  ({status, onChangeStatus}: {status: boolean; onChangeStatus: () => void}) => {
+    const isOn = useSharedValue(status);
+
+    useEffect(() => {
+      console.log('check useeffect');
+      isOn.value = status;
+    }, [status]);
+
+    const handlePress = () => {
+      isOn.value = !isOn.value;
+      onChangeStatus();
+    };
+
+    // const [isOn, setIsOn] = useState(false);
+    // useEffect(() => {
+    //   setIsOn(status);
+    // }, []);
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+        <View>
+          <Text
+            variant={'SubTitleOne'}
+            style={{
+              color: '#fff',
+            }}>
+            Publish Event
+          </Text>
+          <Text
+            variant={'DetailRegular'}
+            style={{
+              color: '#fff',
+            }}>
+            {status ? 'LIVE' : 'DRAFT'}
+          </Text>
+        </View>
+        <View>
+          <Switch
+            value={isOn}
+            onPress={() => {
+              handlePress();
+            }}
+            style={{}}
+          />
+        </View>
+      </View>
+    );
+  },
+);
+
 const styles = StyleSheet.create({
   color_W: {
     color: '#fff',

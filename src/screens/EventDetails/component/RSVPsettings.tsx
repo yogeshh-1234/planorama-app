@@ -354,7 +354,7 @@ const InputBox = memo(
             lineHeight: 37.5,
             color: '#fff',
           }}
-          maxLength={3}
+          maxLength={4}
           onChangeText={text => {
             const numericValue = text.replace(/[^0-9]/g, '');
             onChangeText(numericValue);

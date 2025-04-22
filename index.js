@@ -8,4 +8,15 @@ import {name as appName} from './app.json';
 import { initializeNotifee } from './src/functions/NotifeeService';
 
 initializeNotifee()
-AppRegistry.registerComponent(appName, () => App);
+
+function HeadlessCheck({ isHeadless }) {
+    if (isHeadless) {
+      // App has been launched in the background by iOS, ignore
+      return null;
+    }
+  
+    return <App />;
+  }
+  
+
+AppRegistry.registerComponent(appName, () => HeadlessCheck);

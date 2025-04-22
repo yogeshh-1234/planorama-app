@@ -17,7 +17,10 @@ import Contacts from '../screens/Contacts';
 import ContactsScreen from '../screens/Contacts/ContactsScreen';
 import NewContact from '../screens/Contacts/NewContact';
 import EventSettingsScreen from '../screens/EventDetails/EventSettingsScreen';
-import {EventDetailsType} from '../screens/EventDetails/EveDetType';
+import {
+  EventDetailsType,
+  RSVPResponceData,
+} from '../screens/EventDetails/EveDetType';
 import EventGuest from '../screens/EventGuest';
 import SendMsgScreen from '../screens/SendMsgScreen';
 import PreviewScreen from '../screens/SendMsgScreen/PreviewScreen';
@@ -26,6 +29,7 @@ import {Linking, ToastAndroid, View} from 'react-native';
 import {Portal} from 'react-native-paper';
 import Loading from '../components/Loading';
 import LoadingCompo from '../components/LoadingCompo';
+import EditContactList from '../screens/Contacts/EditContactList';
 
 export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   IntroScreen: 'IntroScreen',
@@ -43,6 +47,7 @@ export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   SendMsgScreen: 'SendMsgScreen',
   PreviewScreen: 'PreviewScreen',
   SuccessScreen: 'SuccessScreen',
+  EditContactList: 'EditContactList',
 };
 
 export type RootStackParamList = {
@@ -67,7 +72,7 @@ export type RootStackParamList = {
   };
   ImportContacts: {onGoBack?: () => void};
   AddNewContact: {onGoBack?: () => void};
-  EventSettingsScreen: {eventID?: number};
+  EventSettingsScreen: {eventData?: RSVPResponceData; eventID?: number};
   EventGuest: {eventID: number; eventName: string; eventPic: string};
   SendMsgScreen: {
     guestList: guestListType[];
@@ -87,11 +92,12 @@ export type RootStackParamList = {
   };
   SuccessScreen: {
     type: string;
-    textOne:string;
-    textTwo:string;
-    textThree:string;
+    textOne: string;
+    textTwo: string;
+    textThree: string;
     eventID: number;
   };
+  EditContactList: {data:{name: string; number: string}[];}
 };
 
 export type guestListType = {
@@ -290,6 +296,10 @@ function MainNavigation(): React.JSX.Element {
             <Stack.Screen
               name={MAINSCREENS.SuccessScreen}
               component={SuccessScreen}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.EditContactList}
+              component={EditContactList}
             />
           </>
         )}

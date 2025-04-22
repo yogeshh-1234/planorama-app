@@ -48,9 +48,9 @@ import Animated, {
 import {Tooltip} from 'react-native-paper';
 import TextInput from '../../components/TextInput';
 import {debounce} from 'lodash';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import { getCountry } from "react-native-localize";
-
+import {parsePhoneNumberFromString} from 'libphonenumber-js';
+import {getCountry} from 'react-native-localize';
+import CustomCheckBox from '../../components/CheckBox';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
@@ -136,7 +136,6 @@ export default function () {
 
 export type contactListItem = contactType;
 
-
 // // Get the device's default country code
 // const getDefaultCountryCode = () => {
 //   const region = getCountry();
@@ -161,7 +160,6 @@ export type contactListItem = contactType;
 //   }
 // };
 
-
 export type ItemType = Record<string, {name: string; number: string}>;
 const ContactsCompo = memo(() => {
   const {params} = useRoute<RouteProp<RootStackParamList, 'ImportContacts'>>();
@@ -172,7 +170,7 @@ const ContactsCompo = memo(() => {
   const [permissionGranted, setPermissionGranted] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<ItemType>({}); // Object to store selected items
- 
+
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
@@ -243,15 +241,15 @@ const ContactsCompo = memo(() => {
               item.name.length > 0,
           )
           .sort((a, b) => a.name.localeCompare(b.name));
-          // newformattedContacts.map((itm)=>{
-          //   const normalizedNumber = normalizePhoneNumber(itm.number);
-          //   if (normalizedNumber) {
-          //    console.log('success',normalizedNumber,itm.name)
-              
-          //   } else {
-          //     console.error('Fail',normalizedNumber,itm.name);
-          //   }
-          // })
+        // newformattedContacts.map((itm)=>{
+        //   const normalizedNumber = normalizePhoneNumber(itm.number);
+        //   if (normalizedNumber) {
+        //    console.log('success',normalizedNumber,itm.name)
+
+        //   } else {
+        //     console.error('Fail',normalizedNumber,itm.name);
+        //   }
+        // })
 
         setContacts(newformattedContacts);
         setLoading({
@@ -292,9 +290,11 @@ const ContactsCompo = memo(() => {
   }, [popupModal.state]);
 
   const onSubmitData = useCallback(() => {
-    const selectedItms = Object.values(selectedItems);
-    if (selectedItms.length > 0) {
-      const adjustData = selectedItms.map(itm => ({...itm, country_code: ''}));
+    const selectedItmsArr = Object.values(selectedItems);
+    // console.log('selectedItms', selectedItmsArr);
+    // navigation.navigate('EditContactList', {data: selectedItmsArr});
+    if (selectedItmsArr.length > 0) {
+      const adjustData = selectedItmsArr.map(itm => ({ ...itm, country_code: '' }));
       const token = storage.getString('user.token');
       const id = storage.getString('user.id');
       if (
@@ -408,7 +408,6 @@ const ContactsCompo = memo(() => {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            //   marginVertical: 12,
           }}>
           <Text
             style={{color: '#fff'}}
@@ -417,20 +416,6 @@ const ContactsCompo = memo(() => {
             exiting={FadeOutLeft}>
             Edit your guest list below
           </Text>
-          {/* <AnimatedPressable
-              entering={FadeInRight.delay(200)}
-              exiting={FadeOutRight}
-              onPress={()=>{
-
-              }}
-              style={{
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                borderRadius: 10,
-                backgroundColor: '#C71D40',
-              }}>
-              <BinSVG fill={'#fff'} width={14} height={14} />
-            </AnimatedPressable> */}
         </View>
         <View
           style={{
@@ -465,35 +450,50 @@ const ContactsCompo = memo(() => {
             />
           </View>
           <View>
-            <Button
-              onPress={() => setViewAll(pre => !pre)}
-              lable={viewAll ? 'Selected' : 'All'}
-              buttonStyles={{
-                // width: width * 0.42,
-                backgroundColor: '#FFFFFF80',
+            <Pressable
+              onPress={() => {
+                setViewAll(pre => !pre);
+              }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-evenly',
+                gap: 8,
                 borderColor: '#EDEDED',
                 borderWidth: 1,
                 paddingVertical: 12,
+                paddingHorizontal: 12,
                 minWidth: 100,
                 width: 'auto',
-              }}
-              variant="BodyRegular"
-            />
+                borderRadius: 12,
+              }}>
+              <CustomCheckBox
+                checked={viewAll}
+                height={20}
+                width={20}
+                checkMarkColor={'#fff'}
+                checkedBorderColor={'#75486F'}
+                unCheckedBorderColor={'#75486F'}
+                checkedBackgroundColor={'#75486F'}
+                unCheckedBackgroundColor={'#75486F'}
+                duration={300}
+              />
+              <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+                {viewAll ? 'Selected' : 'All'}
+              </Text>
+            </Pressable>
           </View>
         </View>
         {contacts.length > 0 && (
-          <>
-            
-              <ContsctsList
-                key={viewAll?"all":"selected"}
-                staticData={viewAll?false:true}
-                selectedItems={selectedItems}
-                setSelectedItems={(val: any) => setSelectedItems(val)}
-                contacts={viewAll?filteredContacts:selectedContacts}
-                delay={0}
-              />
-           
-          </>
+          <ContsctsList
+            key={viewAll ? 'all' : 'selected'}
+            staticData={viewAll ? false : true}
+            selectedItems={selectedItems}
+            setSelectedItems={(val: any) => setSelectedItems(val)}
+            contacts={viewAll ? filteredContacts : selectedContacts}
+            delay={0}
+            phoneContact={true}
+          />
         )}
       </View>
 

@@ -7,7 +7,7 @@ import {
   TextStyle,
   View,
 } from 'react-native';
-import {CloseSVG, LocSVG, SearchSVG} from '../assets/SVG/IconsSVG';
+import { CloseSVG, LocSVG, SearchSVG } from '../assets/SVG/IconsSVG';
 
 export default ({
   lable = '',
@@ -84,7 +84,7 @@ export default ({
         onChangeText={onChangeText}
         {...textInputProps}
       />
-      {rightIcon()}
+      {iconName === 'search' ? value&&value?.length > 0 && rightIcon() : rightIcon()}
     </View>
   );
 };

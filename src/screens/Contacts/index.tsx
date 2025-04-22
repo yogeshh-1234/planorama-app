@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, {memo, useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -11,7 +11,7 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
-import { BGline } from '../../assets/SVG/VectorSVG';
+import {BGline} from '../../assets/SVG/VectorSVG';
 import HeaderCompo from '../../components/HeaderCompo';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
@@ -23,8 +23,8 @@ import {
   ShareSVG,
 } from '../../assets/SVG/IconsSVG';
 import TextInput from '../../components/TextInput';
-import { storage } from '../../functions/storage';
-import { useMutation } from '@tanstack/react-query';
+import {storage} from '../../functions/storage';
+import {useMutation} from '@tanstack/react-query';
 import {
   cantactViewResponse,
   contactType,
@@ -34,7 +34,7 @@ import {
   importGuestForm,
 } from './contactsType';
 import Urls from '../../api/urls';
-import { postData } from '../../api';
+import {postData} from '../../api';
 import PopupCompo from '../../components/PopupCompo';
 import LoadingCompo from '../../components/LoadingCompo';
 import {
@@ -49,7 +49,7 @@ import {
   useRoute,
 } from '@react-navigation/native';
 import ContsctsList from './ContsctsList';
-import { ItemType } from './ContactsScreen';
+import {ItemType} from './ContactsScreen';
 import LottieView from 'lottie-react-native';
 import Animated, {
   FadeIn,
@@ -66,12 +66,13 @@ import {
   profileError,
 } from '../Profile/ProfileTypes';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const { width, height } = Dimensions.get('screen');
+const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
 export default function () {
-  const { params } = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
+  const {params} = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
 
+  const fromEvents = params.eventID === -1 ? false : true;
   const navigation = useNavigation<MainStackNavigation>();
 
   const [loading, setLoading] = useState(false);
@@ -98,22 +99,38 @@ export default function () {
           right: 0,
         }}
       />
-      <HeaderCompo title={params.eventName} />
+      <View>
+        {params?.eventName && (
+          <Text
+            variant={'SubTitleTwo'}
+            style={{
+              color: '#fff',
+              alignSelf: 'center',
+              textAlign: 'center',
+
+              paddingHorizontal: 20,
+              marginTop: 14,
+            }}
+            numberOfLines={1}>
+            {params.eventName}
+          </Text>
+        )}
+      </View>
+      <HeaderCompo />
       <View
         style={{
-          // paddingTop: 30,
           paddingHorizontal: width * 0.05,
           gap: 18,
           flex: 1,
         }}>
         <Animated.View
+          entering={FadeIn}
+          exiting={FadeOut}
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-          }}
-          entering={FadeIn}
-          exiting={FadeOut}>
+          }}>
           <Text
             variant={'TitleTwo'}
             style={{
@@ -121,66 +138,30 @@ export default function () {
             }}
             entering={FadeIn}
             exiting={FadeOut}>
-            Contacts
+            Previously Invited
           </Text>
-          <Button
-            onPress={() => {
-              navigation.navigate('ImportContacts', {
-                onGoBack: () => {
-                  setLoading(pre => !pre);
-                },
-              });
-            }}
-            lable="Address book"
-            buttonStyles={{
-              width: width * 0.42,
-              backgroundColor: 'transparent',
-              borderColor: '#EDEDED',
-              borderWidth: 1,
-              paddingVertical: 12,
-            }}
-            variant="BodyRegular"
-          />
+          {!fromEvents && (
+            <Button
+              onPress={() => {
+                navigation.navigate('ImportContacts', {
+                  onGoBack: () => {
+                    setLoading(pre => !pre);
+                  },
+                });
+              }}
+              lable="Address book"
+              buttonStyles={{
+                paddingHorizontal: 12,
+                width: 'auto',
+                backgroundColor: 'transparent',
+                borderColor: '#EDEDED',
+                borderWidth: 1,
+              }}
+              small
+              variant="BodyRegular"
+            />
+          )}
         </Animated.View>
-        {/* <Animated.View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-          entering={FadeIn.delay(100)}
-          exiting={FadeOut}>
-          <Button
-            onPress={() => {
-              navigation.navigate('AddNewContact', {
-                onGoBack: () => {
-                  setLoading(pre => !pre);
-                },
-              });
-            }}
-            lable="+ Add guests"
-            buttonStyles={{width: width * 0.42, paddingVertical: 12}}
-            variant="BodyRegular"
-          />
-          <Button
-            onPress={() => {
-              navigation.navigate('ImportContacts', {
-                onGoBack: () => {
-                  setLoading(pre => !pre);
-                },
-              });
-            }}
-            lable="Address book"
-            buttonStyles={{
-              width: width * 0.42,
-              backgroundColor: '#FFFFFF80',
-              borderColor: '#EDEDED',
-              borderWidth: 1,
-              paddingVertical: 12,
-            }}
-            variant="BodyRegular"
-          />
-        </Animated.View> */}
 
         {/* <View>
           <FiltersTab />
@@ -189,56 +170,44 @@ export default function () {
           justToReload={loading}
           eventID={params.eventID}
           fromGuest={params.fromGuest}
-          key="eventcontacts"
         />
       </View>
     </View>
   );
 }
 
-// const FiltersTab = memo(() => {
-//   return (
-//     <Animated.View
-//       entering={FadeIn.delay(300)}
-//       exiting={FadeOut}
-//       style={{
-//         flexDirection: 'row',
-//         alignItems: 'center',
-//         gap: 20,
-//       }}>
-//       <FilterButt lable={' '} title="Events" />
-//       <FilterButt lable={' '} title="RSVP status" />
-//     </Animated.View>
-//   );
-// });
-
-// const FilterButt = memo(({lable, title}: {lable: string; title: string}) => {
-//   return (
-//     <View
-//       style={{
-//         flex: 1,
-//       }}>
-//       <Text variant={'DetailRegular'} style={{color: '#fff'}}>
-//         {title}
-//       </Text>
-//       <View
-//         style={{
-//           flexDirection: 'row',
-//           alignItems: 'center',
-//           justifyContent: 'space-between',
-//           // flex: 1,
-//           backgroundColor: '#C5B1C33D',
-//           borderRadius: 5,
-//           padding: 12,
-//         }}>
-//         <Text variant={'DetailRegular'} style={{color: '#fff'}}>
-//           {lable}
-//         </Text>
-//         <DownSVG fill={'#fff'} width={12} height={12} />
-//       </View>
-//     </View>
-//   );
-// });
+const FiltersTab = memo(() => {
+  return (
+    <Animated.View
+      entering={FadeIn.delay(300)}
+      exiting={FadeOut}
+      style={{
+        // flexDirection: 'row',
+        // alignItems: 'center',
+        // gap: 20,
+        flex: 1,
+      }}>
+      <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+        Events
+      </Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          // flex: 1,
+          backgroundColor: '#C5B1C33D',
+          borderRadius: 5,
+          padding: 12,
+        }}>
+        <Text variant={'DetailRegular'} style={{color: '#fff'}}>
+          {""}
+        </Text>
+        <DownSVG fill={'#fff'} width={12} height={12} />
+      </View>
+    </Animated.View>
+  );
+});
 
 const PopupModal = {
   state: false,
@@ -257,7 +226,7 @@ const ContactList = memo(
     eventID: number;
     fromGuest: boolean | undefined;
   }) => {
-    const { params } =
+    const {params} =
       useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
 
     const navigation = useNavigation<MainStackNavigation>();
@@ -308,7 +277,7 @@ const ContactList = memo(
     >({
       mutationFn: (formData: contactViewForm) =>
         postData<contactViewForm, cantactViewResponse>(Urls.PROFILE, formData),
-      onSuccess: ({ data, StatusCode }) => {
+      onSuccess: ({data, StatusCode}) => {
         if (StatusCode === 200) {
           setContacts(
             data.contact_list.map(itm => ({
@@ -321,8 +290,9 @@ const ContactList = memo(
         } else {
           setPopupModal({
             state: true,
-            title: `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
-              }`,
+            title: `Oops! Something went wrong.${
+              StatusCode ? ` [${StatusCode}]` : ''
+            }`,
             disc: "We couldn't complete your request, please try again!",
             buttOne: 'BACK',
             buttTwo: 'RETRY',
@@ -341,8 +311,9 @@ const ContactList = memo(
 
         setPopupModal({
           state: true,
-          title: `Oops! Something went wrong.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
-            }`,
+          title: `Oops! Something went wrong.${
+            error?.StatusCode ? ` [${error.StatusCode}]` : ''
+          }`,
           disc: error?.error?.description
             ? error.error.description
             : "We couldn't complete your request, please try again!",
@@ -358,13 +329,13 @@ const ContactList = memo(
 
     const buttOnePress = useCallback(() => {
       if (popupModal.buttOne === 'BACK') {
-        setPopupModal({ ...popupModal, state: false });
+        setPopupModal({...popupModal, state: false});
       }
     }, [popupModal.state]);
 
     const buttTwoPress = useCallback(() => {
       if (popupModal.buttTwo === 'RETRY') {
-        setPopupModal({ ...popupModal, state: false });
+        setPopupModal({...popupModal, state: false});
         callAPI();
       }
     }, [popupModal.state]);
@@ -410,7 +381,7 @@ const ContactList = memo(
     >({
       mutationFn: (formData: importGuestForm) =>
         postData<importGuestForm, importContactResponse>(Urls.EVENT, formData),
-      onSuccess: ({ data, StatusCode }) => {
+      onSuccess: ({data, StatusCode}) => {
         if (StatusCode === 200) {
           //
           ToastAndroid.showWithGravity(
@@ -432,8 +403,9 @@ const ContactList = memo(
           });
           setPopupModal({
             state: true,
-            title: `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
-              }`,
+            title: `Oops! Something went wrong.${
+              StatusCode ? ` [${StatusCode}]` : ''
+            }`,
             disc: "We couldn't complete your request, please try again!",
             buttOne: 'BACK',
             buttTwo: 'RETRY',
@@ -448,8 +420,9 @@ const ContactList = memo(
 
         setPopupModal({
           state: true,
-          title: `Oops! Something went wrong.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
-            }`,
+          title: `Oops! Something went wrong.${
+            error?.StatusCode ? ` [${error.StatusCode}]` : ''
+          }`,
           disc: error?.error?.description
             ? error.error.description
             : "We couldn't complete your request, please try again!",
@@ -471,10 +444,10 @@ const ContactList = memo(
             style={{
               paddingBottom: 12,
               flexDirection: 'row',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               gap: 6,
             }}>
-            <Animated.View style={{ flex: 1 }}>
+            <Animated.View style={{flex: 1}}>
               <TextInput
                 iconName="search"
                 onRightButt={() => setValue('')}
@@ -495,49 +468,7 @@ const ContactList = memo(
                 }}
               />
             </Animated.View>
-
-            {edit ? (
-              <>
-                <RemoveContacts
-                  selectedItems={selectedItems}
-                  onReload={() => {
-                    setEdit(false);
-                    setSelectedItems({});
-                    callAPI();
-                  }}
-                />
-                <AnimatedPressable
-                  entering={ZoomIn}
-                  exiting={ZoomOut}
-                  style={{
-                    backgroundColor: '#000',
-                    borderRadius: 4,
-                    height: 36,
-                    width: 36,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  onPress={() => {
-                    setEdit(false);
-                  }}>
-                  <CloseSVG width={20} height={20} fill="#fff" />
-                </AnimatedPressable>
-              </>
-            ) : (
-              <AnimatedPressable
-                entering={ZoomIn}
-                exiting={ZoomOut}
-                style={{
-                  backgroundColor: '#F9BC52',
-                  borderRadius: 4,
-                  padding: 8,
-                }}
-                onPress={() => {
-                  setEdit(true);
-                }}>
-                <EditSVG width={18} height={18} />
-              </AnimatedPressable>
-            )}
+            <FiltersTab />
           </Animated.View>
         )}
 
@@ -553,24 +484,16 @@ const ContactList = memo(
             }}>
             <LottieView
               source={require('../../assets/lottie/loading.lottie')}
-              style={{ width: '100%', height: '100%' }}
+              style={{width: '100%', height: '100%'}}
               autoPlay
               loop
             />
             <Text
               variant={'BodyRegular'}
-              style={{ color: '#fff', alignSelf: 'center', textAlign: 'center' }}>
+              style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
               {loading.text}
             </Text>
           </View>
-        ) : edit ? (
-          <ContsctsList
-            staticData={false}
-            selectedItems={selectedItems}
-            setSelectedItems={(val: any) => setSelectedItems(val)}
-            contacts={filteredData}
-            delay={0}
-          />
         ) : (
           <ContsctsList
             staticData={fromEvents ? false : true}
@@ -604,7 +527,7 @@ const ContactList = memo(
             {/* <InviteButton selectedItems={selectedItems} /> */}
           </View>
         )}
-        {/* search */}
+
         <PopupCompo
           isVisible={popupModal.state}
           onDismiss={onDismiss}
@@ -621,10 +544,10 @@ const ContactList = memo(
   },
 );
 
-const InviteButton = memo(({ selectedItems }: { selectedItems: ItemType }) => {
+const InviteButton = memo(({selectedItems}: {selectedItems: ItemType}) => {
   const navigation = useNavigation<MainStackNavigation>();
 
-  const { params } = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
+  const {params} = useRoute<RouteProp<RootStackParamList, 'ContactsScreen'>>();
   const [loading, setLoading] = useState(false);
 
   const checkInvite = () => {
@@ -648,16 +571,16 @@ const InviteButton = memo(({ selectedItems }: { selectedItems: ItemType }) => {
   >({
     mutationFn: (formData: connectionForm) =>
       postData<connectionForm, connectionResponce>(Urls.WHATSAPP, formData),
-    onSuccess: ({ data: { status }, StatusCode }) => {
+    onSuccess: ({data: {status}, StatusCode}) => {
       // console.log(status);
       StatusCode === 200
         ? status
           ? onSendMsg()
           : ToastAndroid.showWithGravity(
-            `Whatsapp not connected!`,
-            ToastAndroid.SHORT,
-            ToastAndroid.CENTER,
-          )
+              `Whatsapp not connected!`,
+              ToastAndroid.SHORT,
+              ToastAndroid.CENTER,
+            )
         : errorPopUp(StatusCode, null);
       setLoading(false);
     },
@@ -666,7 +589,8 @@ const InviteButton = memo(({ selectedItems }: { selectedItems: ItemType }) => {
   const errorPopUp = (code: number, desc: string | null) => {
     setLoading(false);
     ToastAndroid.showWithGravity(
-      `${desc ? desc : "We couldn't complete your request, please try again!"}${code ? ` [${code}]` : ''
+      `${desc ? desc : "We couldn't complete your request, please try again!"}${
+        code ? ` [${code}]` : ''
       }`,
       ToastAndroid.SHORT,
       ToastAndroid.CENTER,
@@ -762,13 +686,14 @@ const RemoveContacts = memo(
           Urls.PROFILE,
           formData,
         ),
-      onSuccess: ({ data, StatusCode }) => {
+      onSuccess: ({data, StatusCode}) => {
         if (StatusCode === 200) {
           //
           onReload();
         } else {
           ToastAndroid.showWithGravity(
-            `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
+            `Oops! Something went wrong.${
+              StatusCode ? ` [${StatusCode}]` : ''
             }`,
             ToastAndroid.SHORT,
             ToastAndroid.CENTER,
@@ -804,7 +729,7 @@ const RemoveContacts = memo(
         disabled={loading}
         onPress={removeContacts}>
         {loading && <ActivityIndicator color={'#fff'} />}
-        <Text style={{ color: '#fff' }} variant={'BodyRegular'}>
+        <Text style={{color: '#fff'}} variant={'BodyRegular'}>
           Remove
         </Text>
       </AnimatedPressable>

@@ -12,8 +12,37 @@ import Animated, {
   interpolateColor,
 } from 'react-native-reanimated';
 
-const CustomCheckBox = memo((props) => {
-  const {
+
+
+type CheckBoxProps = {
+
+  checked: boolean;
+
+  height: number;
+
+  width: number;
+
+  checkMarkColor: string;
+
+  checkedBorderColor: string;
+
+  unCheckedBorderColor: string;
+
+  checkedBackgroundColor: string;
+
+  unCheckedBackgroundColor: string;
+
+  duration: number;
+
+  SvgStyles?: object;
+  
+  index?: number;
+};
+
+
+const CustomCheckBox = memo((
+  
+  {
     checked,
     checkMarkColor,
     checkedBorderColor,
@@ -25,7 +54,9 @@ const CustomCheckBox = memo((props) => {
     SvgStyles,
     index,
     duration = 1000,
-  } = props;
+  }:CheckBoxProps
+) => {
+
   const progress = useDerivedValue(() => {
     return withTiming(checked ? 1 : 0, {duration});
   });
@@ -54,10 +85,15 @@ const CustomCheckBox = memo((props) => {
 });
 
 export default CustomCheckBox;
-const AnimatedCheckMarkPath = memo(props => {
+type AnimatedCheckMarkPathProps = {
+  progress: Animated.DerivedValue<0 | 1>;
+  checkMarkColor: string;
+};
+
+const AnimatedCheckMarkPath = memo((props: AnimatedCheckMarkPathProps) => {
   const {progress, checkMarkColor} = props;
   const [length, setLength] = useState(0);
-  const pathRef = useRef(null);
+  const pathRef = useRef<any>(null);
   const AnimatedPath = Animated.createAnimatedComponent(Path);
   const checkMarkAnimation = useAnimatedProps(() => {
     const strokeDashoffset = length - length * progress.value;
@@ -67,7 +103,11 @@ const AnimatedCheckMarkPath = memo(props => {
   return (
     <AnimatedPath
       animatedProps={checkMarkAnimation}
-      onLayout={() => setLength(pathRef.current.getTotalLength())}
+      onLayout={() => {
+        if (pathRef.current) {
+          setLength(pathRef.current.getTotalLength());
+        }
+      }}
       ref={pathRef}
       d="M12 24.4068L20.6667 32.9999L36.5 17.1667"
       stroke={checkMarkColor}
@@ -79,7 +119,15 @@ const AnimatedCheckMarkPath = memo(props => {
   );
 });
 
-const AnimatedColor = memo(props => {
+type AnimatedColorProps = {
+  progress: Animated.DerivedValue<0 | 1>;
+  unCheckedBorderColor: string;
+  checkedBorderColor: string;
+  unCheckedBackgroundColor: string;
+  checkedBackgroundColor: string;
+};
+
+const AnimatedColor = memo((props: AnimatedColorProps) => {
   const {
     progress,
     unCheckedBorderColor,

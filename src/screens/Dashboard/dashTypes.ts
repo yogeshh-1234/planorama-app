@@ -11,6 +11,7 @@ export interface eventItem {
   date: string;
   time: string;
   goingStatus: string;
+  published: string;
 }
 
 export interface dashEventsResponse {

@@ -1,4 +1,4 @@
-import React, {memo, useCallback, useEffect, useState} from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
   Image,
@@ -11,20 +11,21 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {BGline} from '../../assets/SVG/VectorSVG';
+import { BGline, RibbonSVG } from '../../assets/SVG/VectorSVG';
 import Header from './components/Header';
 import Text from '../../components/Text';
-import {ActivityIndicator, Searchbar} from 'react-native-paper';
+import { ActivityIndicator, Searchbar } from 'react-native-paper';
 import {
   CalenderSVG,
   ClockSVG,
+  LocSVG,
   NewEventBox,
   QuesSVG,
   SearchSVG,
   ThumbsUpSVG,
 } from '../../assets/SVG/IconsSVG';
-import {storage} from '../../functions/storage';
-import {useMutation} from '@tanstack/react-query';
+import { storage } from '../../functions/storage';
+import { useMutation } from '@tanstack/react-query';
 import {
   dashError,
   dashEventsResponse,
@@ -32,7 +33,7 @@ import {
   eventItem,
   profileResponse,
 } from './dashTypes';
-import {postData} from '../../api';
+import { postData } from '../../api';
 import Urls from '../../api/urls';
 import PopupCompo from '../../components/PopupCompo';
 import Animated, {
@@ -41,8 +42,8 @@ import Animated, {
   FadeOutLeft,
 } from 'react-native-reanimated';
 import Button from '../../components/Button';
-import {useNavigation} from '@react-navigation/native';
-import {MainStackNavigation} from '../../navigation';
+import { useNavigation } from '@react-navigation/native';
+import { MainStackNavigation } from '../../navigation';
 import LoadingCompo from '../../components/LoadingCompo';
 import messaging from '@react-native-firebase/messaging';
 import notifee, {
@@ -50,7 +51,7 @@ import notifee, {
   AndroidCategory,
 } from '@notifee/react-native';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 const PopupModal = {
   state: false,
   title: '',
@@ -156,8 +157,6 @@ export default function () {
   const [popupModal, setPopupModal] = useState(PopupModal);
   const [justToReload, setJustToReload] = useState(false);
 
-
-  
   useEffect(() => {
     const tempName = storage.getString('user.name');
     const tempPic = storage.getString('user.pic');
@@ -198,7 +197,7 @@ export default function () {
   const mutation = useMutation<profileResponse, dashError, dashFormType>({
     mutationFn: (formData: dashFormType) =>
       postData<dashFormType, profileResponse>(Urls.PROFILE, formData),
-    onSuccess: ({data, StatusCode}) => {
+    onSuccess: ({ data, StatusCode }) => {
       if (StatusCode === 200) {
         setProfileData({
           pic: data.pic,
@@ -214,9 +213,8 @@ export default function () {
       } else {
         setPopupModal({
           state: true,
-          title: `Oops! Something went wrong.${
-            StatusCode ? ` [${StatusCode}]` : ''
-          }`,
+          title: `Oops! Something went wrong.${StatusCode ? ` [${StatusCode}]` : ''
+            }`,
           disc: "Couldn't load profile data, please try again!",
           buttOne: 'LOGOUT',
           buttTwo: 'RETRY',
@@ -229,9 +227,8 @@ export default function () {
 
       setPopupModal({
         state: true,
-        title: `Oops! Something went wrong.${
-          error?.StatusCode ? ` [${error.StatusCode}]` : ''
-        }`,
+        title: `Oops! Something went wrong.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
+          }`,
         disc: error?.error?.description
           ? error.error.description
           : "We couldn't complete your request, please try again!",
@@ -242,19 +239,19 @@ export default function () {
   });
 
   const onDismiss = useCallback(() => {
-    setPopupModal({...popupModal, state: false});
+    setPopupModal({ ...popupModal, state: false });
   }, [popupModal.state]);
 
   const buttOnePress = useCallback(() => {
     if (popupModal.buttOne === 'LOGOUT') {
-      setPopupModal({...popupModal, state: false});
+      setPopupModal({ ...popupModal, state: false });
       storage.clearAll();
     }
   }, [popupModal.state]);
 
   const buttTwoPress = useCallback(() => {
     if (popupModal.buttTwo === 'RETRY') {
-      setPopupModal({...popupModal, state: false});
+      setPopupModal({ ...popupModal, state: false });
       callAPI();
     }
   }, [popupModal.state]);
@@ -389,7 +386,7 @@ export default function () {
 }
 
 const EventsCompo = memo(
-  ({lable, justToReload}: {lable: EventListType; justToReload: boolean}) => {
+  ({ lable, justToReload }: { lable: EventListType; justToReload: boolean }) => {
     const [type, setType] = useState<EventTypeText>('Upcoming');
     const [loading, setLoading] = useState(false);
     const [popupModal, setPopupModal] = useState(PopupModal);
@@ -424,8 +421,8 @@ const EventsCompo = memo(
               ? 'MY_EVT_LIST_UP'
               : 'MY_EVT_LIST_PREV'
             : type === 'Upcoming'
-            ? 'INV_EVT_LIST_UP'
-            : 'INV_EVT_LIST_PREV';
+              ? 'INV_EVT_LIST_UP'
+              : 'INV_EVT_LIST_PREV';
         const formData = {
           mode,
           token,
@@ -439,7 +436,9 @@ const EventsCompo = memo(
     const mutation = useMutation<dashEventsResponse, dashError, dashFormType>({
       mutationFn: (formData: dashFormType) =>
         postData<dashFormType, dashEventsResponse>(Urls.HOME, formData),
-      onSuccess: ({data, StatusCode}) => {
+      onSuccess: ({ data, StatusCode }) => {
+        // console.log('data', data);
+
         if (StatusCode === 200) {
           if (data.list_type === 'up') {
             setUpEventsList(data.event_list);
@@ -459,9 +458,8 @@ const EventsCompo = memo(
         } else {
           setPopupModal({
             state: true,
-            title: `Error getting ${lable} ${type} events.${
-              StatusCode ? ` [${StatusCode}]` : ''
-            }`,
+            title: `Error getting ${lable} ${type} events.${StatusCode ? ` [${StatusCode}]` : ''
+              }`,
             disc: "We couldn't complete your request, please try again!",
             buttOne: 'LOGOUT',
             buttTwo: 'RETRY',
@@ -474,9 +472,8 @@ const EventsCompo = memo(
 
         setPopupModal({
           state: true,
-          title: `Error getting ${lable} ${type} events.${
-            error?.StatusCode ? ` [${error.StatusCode}]` : ''
-          }`,
+          title: `Error getting ${lable} ${type} events.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
+            }`,
           disc: error?.error?.description
             ? error.error.description
             : "We couldn't complete your request, please try again!",
@@ -487,19 +484,19 @@ const EventsCompo = memo(
     });
 
     const onDismiss = useCallback(() => {
-      setPopupModal({...popupModal, state: false});
+      setPopupModal({ ...popupModal, state: false });
     }, [popupModal.state]);
 
     const buttOnePress = useCallback(() => {
       if (popupModal.buttOne === 'LOGOUT') {
-        setPopupModal({...popupModal, state: false});
+        setPopupModal({ ...popupModal, state: false });
         storage.clearAll();
       }
     }, [popupModal.state]);
 
     const buttTwoPress = useCallback(() => {
       if (popupModal.buttTwo === 'RETRY') {
-        setPopupModal({...popupModal, state: false});
+        setPopupModal({ ...popupModal, state: false });
         callAPI();
       }
     }, [popupModal.state]);
@@ -514,7 +511,7 @@ const EventsCompo = memo(
             textTransform: 'capitalize',
           }}
           variant={'SubTitleTwo'}>
-          {lable === 'your' ? 'Hosted' : lable} Events
+          {lable === 'your' ? 'Hosting' : `${lable} Events`}
         </Text>
         <SelectionRow type={type} setType={setType} total={totalCount} />
         <EventsDisplay
@@ -572,10 +569,10 @@ const EventsDisplay = memo(
         }}>
         <ActivityIndicator
           color="#fff"
-          style={{alignSelf: 'center'}}
+          style={{ alignSelf: 'center' }}
           size={'small'}
         />
-        <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+        <Text variant={'BodyRegular'} style={{ color: '#fff' }}>
           Getting Events ...
         </Text>
       </View>
@@ -600,7 +597,7 @@ const EventsDisplay = memo(
         ))}
         {lable === 'your' && (
           <AnimatedPressable
-            style={{justifyContent: 'center'}}
+            style={{ justifyContent: 'center' }}
             onPress={AddEvent}
             entering={FadeIn.delay(400)}>
             <NewEventBox width={width * 0.6} height={width * 0.6} />
@@ -651,7 +648,11 @@ const EventView = memo(
     const navigation = useNavigation<MainStackNavigation>();
     return (
       <Pressable
-        style={{paddingHorizontal: width * 0.02}}
+        style={{
+          paddingHorizontal: width * 0.02,
+          // borderWidth: 1,
+          width: width * 0.6 + width * 0.02 + width * 0.02,
+        }}
         onPress={() => {
           navigation.navigate('EventDetails', {
             id: data.evt_id,
@@ -667,7 +668,7 @@ const EventView = memo(
           </Text>
         )} */}
         {/*  */}
-        <ImageCompo uri={data.pic} size={width * 0.6} />
+        <ImageCompo status={data.published === "Y"} uri={data.pic} size={width * 0.6} />
         <Animated.View
           style={{
             paddingVertical: 4,
@@ -724,22 +725,22 @@ const EventView = memo(
               )}
             </Animated.View>
           )} */}
-          <Text variant={'SubTitleOne'} style={{color: '#fff'}}>
+          <Text variant={'SubTitleOne'} style={{ color: '#fff' }}>
             {data.title}
           </Text>
           <Animated.View
-            style={{flexDirection: 'row', alignItems: 'center', gap: 16}}>
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
             <Animated.View
-              style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <CalenderSVG width={16} height={16} />
-              <Text variant={'DetailRegular'} style={{color: '#EDEDED'}}>
+              <Text variant={'DetailRegular'} style={{ color: '#EDEDED' }}>
                 {data.date}
               </Text>
             </Animated.View>
             <Animated.View
-              style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <ClockSVG width={16} height={16} />
-              <Text variant={'DetailRegular'} style={{color: '#EDEDED'}}>
+              <Text variant={'DetailRegular'} style={{ color: '#EDEDED' }}>
                 {data.time}
               </Text>
             </Animated.View>
@@ -751,7 +752,7 @@ const EventView = memo(
   },
 );
 
-const StatusCompo = memo(({goingStatus}: {goingStatus: string}) => {
+const StatusCompo = memo(({ goingStatus }: { goingStatus: string }) => {
   return (
     <Animated.View
       style={{
@@ -778,10 +779,10 @@ const StatusCompo = memo(({goingStatus}: {goingStatus: string}) => {
         />
       )}
       {goingStatus === 'M' && <QuesSVG width={20} height={20} />}
-      <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+      <Text variant={'BodyRegular'} style={{ color: '#fff' }}>
         {goingStatus === 'Y' && 'Going'}
         {goingStatus === 'N' && 'Not Going'}
-        {goingStatus === 'M' && 'May Be'}
+        {goingStatus === 'M' && 'Maybe'}
         {goingStatus === '' && 'Not Responsede Yet'}
       </Text>
     </Animated.View>
@@ -795,7 +796,7 @@ const SelectionRow = memo(
     setType,
   }: {
     type: string;
-    total: {up: string; pre: string};
+    total: { up: string; pre: string };
     setType: (val: EventTypeText) => void;
   }) => {
     return (
@@ -851,11 +852,11 @@ const SelectionItm = memo(
           backgroundColor: '#C5B1C33D',
         }}
         onPress={onPress}>
-        <Text variant={'BodyRegular'} style={{color: '#fff'}}>
+        <Text variant={'BodyRegular'} style={{ color: '#fff' }}>
           {lable}
         </Text>
 
-        <Text variant={'BodyRegular'} style={{color: '#ffffff80'}}>
+        <Text variant={'BodyRegular'} style={{ color: '#ffffff80' }}>
           {count}
         </Text>
       </Pressable>
@@ -863,15 +864,11 @@ const SelectionItm = memo(
   },
 );
 
-const WelcomeCompo = memo(({name}: {name: string}) => {
+const WelcomeCompo = memo(({ name }: { name: string }) => {
   return (
-    <Animated.View style={{paddingHorizontal, gap: 6}}>
-      <Text variant={'SubTitleTwo'} style={{color: '#fff'}}>
+    <Animated.View style={{ paddingHorizontal, gap: 6 }}>
+      <Text variant={'SubTitleTwo'} style={{ color: '#fff' }}>
         Welcome, {name}!
-      </Text>
-      <Text variant={'DetailBold'} style={{color: '#fff'}}>
-        Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet
-        sint.
       </Text>
     </Animated.View>
   );
@@ -880,7 +877,7 @@ const WelcomeCompo = memo(({name}: {name: string}) => {
 const SearchCompo = memo(() => {
   const [value, setValue] = useState('');
   return (
-    <Animated.View style={{paddingHorizontal}}>
+    <Animated.View style={{ paddingHorizontal }}>
       <View
         style={{
           flexDirection: 'row',
@@ -910,9 +907,9 @@ const SearchCompo = memo(() => {
   );
 });
 
-const ImageCompo = memo(({uri, size}: {uri: string | null; size: number}) => {
+const ImageCompo = memo(({ status, uri, size }: { status: boolean; uri: string | null; size: number }) => {
   const [loading, setLoading] = useState(false);
-
+  const ribbon = width * 0.1
   return (
     <Animated.View
       style={{
@@ -923,7 +920,7 @@ const ImageCompo = memo(({uri, size}: {uri: string | null; size: number}) => {
       }}>
       {uri ? (
         <Image
-          source={{uri}}
+          source={{ uri }}
           style={{
             width: size,
             height: size,
@@ -946,11 +943,25 @@ const ImageCompo = memo(({uri, size}: {uri: string | null; size: number}) => {
             justifyContent: 'center',
             backgroundColor: '#C5B1C380',
           }}>
-          <Text style={{color: '#fff'}} variant={'BodyBold'}>
+          <Text style={{ color: '#fff' }} variant={'BodyBold'}>
             No Image
           </Text>
         </Animated.View>
       )}
+
+      <RibbonSVG
+        name={status?'LIVE':'DRAFT'}
+        width={ribbon}
+        height={ribbon}
+        fill={status?"#2FAB68":"#E4A421"}
+        color={status?"#fff":"#000"}
+        style={{
+          position: 'absolute',
+          top: -ribbon * 0.2,
+          left: -ribbon * 0.15,
+        }}
+      />
+
       {loading && (
         <ActivityIndicator
           color="#fff"

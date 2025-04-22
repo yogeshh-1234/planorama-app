@@ -39,6 +39,7 @@ export default function ({
   onReload,
   onDelete,
   rsvpArray,
+  phoneContact = false,
 }: {
   staticData: boolean;
   selectedItems: ItemType;
@@ -53,6 +54,7 @@ export default function ({
     id: string;
     name: string;
   }>;
+  phoneContact?: boolean;
 }) {
   const [selectAll, setSelectAll] = useState(false);
 
@@ -177,7 +179,7 @@ export default function ({
           <View
             style={{
               borderColor: '#fff',
-              borderWidth: staticData || fromGuest ? 0 : 0.5,
+              // borderWidth: staticData || fromGuest ? 0 : 0.5,
               borderRadius: 5,
               flex: 1,
               paddingVertical: 6,
@@ -228,7 +230,7 @@ export default function ({
           <AnimatedPressable
             entering={FadeInLeft.delay(delay)}
             exiting={FadeOutLeft}
-            onPress={handleSelectAll}
+            onPress={phoneContact ? null : handleSelectAll}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -244,7 +246,7 @@ export default function ({
                 height: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderWidth: staticData ? 0 : 1,
+                borderWidth: staticData|| phoneContact   ? 0 : 1,
                 borderColor: '#fff',
               }}>
               {selectAll && <TickSVG width={12} height={12} />}
@@ -269,7 +271,7 @@ export default function ({
                     paddingHorizontal: 4,
                   }}>
                   <Text variant={'BodyRegular'} style={{color: '#fff'}}>
-                    Name
+                  Addressable Name
                   </Text>
                 </View>
                 <Text variant={'BodyRegular'} style={{color: '#fff', flex: 1}}>

@@ -29,6 +29,7 @@ import {
   connectionResponce,
   profileError,
 } from '../Profile/ProfileTypes';
+import Button from '../../components/Button';
 const {width, height} = Dimensions.get('screen');
 const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
@@ -98,7 +99,7 @@ export default function () {
     onSuccess: ({data, StatusCode}) => {
       if (StatusCode === 200) {
         // console.log(data.INVITE_RSVP_DD_ARR)
-  
+
         setAllGuestData(data);
         setEventGuest(data.guest_list);
         if (!(data.guest_list.length > 0)) {
@@ -140,6 +141,12 @@ export default function () {
     });
   };
 
+  const addresssBook = () => {
+    navigation.navigate('ImportContacts', {
+      onGoBack: () => callAPI(),
+    });
+  };
+
   return (
     <View
       style={{
@@ -166,7 +173,8 @@ export default function () {
 
       <View
         style={{
-          gap: 18,
+          paddingTop: 14,
+          gap: 14,
           flex: 1,
         }}>
         <View
@@ -180,26 +188,48 @@ export default function () {
             variant={'TitleTwo'}
             style={{
               color: '#fff',
-              paddingVertical: 12,
+              // paddingVertical: 12,
             }}>
             Manage guests
           </Text>
-          {eventGuest.length > 0 && (
-            <Pressable
-              style={{
-                paddingVertical: 12,
-                paddingHorizontal: 4,
+        </View>
+        <View style={{gap: 8, marginBottom: 6}}>
+          <Text
+            variant={'SubTitleTwo'}
+            style={{color: '#fff', alignSelf: 'center', textAlign: 'center'}}>
+            Import from
+          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              marginHorizontal: width * 0.05,
+              justifyContent: 'space-between',
+            }}>
+            <Button
+              lable="Previously Invited"
+              onPress={addGuest}
+              buttonStyles={{
+                backgroundColor: '#F9BC52',
+                borderWidth: 1,
+                borderColor: '#EDEDED',
+                width: width * 0.43,
+                paddingHorizontal: 14,
               }}
-              onPress={addGuest}>
-              <Text
-                variant={'DetailRegular'}
-                style={{
-                  color: '#fff',
-                }}>
-                + Add guests
-              </Text>
-            </Pressable>
-          )}
+              small
+            />
+            <Button
+              lable="Address book"
+              onPress={addresssBook}
+              buttonStyles={{
+                backgroundColor: '#75486F',
+                borderWidth: 1,
+                borderColor: '#EDEDED',
+                width: width * 0.43,
+                paddingHorizontal: 14,
+              }}
+              small
+            />
+          </View>
         </View>
         {eventGuest.length > 0 ? (
           <ManageGuest

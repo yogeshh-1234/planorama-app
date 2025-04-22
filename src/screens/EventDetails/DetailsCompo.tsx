@@ -2,6 +2,7 @@ import React, {memo, useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Clipboard,
   Dimensions,
   Image,
   Linking,
@@ -32,7 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {storage} from '../../functions/storage';
 import ImageViewer from '../../components/ImageViewer';
-import RNCalendarEvents from 'react-native-calendar-events';
+import RNCalendarEvents, {Calendar} from 'react-native-calendar-events';
 import {Portal} from 'react-native-paper';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const {width, height} = Dimensions.get('screen');
@@ -40,6 +41,7 @@ const Top_Height = StatusBar.currentHeight ? StatusBar.currentHeight : 0;
 
 export default function ({
   title,
+  link,
   fontId,
   cover_img,
   bg_img,
@@ -56,6 +58,7 @@ export default function ({
   isAddOnList = false,
 }: {
   title: string;
+  link: string;
   fontId: string;
   cover_img: string;
   bg_img: string;
@@ -68,11 +71,7 @@ export default function ({
   rsvp: 'Y' | 'N' | 'M' | null;
   gallery: string[];
   galleryLoading?: boolean;
-  hostList?: {
-    event_assoc_id: string;
-    name: string;
-    pic: string;
-  }[];
+  hostList?: host_list_Type[];
   isAddOnList: boolean;
 }) {
   const fontName = useMemo(() => {
@@ -97,6 +96,24 @@ export default function ({
         ]}>
         {title}
       </Text>
+      {link && (
+        <Text
+          onPress={() => {
+            Clipboard.setString(link);
+          }}
+          entering={FadeIn}
+          variant={'DetailRegular'}
+          style={{
+            color: '#fff',
+            alignSelf: 'center',
+            textAlign: 'center',
+            textDecorationLine: 'underline',
+          }}>
+          {link}
+        </Text>
+      )}
+
+      {/*  */}
       <ImageCompo uri={cover_img} ImgSize={width * 0.9} delay={100} />
       <View style={styles.dateLoc}>
         <View style={styles.dateRow}>
@@ -287,17 +304,7 @@ export const ImageCompo = memo(
   },
 );
 export const HostedByCompo = memo(
-  ({
-    hostList,
-  }: {
-    hostList:
-      | {
-          event_assoc_id: string;
-          name: string;
-          pic: string;
-        }[]
-      | undefined;
-  }) => {
+  ({hostList}: {hostList: host_list_Type[] | undefined}) => {
     const [data, setProfileData] = useState({
       name: '',
       pic: '',
@@ -375,6 +382,7 @@ export const HostedByCompo = memo(
   },
 );
 import Modal from 'react-native-modal';
+import {host_list_Type} from './EveDetType';
 
 const CalenderButt = memo(
   ({
@@ -388,7 +396,7 @@ const CalenderButt = memo(
     notes: string;
     location: string;
   }) => {
-    const [calendars, setCalendars] = useState([]);
+    const [calendars, setCalendars] = useState<Calendar[]>([]);
     const [showModal, setShowModal] = useState(false);
 
     const fetchCalendars = async () => {
@@ -412,11 +420,19 @@ const CalenderButt = memo(
       }
     };
 
-    const createEvent = async calendarId => {
+    interface EventDetails {
+      title: string;
+      startDate: string;
+      endDate: string;
+      notes: string;
+      location: string;
+      calendarId: string;
+    }
+
+    const createEvent = async (calendarId: string) => {
       try {
-        const eventDetails = {
+        const eventDetails: EventDetails = {
           title,
-          // startDate: '2025-02-15T14:30:00.000Z',
           startDate: date,
           endDate: date,
           notes: 'This is a test event created from React Native.',
@@ -516,9 +532,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 20,
+    // flexDirection: 'row',
+    // alignItems: 'center',
+    gap: 8,
 
     paddingTop: 8,
   },

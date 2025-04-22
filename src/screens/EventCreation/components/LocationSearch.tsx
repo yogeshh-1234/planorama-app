@@ -34,7 +34,7 @@ export default memo(
                         justifyContent: 'space-between',
                     }}>
                     <Text variant={'BodyRegular'} style={[styles.color_W]}>
-                        {online ? 'Link URL' : 'Location'}
+                        {online ? 'Custom URL' : 'Location'}
                     </Text>
                     <Pressable
                         onPress={() => {
@@ -113,20 +113,28 @@ const LocationCompo = memo(({ onChange }: { onChange: (text: string) => void }) 
                 styles={{
                     container: {
                         flex: 1,
+                        // backgroundColor: '#C5B1C33D',
+                        // borderRadius: 10,
+                        // paddingHorizontal: 12,
+                        // gap: 12,
+
+                        // paddingVertical: 12,
                     },
                     textInputContainer: {
                         flexDirection: 'row',
                     },
+                    
                     textInput: {
+                        color: '#fff',
                         backgroundColor: '#C5B1C33D',
                         height: 44,
-                        borderRadius: 5,
-                        paddingVertical: 5,
-                        paddingHorizontal: 10,
+                        borderRadius: 10,
+                        paddingHorizontal: 12,
                         fontSize: 16,
                         flex: 1,
                     },
                     poweredContainer: {
+                        color: '#fff',
                         justifyContent: 'flex-end',
                         alignItems: 'center',
                         borderBottomRightRadius: 5,
@@ -148,7 +156,7 @@ const LocationCompo = memo(({ onChange }: { onChange: (text: string) => void }) 
                         backgroundColor: '#c8c7cc',
                     },
                     description: {
-                        color: '#ffffff',
+                        color: '#fff',
                     },
                     loader: {
                         flexDirection: 'row',
@@ -156,6 +164,7 @@ const LocationCompo = memo(({ onChange }: { onChange: (text: string) => void }) 
                         height: 20,
                     },
                 }}
+
             />
         </KeyboardAvoidingView>
     );

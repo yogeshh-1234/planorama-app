@@ -3,32 +3,23 @@ import React, {memo, useCallback, useEffect, useState} from 'react';
 import {
   Dimensions,
   Pressable,
-  ScrollView,
   StatusBar,
   StyleSheet,
   View,
+  BackHandler,
 } from 'react-native';
 import {MainStackNavigation, RootStackParamList} from '../../navigation';
 import {BGline} from '../../assets/SVG/VectorSVG';
 import HeaderCompo from '../../components/HeaderCompo';
 import Text from '../../components/Text';
-import {DownSVG, QuesSVG, UsersSVG} from '../../assets/SVG/IconsSVG';
-import Switch from '../../components/Switch';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  useSharedValue,
-} from 'react-native-reanimated';
-import SelectDropdown from 'react-native-select-dropdown';
+import {QuesSVG, UsersSVG} from '../../assets/SVG/IconsSVG';
+import Animated, {FadeIn, FadeOut} from 'react-native-reanimated';
 import RSVPsettings from './component/RSVPsettings';
-import Questionnaire from './component/Questionnaire';
 import PopupCompo from '../../components/PopupCompo';
 import {storage} from '../../functions/storage';
 import {useMutation} from '@tanstack/react-query';
 import {
   ErrorFormat,
-  EventDetailsForm,
-  RSVPResponce,
   RSVPResponceData,
   RSVPSubmitForm,
   sendRSVPSuccess,
@@ -68,8 +59,8 @@ export default function () {
 
     // from event view
     // call api get
-    if (params?.eventID) {
-      callAPI();
+    if (params?.eventData) {
+      setSettingsData(params?.eventData);
     } else {
       const TempSettingsData = storage.getString('SettingsData');
       if (TempSettingsData !== null && TempSettingsData !== undefined) {
@@ -79,61 +70,25 @@ export default function () {
         setSettingsData(toSetData);
       } else {
         setSettingsData({
-          id: 0,
-          accept_rsvp: 'Y',
+          published: 'N',
           rsvp_url: null,
-          accept_maybe: 'Y',
+          accept_rsvp: 'N',
+          accept_maybe: 'N',
           rsvp_button_style: 0,
-          show_count_guests: 'Y',
-          open_event: 'Y',
+          show_count_guests: 'N',
+          open_event: 'N',
           max_capacity: 0,
-          guest_approval: 'Y',
+          guest_approval: 'N',
           additional_guests: 0,
-          activity_timeline: 'Y',
-          guest_status_share: 'Y',
-          guest_posts: 'Y',
-          guest_upload: 'Y',
+          activity_timeline: 'N',
+          guest_status_share: 'N',
+          guest_posts: 'N',
+          guest_upload: 'N',
         });
       }
     }
   }, []);
 
-  //
-  const callAPI = () => {
-    const token = storage.getString('user.token');
-    const id = storage.getString('user.id');
-    if (
-      token !== null &&
-      token !== undefined &&
-      id !== null &&
-      id !== undefined &&
-      params.eventID !== undefined
-    ) {
-      const formData = {
-        mode: 'VIEW_EVENT_CONFIG',
-        token,
-        id,
-        event_id: params.eventID,
-      };
-      setLoading({status: true, text: 'Getting RSVP Settings!'});
-      mutation.mutate(formData);
-    }
-  };
-
-  const mutation = useMutation<RSVPResponce, ErrorFormat, EventDetailsForm>({
-    mutationFn: (formData: EventDetailsForm) =>
-      postData<EventDetailsForm, RSVPResponce>(Urls.EVENT, formData),
-    onSuccess: ({data, StatusCode}) => {
-      // console.log('data', data);
-      StatusCode === 200
-        ? setSettingsData(data)
-        : errorPopUp(StatusCode, null, 'BACK');
-      setLoading({status: false, text: ''});
-    },
-    onError: error => {
-      errorPopUp(error?.StatusCode, error?.error?.description, 'BACK');
-    },
-  });
   const errorPopUp = (code: number, desc: string | null, buttTxt: string) => {
     setLoading({status: false, text: ''});
     setPopupModal({
@@ -162,7 +117,6 @@ export default function () {
 
   const buttTwoPress = useCallback(() => {
     if (popupModal.buttOne === 'BACK' && popupModal.buttTwo === 'RETRY') {
-      callAPI();
     } else if (popupModal.buttOne === '' && popupModal.buttTwo === 'RETRY') {
       sendData();
     } else if (popupModal.buttOne === 'BACK' && popupModal.buttTwo === 'SAVE') {
@@ -170,15 +124,6 @@ export default function () {
     }
   }, [popupModal.state]);
 
-  const onBack = () => {
-    setPopupModal({
-      state: true,
-      title: `Save Changes!`,
-      disc: 'Do you want to save the changes?',
-      buttOne: 'BACK',
-      buttTwo: 'SAVE',
-    });
-  };
   const handleSettingsDataChange = (updatedData: RSVPResponceData) => {
     setSettingsData(updatedData);
   };
@@ -199,7 +144,7 @@ export default function () {
             mode: 'UPDATE_EVENT_CONFIG',
             token,
             id,
-            event_id: params?.eventID,
+            event_id: params.eventID,
           };
           // console.log('check', formData)
           setLoading({status: true, text: 'Setting RSVP Settings!'});
@@ -212,7 +157,19 @@ export default function () {
       }
     }
   };
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        sendData();
+        return true; // Prevent default back navigation
+      },
+    );
 
+    return () => backHandler.remove(); // Cleanup the listener
+  }, [sendData]);
+
+  //
   const mutationSend = useMutation<
     sendRSVPSuccess,
     ErrorFormat,
@@ -221,6 +178,7 @@ export default function () {
     mutationFn: (formData: RSVPSubmitForm) =>
       postData<RSVPSubmitForm, sendRSVPSuccess>(Urls.EVENT, formData),
     onSuccess: ({data, StatusCode}) => {
+
       StatusCode === 200
         ? //
           navigation.goBack()
@@ -254,13 +212,7 @@ export default function () {
           right: 0,
         }}
       />
-      <HeaderCompo
-        showSave={true}
-        onSave={() => {
-          sendData();
-        }}
-        onBack={onBack}
-      />
+      <HeaderCompo showSave={false} onSave={sendData} onBack={sendData} />
       <View
         style={{
           // paddingTop: 30,
@@ -279,14 +231,14 @@ export default function () {
             Settings
           </Text>
         </View>
-        <TopTabs topTab={topTab} setTopTab={setTopTab} />
+        {/* <TopTabs topTab={topTab} setTopTab={setTopTab} /> */}
         {topTab === 'RSVP' && settingsData !== null && (
           <RSVPsettings
             settingsData={settingsData}
             onDataChange={handleSettingsDataChange}
           />
         )}
-        {topTab === 'Ques' && <Questionnaire />}
+        {/* {topTab === 'Ques' && <Questionnaire />} */}
       </View>
       {loading.status && <LoadingCompo text={loading.text} />}
       <PopupCompo

@@ -9,13 +9,15 @@ export interface eventItemType {
   colorHex: string;
   date: string;
   time: string;
-  type: string;
+  type: string; //location type online offline
   location: string;
   link: string;
   eventHostIds: string;
   eventDisc: string;
   rsvp: 'Y' | 'N' | 'M' | '' | null;
   event_id: number | null;
+  rsvp_url: string;
+  published: string; //'Y' | 'N';
 }
 export interface galleryForm {
   mode: string;

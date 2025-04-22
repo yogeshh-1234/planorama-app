@@ -18,7 +18,7 @@ export type CustomVariantProp =
 
 const scaleNum = 1;
 const adjustNum = 0;
-const fontResize = (fontSize: number) => {
+export const fontResize = (fontSize: number) => {
   return (fontSize + adjustNum) * scaleNum;
 };
 const fontConfig: Record<string, MD3Type> = {

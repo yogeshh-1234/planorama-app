@@ -1,19 +1,24 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {Dimensions, Keyboard, Pressable, View} from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Dimensions, Keyboard, Pressable, View } from 'react-native';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
-import {OtpInput} from 'react-native-otp-entry';
+import { OtpInput } from 'react-native-otp-entry';
 import TitleCompo from './components/TitleCompo';
-import CustomCheckBox from '../../components/CheckBox';
-import {storage} from '../../functions/storage';
-import {useMutation} from '@tanstack/react-query';
-import {AuthSuccess, ErrorFormat, SendOTPform} from './authType';
-import {postData} from '../../api';
+import { storage } from '../../functions/storage';
+import { useMutation } from '@tanstack/react-query';
+import { AuthSuccess, ErrorFormat, SendOTPform } from './authType';
+import { postData } from '../../api';
 import Urls from '../../api/urls';
 import PopupCompo from '../../components/PopupCompo';
-import Animated, {FadeIn, FadeInDown, FadeInUp, FadeOut} from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  FadeOut,
+} from 'react-native-reanimated';
+import { DownSVG } from '../../assets/SVG/IconsSVG';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 const PopupModal = {
   state: false,
   title: '',
@@ -21,9 +26,8 @@ const PopupModal = {
   buttOne: '',
   buttTwo: '',
 };
-export default function ({onPress}: {onPress: () => void}) {
+export default function ({ onPress }: { onPress: () => void }) {
   const [num, setNum] = useState('');
-  const [check, setCheck] = useState(false);
   const [otpVal, setOtpVal] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -83,9 +87,8 @@ export default function ({onPress}: {onPress: () => void}) {
       } else {
         setPopupModal({
           state: true,
-          title: `Oops! Something went wrong.${
-            data.StatusCode ? ` [${data.StatusCode}]` : ''
-          }`,
+          title: `Oops! Something went wrong.${data.StatusCode ? ` [${data.StatusCode}]` : ''
+            }`,
           disc: "We couldn't complete your request, please try again!",
           buttOne: '',
           buttTwo: 'OKAY',
@@ -97,9 +100,8 @@ export default function ({onPress}: {onPress: () => void}) {
       setLoading(false);
       setPopupModal({
         state: true,
-        title: `Oops! Something went wrong.${
-          error?.StatusCode ? ` [${error.StatusCode}]` : ''
-        }`,
+        title: `Oops! Something went wrong.${error?.StatusCode ? ` [${error.StatusCode}]` : ''
+          }`,
         disc: error?.error?.description
           ? error.error.description
           : "We couldn't complete your request, please try again!",
@@ -110,7 +112,7 @@ export default function ({onPress}: {onPress: () => void}) {
   });
 
   const onDismiss = useCallback(
-    () => setPopupModal({...popupModal, state: false}),
+    () => setPopupModal({ ...popupModal, state: false }),
     [],
   );
 
@@ -121,25 +123,47 @@ export default function ({onPress}: {onPress: () => void}) {
         paddingHorizontal: width * 0.05,
         justifyContent: 'space-between',
       }}>
-      <Animated.View
-        style={{
-          gap: height * 0.02,
-        }}>
-        <TitleCompo />
-      </Animated.View>
+      <View style={{ gap: 12 }} >
+        <Pressable
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+          }}
+          onPress={() => { }}>
+          <DownSVG
+            width={12}
+            height={12}
+            style={{
+              transform: [{ rotate: '90deg' }],
+            }}
+          />
+          <Text variant={'SubTitleTwo'} style={{ color: '#fff' }}>
+            Back
+          </Text>
+        </Pressable>
+
+        <Animated.View
+          style={{
+            gap: height * 0.02,
+          }}>
+          <TitleCompo />
+        </Animated.View>
+      </View>
       <Text
         variant={'TitleOne'}
-        style={{color: '#fff'}}
-        entering={FadeInUp}
+        style={{ color: '#fff' }}
+        entering={FadeIn}
         exiting={FadeOut}>
         {num}
       </Text>
-      <View style={{gap: height * 0.03}}>
-        <Animated.View entering={FadeInUp.delay(300)} exiting={FadeOut}>
+      <View style={{ gap: height * 0.03 }}>
+        <Animated.View entering={FadeIn.delay(400)} exiting={FadeOut}>
           <OtpInput
             disabled={loading}
             numberOfDigits={6}
-            focusStickBlinkingDuration={500}
+            autoFocus
+            // focusStickBlinkingDuration={500}
             onTextChange={text => setOtpVal(text)}
             onFilled={text => setOtpVal(text)}
             textInputProps={{
@@ -175,50 +199,30 @@ export default function ({onPress}: {onPress: () => void}) {
           />
         </Animated.View>
         <Text
-          entering={FadeInUp.delay(400)}
+          entering={FadeInUp.delay(600)}
           exiting={FadeOut}
           variant={'DetailRegular'}
-          style={{color: '#fff', textAlign: 'center'}}>
+          style={{ color: '#fff', textAlign: 'center' }}>
           Did not receive OTP?{' '}
-          <Text variant={'DetailBold'} style={{color: '#fff'}}>
+          <Text variant={'DetailBold'} style={{ color: '#fff' }}>
             Resend
           </Text>
         </Text>
-        <AnimatedPressable
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-          entering={FadeInUp.delay(500)}
-          exiting={FadeOut}
-          onPress={() => setCheck(pre => !pre)}>
-          <CustomCheckBox
-            checked={check}
-            checkMarkColor={'#fff'}
-            checkedBorderColor={'#fff'}
-            unCheckedBorderColor={'#fff'}
-            checkedBackgroundColor={'#fff'}
-            unCheckedBackgroundColor={'#fff'}
-            height={30}
-            width={30}
-            SvgStyles={{
-              marginRight: 10,
-            }}
-            index={1}
-            duration={300}
-          />
-          <Text
-            variant={'DetailRegular'}
-            style={{color: '#fff', textDecorationLine: 'underline',flex:1}}>
-            I agree to T&C Lorem ipsum dolor sit amet, sdasd consectetur
-            adipiscing elit, sed do
-          </Text>
-        </AnimatedPressable>
-        <Animated.View entering={FadeIn.delay(600)} exiting={FadeOut}>
+
+        <Text
+          variant={'DetailRegular'}
+          style={{ color: '#fff', alignSelf: 'center', textAlign: 'center' }}
+          entering={FadeInUp.delay(700)}
+          exiting={FadeOut}>
+          By signing up, you agree to our Terms and Conditions and Privacy
+          Policy.
+        </Text>
+
+        <Animated.View entering={FadeIn.delay(800)} exiting={FadeOut}>
           <Button
             lable="CONTINUE"
             onPress={submitCode}
-            disabled={otpVal.length !== 6 || !check}
+            disabled={otpVal.length !== 6}
           />
         </Animated.View>
       </View>

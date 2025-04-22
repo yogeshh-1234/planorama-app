@@ -47,7 +47,7 @@ export default function ({
             {rsvp === 'Y'
               ? 'Going'
               : rsvp === 'M'
-              ? 'May be'
+              ? 'Maybe'
               : rsvp === 'N'
               ? 'Not Going'
               : ''}

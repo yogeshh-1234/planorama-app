@@ -1,5 +1,9 @@
 import * as React from 'react';
-import Svg, {SvgProps, Path, G} from 'react-native-svg';
+import Svg, {SvgProps as RNSvgProps, Path, G, Text} from 'react-native-svg';
+
+interface SvgProps extends RNSvgProps {
+  name?: string;
+}
 const IntroSVG = (props: SvgProps) => (
   <Svg width={351} height={351} viewBox="0 0 351 351" fill="none" {...props}>
     <Path
@@ -784,4 +788,21 @@ const WAChatUI = (props: SvgProps) => (
   </Svg>
 );
 
-export {IntroSVG, BGline, WAChatUI};
+const RibbonSVG = (props: SvgProps) => (
+  <Svg id="Layer_1" x="0px" y="0px" viewBox="0 0 1792 1792" {...props}>
+    <Path d="M1792,896l-235.9,388.4H0L238.3,896L0,507.6h1556.5L1792,896z" />
+    <Text
+      x="896" 
+      y="926" 
+      fontSize="400" 
+      fontWeight="bold" 
+      fill={props.color}
+      textAnchor="middle" 
+      alignmentBaseline="middle"
+    >
+      {props.name}
+    </Text>
+  </Svg>
+);
+
+export {IntroSVG, BGline, WAChatUI, RibbonSVG};

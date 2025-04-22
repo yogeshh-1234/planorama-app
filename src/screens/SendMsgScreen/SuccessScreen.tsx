@@ -123,7 +123,7 @@ export default function () {
         return (
           <View>
             <Button
-              lable="VIEW EVENT"
+              lable="GO TO DASHBOARD"
               onPress={goBack}
               buttonStyles={{
                 backgroundColor: '#fff',
@@ -131,9 +131,9 @@ export default function () {
               textStyles={{
                 color: '#2D2D2D',
               }}
-              icon={() => <EyeSVG width={26} height={26} />}
+              // icon={() => <EyeSVG width={26} height={26} />}
             />
-            <Button
+            {/* <Button
               lable="GO TO DASHBOARD"
               onPress={onDash}
               buttonStyles={{
@@ -143,7 +143,7 @@ export default function () {
                 color: '#fff',
               }}
               variant="SubTitleOne"
-            />
+            /> */}
           </View>
         );
 
