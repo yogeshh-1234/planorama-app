@@ -53,7 +53,7 @@ export default function () {
         style={{
           flex: 1,
         }}>
-        <WhatsAppCompo />
+        {/* <WhatsAppCompo /> */}
         <MainContainer />
       </View>
     </View>

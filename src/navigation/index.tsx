@@ -26,6 +26,11 @@ import {Linking, ToastAndroid, View} from 'react-native';
 import {Portal} from 'react-native-paper';
 import Loading from '../components/Loading';
 import LoadingCompo from '../components/LoadingCompo';
+import Questionnaire from '../screens/EventDetails/component/Questionnaire';
+import QuestionStats from '../screens/EventDetails/QuestionStats';
+import QuestionResponse from '../screens/EventDetails/QuestionResponse';
+import QuestionResponseSub from '../screens/EventDetails/QuestionResponseSub';
+import WhatsappTemplateScreen from '../screens/EventGuest/WhatsappTemplateScreen';
 
 export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   IntroScreen: 'IntroScreen',
@@ -40,9 +45,14 @@ export const MAINSCREENS: Record<string, keyof RootStackParamList> = {
   AddNewContact: 'AddNewContact',
   EventSettingsScreen: 'EventSettingsScreen',
   EventGuest: 'EventGuest',
+  WhatsappTemplateScreen: 'WhatsappTemplateScreen',
   SendMsgScreen: 'SendMsgScreen',
   PreviewScreen: 'PreviewScreen',
   SuccessScreen: 'SuccessScreen',
+  Questionnaire: 'Questionnaire',
+  QuestionStats: 'QuestionStats',
+  QuestionResponse: 'QuestionResponse',
+  QuestionResponseSub: 'QuestionResponseSub',
 };
 
 export type RootStackParamList = {
@@ -69,6 +79,12 @@ export type RootStackParamList = {
   AddNewContact: {onGoBack?: () => void};
   EventSettingsScreen: {eventID?: number};
   EventGuest: {eventID: number; eventName: string; eventPic: string};
+  WhatsappTemplateScreen: {
+    guestList: guestListType[];
+    eventID: number;
+    eventName: string;
+    eventPic: string;
+  };
   SendMsgScreen: {
     guestList: guestListType[];
     eventID: number;
@@ -87,10 +103,30 @@ export type RootStackParamList = {
   };
   SuccessScreen: {
     type: string;
-    textOne:string;
-    textTwo:string;
-    textThree:string;
+    textOne: string;
+    textTwo: string;
+    textThree: string;
     eventID: number;
+  };
+  Questionnaire: {
+    eventID: number;
+  };
+  QuestionStats: {
+    event_id: string;
+  };
+  QuestionResponse: {
+    event_id: string;
+    quesType: string;
+    quesID: number;
+    choiceID: number;
+    choiceTxt: string;
+    quesTxt: string;
+  };
+  QuestionResponseSub: {
+    event_id: string;
+    quesType: string;
+    quesID: number;
+    quesTxt: string;
   };
 };
 
@@ -280,6 +316,10 @@ function MainNavigation(): React.JSX.Element {
               component={EventGuest}
             />
             <Stack.Screen
+              name={MAINSCREENS.WhatsappTemplateScreen}
+              component={WhatsappTemplateScreen}
+            />
+            <Stack.Screen
               name={MAINSCREENS.SendMsgScreen}
               component={SendMsgScreen}
             />
@@ -290,6 +330,22 @@ function MainNavigation(): React.JSX.Element {
             <Stack.Screen
               name={MAINSCREENS.SuccessScreen}
               component={SuccessScreen}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.Questionnaire}
+              component={Questionnaire}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.QuestionStats}
+              component={QuestionStats}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.QuestionResponse}
+              component={QuestionResponse}
+            />
+            <Stack.Screen
+              name={MAINSCREENS.QuestionResponseSub}
+              component={QuestionResponseSub}
             />
           </>
         )}

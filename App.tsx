@@ -6,6 +6,7 @@ import MainNavigation from './src/navigation';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {LogBox} from 'react-native';
 import notifee, {AuthorizationStatus} from '@notifee/react-native';
+import 'react-native-get-random-values';
 // import colors from './src/config/colors';
 const theme = {
   ...MD3LightTheme,

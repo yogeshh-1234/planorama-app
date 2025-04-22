@@ -156,8 +156,6 @@ export default function () {
   const [popupModal, setPopupModal] = useState(PopupModal);
   const [justToReload, setJustToReload] = useState(false);
 
-
-  
   useEffect(() => {
     const tempName = storage.getString('user.name');
     const tempPic = storage.getString('user.pic');

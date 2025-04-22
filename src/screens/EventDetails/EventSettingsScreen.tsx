@@ -286,7 +286,7 @@ export default function () {
             onDataChange={handleSettingsDataChange}
           />
         )}
-        {topTab === 'Ques' && <Questionnaire />}
+        {/* {topTab === 'Ques' && <Questionnaire />} */}
       </View>
       {loading.status && <LoadingCompo text={loading.text} />}
       <PopupCompo
@@ -312,14 +312,15 @@ const TopTabs = memo(
   }) => {
     return (
       <View style={style.topRow}>
+        {/* rsvp */}
         <AnimatedPressable
           entering={FadeIn}
           exiting={FadeOut}
           style={[
             style.topTabButt,
-            {
-              borderBottomWidth: topTab === 'RSVP' ? 1 : 0,
-            },
+            // {
+            //   borderBottomWidth: topTab === 'RSVP' ? 1 : 0,
+            // },
           ]}
           onPress={() => setTopTab('RSVP')}>
           <UsersSVG
@@ -335,7 +336,9 @@ const TopTabs = memo(
             RSVP
           </Text>
         </AnimatedPressable>
-        <AnimatedPressable
+
+        {/* Questionaire */}
+        {/* <AnimatedPressable
           entering={FadeIn.delay(400)}
           exiting={FadeOut}
           style={[
@@ -360,7 +363,7 @@ const TopTabs = memo(
             }}>
             Questionnaire
           </Text>
-        </AnimatedPressable>
+        </AnimatedPressable> */}
       </View>
     );
   },
