@@ -478,7 +478,7 @@ export default memo(() => {
         translucent
         barStyle={'light-content'}
       />
-      <HeaderCompo showSave={true} onSave={sendData} onBack={onBack} />
+      <HeaderCompo  onSave={sendData}  />
       <BGline
         width={'100%'}
         height={height * 0.1}

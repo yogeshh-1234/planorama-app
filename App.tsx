@@ -7,6 +7,8 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {LogBox} from 'react-native';
 import notifee, {AuthorizationStatus} from '@notifee/react-native';
 import 'react-native-get-random-values';
+import { OfflineDB } from './src/storage/offlineDB';
+import { SampleDataGenerator } from './src/storage/sampleData';
 // import colors from './src/config/colors';
 const theme = {
   ...MD3LightTheme,
@@ -36,6 +38,10 @@ function App(): React.JSX.Element {
     LogBox.ignoreAllLogs(); //Ignore all log notifications
 
     requestUserPermission();
+    
+    // Initialize offline database and sample data
+    OfflineDB.initializeDefaultData();
+    SampleDataGenerator.initializeAllSampleData();
   }, []);
 
   return (

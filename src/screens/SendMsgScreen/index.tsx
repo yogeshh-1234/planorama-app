@@ -144,7 +144,15 @@ const MainContainer = () => {
     mutationFn: (formData: getMsgForm) =>
       postData<getMsgForm, getMsgResponse>(Urls.WHATSAPP, formData),
     onSuccess: ({data}) => {
-      setAllData(data);
+      // If template is provided, use template content instead of API message
+      if (params.selectedTemplate) {
+        setAllData({
+          ...data,
+          message_template: params.selectedTemplate.content,
+        });
+      } else {
+        setAllData(data);
+      }
 
       setLoading(false);
     },
@@ -202,6 +210,26 @@ const MainContainer = () => {
           }}>
           Send message via WhatsApp
         </Text>
+        {params.selectedTemplate && (
+          <View
+            style={{
+              marginHorizontal: paddingHorizontal,
+              backgroundColor: '#75486F',
+              padding: 12,
+              borderRadius: 8,
+              borderLeftWidth: 4,
+              borderLeftColor: '#F9BC52',
+            }}>
+            <Text
+              variant={'BodyBold'}
+              style={{color: '#F9BC52', marginBottom: 4}}>
+              Using Template: {params.selectedTemplate.title}
+            </Text>
+            <Text variant={'DetailRegular'} style={{color: '#EDEDED'}}>
+              {params.selectedTemplate.category}
+            </Text>
+          </View>
+        )}
         <ImgCompo uri={params.eventPic} />
 
         {!loading && (

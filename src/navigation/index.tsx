@@ -95,6 +95,13 @@ export type RootStackParamList = {
     eventID: number;
     eventName: string;
     eventPic: string;
+    selectedTemplate?: {
+      id: number;
+      title: string;
+      category: string;
+      preview: string;
+      content: string;
+    };
   };
   PreviewScreen: {
     eventID: number;
